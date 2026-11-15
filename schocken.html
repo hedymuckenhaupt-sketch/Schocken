@@ -2916,7 +2916,7 @@ const TEST_NET=!!QS.get('broker');
 const JOIN_PARAM=((QS.get('join')||'')||((location.hash.match(/^#join-([A-Za-z0-9]{4})$/)||[])[1]||'')).toUpperCase();
 let G=null;
 let STATS=LS.get('schocken.stats',{});
-const NET={imgs:{},chat:[],unread:0,mode:'local',code:null,tp:null,lobby:[],conns:{},connCid:{},lastSeen:{},online:{},hostSeen:0,connected:false,retryT:null,myName:'',status:''};
+const NET={epoch:0,hostCid:null,hadHost:false,lastHello:0,lastPing:0,imgs:{},chat:[],unread:0,mode:'local',code:null,tp:null,lobby:[],conns:{},connCid:{},lastSeen:{},online:{},hostSeen:0,connected:false,retryT:null,myName:'',status:''};
 
 const COASTER='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="#f4ead3" stroke="#b8291f" stroke-width="2.4"/><circle cx="12" cy="12" r="6.3" fill="none" stroke="#b8291f" stroke-width="1.2" stroke-dasharray="1.8 1.8"/></svg>';
 const ICON_CPU='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9 16.5h6"/></svg>';
@@ -3065,7 +3065,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 /* ================= Persistence ================= */
 function persist(){
   if(NET.mode==='local'){if(G&&G.status!=='gameEnd')LS.set('schocken.game',G);else LS.del('schocken.game')}
-  else if(NET.mode==='host')LS.set('schocken.host',{code:NET.code,lobby:NET.lobby,opt:S.opt,G:(G&&G.status!=='gameEnd')?G:null,t:Date.now()});
+  else if(NET.mode==='host')LS.set('schocken.host',{code:NET.code,lobby:NET.lobby,opt:S.opt,ep:NET.epoch,G:(G&&G.status!=='gameEnd')?G:null,t:Date.now()});
 }
 function saveSetup(){LS.set('schocken.setup',S)}
 
@@ -3839,7 +3839,7 @@ function openRules(){
     <li>Einsen antippen zum Rauslegen, nochmal tippen zum Zurücknehmen (vor dem nächsten Wurf).</li>
   </ul>
   <h3>Mehrere Handys</h3>
-  <p>Einer tippt auf „Spiel erstellen“ und zeigt den QR-Code oder Code. Alle anderen öffnen die App, tippen „Mehrere Handys“ und treten bei. Das Handy des Hosts muss die App geöffnet lassen. Fliegt jemand raus, kann er mit demselben Code wieder beitreten – oder der Host lässt den Computer für ihn weiterspielen.</p>
+  <p>Einer tippt auf „Spiel erstellen“ und zeigt den QR-Code oder Code. Alle anderen öffnen die App, tippen „Mehrere Handys“ und treten bei. Verschwindet der Host (App gewechselt, Anruf, Akku leer), übernimmt nach ein paar Sekunden automatisch der nächste Spieler – das Spiel läuft einfach weiter. Kommt der alte Host zurück, spielt er als normaler Mitspieler weiter. Fliegt jemand raus, kann er mit demselben Code wieder beitreten – oder der Host lässt den Computer für ihn weiterspielen.</p>
   <p>Über die Sprechblase oben gibt es einen <b>Chat</b> mit Schnell-Sprüchen. Profilbild, Figur und Würfel-Design stellt jeder unter „Dein Profil“ ein, den Tisch im Menü.</p>`;
   $('#rules').classList.add('open');
   $('#rulesClose').addEventListener('click',closeRules);
@@ -3916,12 +3916,15 @@ const Transport={
   host(code,h){
     const T=TOPIC_BASE+code;const list=BROKERS.length>1?BROKERS.slice(0,2):BROKERS;
     const buses=list.map((u,k)=>makeBus(k===0?BROKERS:[u],[T+'/h'],(t,m)=>{if(m&&m.from&&m.msg)h.onMsg(m.from,m.msg)},()=>h.onState(buses.some(b=>b.ok))));
-    return{send(id,msg){buses.forEach(b=>b.publish(T+'/g/'+id,msg))},close(){buses.forEach(b=>b.close())}};
+    const tag=msg=>Object.assign({},msg,{hep:NET.epoch,hcid:CID});
+    return{send(id,msg){const t=tag(msg);buses.forEach(b=>b.publish(T+'/g/'+id,t))},
+      beacon(){const m={from:'host:'+CID,msg:{t:'beacon',cid:CID,ep:NET.epoch}};buses.forEach(b=>b.publish(T+'/h',m))},
+      close(){buses.forEach(b=>b.close())}};
   },
   join(code,h){
     const T=TOPIC_BASE+code;const id='g'+CID.slice(0,6)+Math.random().toString(36).slice(2,6);
     const bus=makeBus(BROKERS,[T+'/g/'+id],(t,m)=>h.onMsg(m),(ok,url)=>h.onState(ok,url));
-    return{send(msg){bus.publish(T+'/h',{from:id,msg})},close(){bus.close()}};
+    return{send(msg){bus.publish(T+'/h',{from:id,msg:Object.assign({},msg,{ep:NET.epoch})})},close(){bus.close()}};
   }
 };
 function netErrText(e){
@@ -3940,22 +3943,58 @@ function hostCreate(name){
   const lobby=[{name,cpu:false,cid:CID,fig:S.me.fig,dice:S.me.dice}];NET.imgs={};if(S.me.img)NET.imgs[CID]=S.me.img;
   startHost(genCode(),lobby,null,true);
 }
-function startHost(code,lobby,savedG,fresh){
+function startHost(code,lobby,savedG,fresh,ep){
   leaveNet(true);
   if(NET.code!==code){NET.chat=[];NET.unread=0}
   NET.mode='host';NET.code=code;NET.lobby=lobby;NET.connected=false;NET.online={[CID]:true};NET.conns={};NET.connCid={};NET.lastSeen={};
+  NET.epoch=ep||0;NET.hostCid=CID;
   G=savedG||null;NET.status='Verbinde mit dem Server …';
   if(G){V.tkey=null;V.sheetKey=null;showScreen('game')}else showScreen('lobby');
+  openHostTransport();
+  persist();
+}
+function openHostTransport(){
   let first=true;
-  NET.tp=Transport.host(code,{
+  NET.tp=Transport.host(NET.code,{
     onState(ok){
       NET.connected=ok;NET.status=ok?'':'Verbinde mit dem Server …';
-      if(ok&&first){first=false;persist();if(G)resumeEngine()}
+      if(ok&&first){first=false;persist();if(G)resumeEngine();try{NET.tp&&NET.tp.beacon()}catch(e){}}
       renderLobby();render();renderNetBar();
     },
     onMsg:hostOnMsg
   });
-  persist();
+}
+/* ---- automatic host hand-over ---- */
+const TAKEOVER_MS=7000,TAKEOVER_STEP=4000;
+function takeoverRank(){
+  if(!G||!G.players)return -1;
+  const n=G.players.length,h=G.players.findIndex(p=>p.cid===NET.hostCid);
+  const order=[];for(let k=1;k<=n;k++){const p=G.players[((h<0?0:h)+k)%n];if(p&&!p.cpu&&p.cid&&p.cid!==NET.hostCid&&(p.cid===CID||NET.online[p.cid]))order.push(p.cid)}
+  return order.indexOf(CID);
+}
+function becomeHost(){
+  if(NET.mode!=='guest'||!G)return;
+  const old=NET.hostCid;
+  try{NET.tp&&NET.tp.close()}catch(e){}
+  NET.tp=null;NET.mode='host';NET.epoch=(NET.epoch||0)+1;NET.hostCid=CID;
+  NET.conns={};NET.connCid={};NET.lastSeen={};const now=Date.now();
+  for(const c of Object.keys(NET.online))NET.lastSeen[c]=now;
+  if(old)NET.online[old]=false;NET.online[CID]=true;
+  anim.waiting=false;
+  LS.del('schocken.guest');
+  openHostTransport();persist();render();renderLobby();
+  const oldName=old&&G.players.find(p=>p.cid===old);
+  toast((oldName?oldName.name:'Der Host')+' ist weg – du bist jetzt Host. Weiter geht’s!');
+}
+function demoteToGuest(){
+  if(NET.mode!=='host')return;
+  clearTimers();cpuGen++;
+  const me=G&&G.players.find(p=>p.cid===CID);const name=(me&&me.name)||S.myName||'Spieler';
+  try{NET.tp&&NET.tp.close()}catch(e){}
+  NET.tp=null;NET.mode='guest';NET.myName=name;NET.connected=false;NET.hostSeen=0;NET.hadHost=false;NET.lastHello=0;
+  LS.del('schocken.host');LS.set('schocken.guest',{code:NET.code,name,t:Date.now()});
+  toast('Ein anderer Spieler hat als Host übernommen – du spielst ganz normal weiter.');
+  guestConnect();render();renderLobby();
 }
 function resumeEngine(){
   if(!G)return;
@@ -3967,6 +4006,8 @@ function resumeEngine(){
 }
 function hostOnMsg(connId,m){
   if(!m||typeof m!=='object')return;
+  if(m.t==='beacon'){if(m.cid!==CID&&(m.ep>NET.epoch||(m.ep===NET.epoch&&String(m.cid)<String(CID))))demoteToGuest();return}
+  if(typeof m.ep==='number'&&m.ep>NET.epoch){demoteToGuest();return}
   const cid=m.cid||NET.connCid[connId];
   if(m.t==='hello'){
     NET.connCid[connId]=m.cid;NET.conns[m.cid]=connId;NET.lastSeen[m.cid]=Date.now();
@@ -4033,24 +4074,30 @@ function hostStart(){
 }
 setInterval(()=>{
   if(NET.mode==='host'&&NET.tp){
-    hostBroadcast({t:'ping'});
+    hostBroadcast({t:'ping'});try{NET.tp.beacon&&NET.tp.beacon()}catch(e){}
     const now=Date.now();
     for(const cid of Object.keys(NET.online)){if(cid!==CID&&NET.online[cid]&&now-(NET.lastSeen[cid]||0)>13000)setOnline(cid,false)}
-  }else if(NET.mode==='guest'&&NET.tp&&NET.connected){
-    if(hostOk())NET.tp.send({t:'ping',cid:CID});
-    else{
-      NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice});
-      if(Date.now()-NET.helloAt>8000)NET.status=netErrText({type:'nohost'});
-      renderLobby();renderNetBar();render();
-    }
   }
 },3500);
+setInterval(()=>{
+  if(NET.mode!=='guest'||!NET.tp||!NET.connected)return;
+  const now=Date.now(),sil=now-NET.hostSeen;
+  if(sil<4000){if(now-NET.lastPing>3500){NET.tp.send({t:'ping',cid:CID});NET.lastPing=now}return}
+  if(now-NET.lastHello>2000){NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice});NET.lastHello=now}
+  if(!NET.hadHost&&now-NET.helloAt>8000)NET.status=netErrText({type:'nohost'});
+  // host gone during a running game -> the next player in line takes over
+  if(NET.hadHost&&G&&G.status!=='gameEnd'){
+    const r=takeoverRank();
+    if(r>=0&&sil>TAKEOVER_MS+r*TAKEOVER_STEP){becomeHost();return}
+  }
+  renderLobby();renderNetBar();render();
+},1000);
 
 /* ---- guest ---- */
 function guestJoin(code,name){
   leaveNet(true);
   if(NET.code!==code){NET.chat=[];NET.unread=0}
-  NET.mode='guest';NET.code=code;NET.myName=name;NET.lobby=[];G=null;NET.status='Verbinde …';
+  NET.mode='guest';NET.code=code;NET.myName=name;NET.lobby=[];G=null;NET.status='Verbinde …';NET.epoch=0;NET.hostCid=null;NET.hadHost=false;
   LS.set('schocken.guest',{code,name,t:Date.now()});
   showScreen('lobby');guestConnect();
 }
@@ -4069,9 +4116,12 @@ function guestConnect(){
   });
   NET.tp=tp;
 }
-function hostOk(){return NET.mode==='guest'&&NET.connected&&Date.now()-NET.hostSeen<12000}
+function hostOk(){return NET.mode==='guest'&&NET.connected&&Date.now()-NET.hostSeen<9000}
 function guestOnMsg(m){
   if(!m||typeof m!=='object')return;
+  if(typeof m.hep==='number'){if(m.hep<NET.epoch)return;if(m.hep>NET.epoch)NET.epoch=m.hep}
+  if(m.hcid&&m.hcid!==NET.hostCid){const prev=NET.hostCid;NET.hostCid=m.hcid;if(prev&&G){const p=G.players.find(x=>x.cid===m.hcid);toast((p?p.name:'Ein Mitspieler')+' ist jetzt Host – weiter geht’s.')}}
+  NET.hadHost=true;
   const was=hostOk();NET.hostSeen=Date.now();
   if(!was){NET.status='';renderNetBar();renderLobby();render()}
   if(m.t==='lobby'){NET.lobby=m.lobby||[];NET.hostOpt=m.opt||{};NET.code=m.code||NET.code;if(!G){if(!$('#lobby').classList.contains('on'))showScreen('lobby');renderLobby()}}
@@ -4119,14 +4169,14 @@ function renderLobby(){
   $('#lbLink').parentElement.style.display=host?'flex':'none';
   let status=NET.status;
   if(!status){
-    if(host)status=(NET.lobby.length<2?'Warte auf Mitspieler – QR-Code scannen lassen.':'Bereit! Weitere können noch beitreten.')+' Handy bitte entsperrt lassen.';
+    if(host)status=(NET.lobby.length<2?'Warte auf Mitspieler – QR-Code scannen lassen.':'Bereit! Weitere können noch beitreten.')+' Bis zum Start bitte Handy entsperrt lassen.';
     else status=hostOk()?'Verbunden ✓ – warte, bis der Host startet …':'Verbinde …';
   }
   $('#lbStatus').textContent=status;
   $('#lbCount').textContent=NET.lobby.length+' von 8';
   $('#lbList').innerHTML=NET.lobby.map((p,i)=>{
-    const on=p.cpu||p.cid===CID?true:host?!!NET.online[p.cid]:(p.cid===NET.lobby[0].cid?hostOk():!!NET.online[p.cid]);
-    const tag=i===0?'Host':p.cid===CID?'du':p.cpu?'Computer':'';
+    const on=p.cpu||p.cid===CID?true:host?!!NET.online[p.cid]:(p.cid===NET.hostCid?hostOk():!!NET.online[p.cid]);
+    const tag=p.cid===(NET.hostCid||NET.lobby[0].cid)?'Host':p.cid===CID?'du':p.cpu?'Computer':'';
     const av=avatarHtml({name:p.name,color:COLORS[i%8],fig:p.fig,img:p.cid&&NET.imgs[p.cid]},30);
     return `<div class="prow">${p.cid===CID?`<button class="avbtn" data-myprof>${av}<i>✎</i></button>`:av}<span class="who2">${esc(p.name)}${tag?`<small>${tag}</small>`:''}</span>${p.cpu?'':`<span class="dot ${on?'':'off'}"></span>`}${host&&i>0?`<button class="del" data-rm="${i}" aria-label="Entfernen">×</button>`:''}</div>`;
   }).join('');
@@ -4173,7 +4223,7 @@ function renderSetup(){
   }
   $('#resumeBox').innerHTML=rb;
   const rl=$('#resumeLocal');if(rl)rl.addEventListener('click',()=>{enableMotion();ac();resumeLocal()});
-  const rh=$('#resumeHost');if(rh)rh.addEventListener('click',()=>{enableMotion();ac();if(sh.opt)S.opt=Object.assign({},DEF_OPT,sh.opt);startHost(sh.code,sh.lobby||[{name:S.myName||'Host',cpu:false,cid:CID}],sh.G&&sh.G.v===3?sh.G:null,false)});
+  const rh=$('#resumeHost');if(rh)rh.addEventListener('click',()=>{enableMotion();ac();if(sh.opt)S.opt=Object.assign({},DEF_OPT,sh.opt);startHost(sh.code,sh.lobby||[{name:S.myName||'Host',cpu:false,cid:CID}],sh.G&&sh.G.v===3?sh.G:null,false,sh.ep||0)});
   const rg=$('#resumeGuest');if(rg)rg.addEventListener('click',()=>{enableMotion();ac();guestJoin(sg.code,sg.name||S.myName||'Gast')});
   // local players
   const pl=$('#plist');
@@ -4506,7 +4556,7 @@ $('#chatBubble').addEventListener('click',()=>{hideChatBubble();openChat()});
 buildDice();applyBoard();
 if(JOIN_PARAM)S.tab='online';
 renderSetup();
-window.__schocken={eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
+window.__schocken={becomeHost,eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
 })();
 </script>
 <script>/* ===== Schocken 3D-Intro (läuft beim ersten Öffnen) ===== */
