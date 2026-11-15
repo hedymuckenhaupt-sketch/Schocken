@@ -3425,8 +3425,9 @@ function resetDiceVis(){
   if(c)applySkin(curP().dice);
   updateCupSaying();
   for(let i=0;i<3;i++){
-    if(!c||c.rolls===0||!vis)DV.state[i]='cup';
-    else if(c.kept[i])DV.state[i]='slot';
+    if(!c||c.rolls===0)DV.state[i]='cup';
+    else if(c.kept[i])DV.state[i]='slot'; // rausgelegte Einsen sehen alle
+    else if(!vis)DV.state[i]='cup';
     else DV.state[i]='free';
   }
   if(c&&vis&&c.rolls>0){
@@ -3459,7 +3460,7 @@ function animateRoll(rolled,vis){
       if(['out','schock','general','strasse'].includes(ev.type)&&canSeeCur())celebrate(ev);
     },880);
   }else{
-    for(let i=0;i<3;i++)DV.state[i]='cup';applyAllDice(true);
+    for(let i=0;i<3;i++)if(!c.kept[i])DV.state[i]='cup';applyAllDice(true);
     cupEl.classList.remove('pour','off','shaking','idle','slam');placeCup('center');
     void cupEl.offsetWidth;cupEl.classList.add('slam');sfx.slam();
     schedule(()=>cupEl.classList.remove('slam'),520);
@@ -3471,7 +3472,7 @@ function viewFx(e){
   if(controls(e.p))return;
   if(e.on){
     V.fxShake=true;
-    for(let i=0;i<3;i++)if(!G.cur.kept[i]||!canSeeCur())DV.state[i]='cup';
+    for(let i=0;i<3;i++)if(!G.cur.kept[i])DV.state[i]='cup';
     applyAllDice(true);
     cupEl.classList.remove('off','idle','pour','slam');placeCup('center');cupEl.classList.add('shaking');
     clearInterval(V.fxRattle);V.fxRattle=setInterval(()=>sfx.rattle(true),110);
@@ -3496,11 +3497,11 @@ function viewUpdate(){
       V.rollId=c.rollId;anim.waiting=false;clearTimeout(V.waitT);stopFxShake();
       animateRoll(c.lastRolled,vis);
     }else if(vis!==V.vis){resetDiceVis()}
-    else if(vis){
+    else{
       let keptChanged=false;
       for(let i=0;i<3;i++){
-        if(c.dice[i]!==V.dice[i]){DV.k[i][0]+=1;setFace(i,true);if(!G.opt.hidden)sfx.flip()}
-        if(c.kept[i]!==V.kept[i]){DV.state[i]=c.kept[i]?'slot':'free';if(!DV.free[i])DV.free[i]={fx:Math.random(),fy:Math.random()};setFace(i,true);keptChanged=true;if(!G.opt.hidden){sfx.tick();vib(8)}}
+        if(vis&&c.dice[i]!==V.dice[i]){DV.k[i][0]+=1;setFace(i,true);if(!G.opt.hidden)sfx.flip()}
+        if(c.kept[i]!==V.kept[i]){DV.state[i]=c.kept[i]?'slot':(vis?'free':'cup');if(!DV.free[i])DV.free[i]={fx:Math.random(),fy:Math.random()};setFace(i,true);keptChanged=true;sfx.tick();if(vis)vib(8)}
       }
       if(keptChanged)for(let i=0;i<3;i++)applyDie(i,true);
     }
@@ -3643,7 +3644,7 @@ function render(){
     tm.textContent=mine&&vis?(motion.ok?'Schütteln!':'Becher halten'):(!vis?(c.rolls?`${mine?'Du':p.name} · ${c.rolls}/${r.maxRolls} ${plural(c.rolls,'Wurf','Würfe')}`:`${mine?'':p.name+' ist dran'}`):'');
     for(let i=0;i<3;i++){
       const el=dieEls[i];
-      el.classList.toggle('kept',vis&&c.kept[i]&&DV.state[i]==='slot');
+      el.classList.toggle('kept',c.kept[i]&&DV.state[i]==='slot');
       el.classList.toggle('keepable',iAct&&eCanToggle(i)&&!c.kept[i]&&c.dice[i]===1);
     }
     cupEl.classList.toggle('idle',mine&&vis&&c.rolls===0&&!anim.shaking&&!anim.landing&&!anim.waiting);
@@ -3821,7 +3822,7 @@ function openRules(){
     <li>Wer zufrieden ist, lässt <b>stehen</b>.</li>
   </ul>
   <h3>Verdeckt spielen</h3>
-  <p>Wie unter dem Becher: Was die anderen gewürfelt haben, sieht man nicht – nur, wie oft sie gewürfelt haben. <b>Aufgedeckt</b> wird am Ende der Runde. Auf einem Handy erscheint vor jedem Zug ein Sichtschutz zum Weitergeben.</p>
+  <p>Wie unter dem Becher: Was die anderen gewürfelt haben, sieht man nicht – nur, wie oft sie gewürfelt haben. <b>Rausgelegte Einsen</b> liegen offen und sind für alle sichtbar. <b>Aufgedeckt</b> wird am Ende der Runde. Auf einem Handy erscheint vor jedem Zug ein Sichtschutz zum Weitergeben.</p>
   <h3>Wertung (von hoch nach niedrig)</h3>
   <table class="combo">
     <tr><td>${dd([1,1,1])}</td><td><b>Schock aus</b><br><small>Verlierer bekommt sofort alle 13</small></td><td>alle</td></tr>
@@ -3872,13 +3873,15 @@ function u8cat(...a){let n=0;a.forEach(x=>n+=x.length);const o=new Uint8Array(n)
 function mstr(x){const b=TE.encode(x);return u8cat(new Uint8Array([b.length>>8,b.length&255]),b)}
 function mpacket(type,body){const rl=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;rl.push(d)}while(n>0);return u8cat(new Uint8Array([type]),new Uint8Array(rl),body)}
 function mqttConn(url,clientId,h){
-  let ws,buf=new Uint8Array(0),pingT=null,pid=1,alive=false,closed=false;
+  let ws,buf=new Uint8Array(0),pingT=null,pid=1,alive=false,closed=false,lastRx=Date.now(),dead=false,chkT=null;
+  // a socket can look open but be dead (phone was locked / app switched): drop it and let the bus reconnect
+  function drop(){if(dead)return;dead=true;clearInterval(pingT);clearTimeout(chkT);alive=false;try{ws.onclose=null;ws.close()}catch(e){}if(!closed)h.onClose()}
   try{ws=new WebSocket(url,['mqtt'])}catch(e){setTimeout(()=>h.onClose(),0);return{subscribe(){},publish(){},close(){},get open(){return false}}}
   ws.binaryType='arraybuffer';
   const send=p=>{if(ws.readyState===1){try{ws.send(p)}catch(e){}}};
   ws.onopen=()=>send(mpacket(0x10,u8cat(mstr('MQTT'),new Uint8Array([4,0x02,0,40]),mstr(clientId))));
-  ws.onmessage=e=>{buf=u8cat(buf,new Uint8Array(e.data));parse()};
-  ws.onclose=()=>{clearInterval(pingT);alive=false;if(!closed)h.onClose()};
+  ws.onmessage=e=>{lastRx=Date.now();buf=u8cat(buf,new Uint8Array(e.data));parse()};
+  ws.onclose=()=>drop();
   ws.onerror=()=>{};
   function parse(){
     while(buf.length>=2){
@@ -3887,17 +3890,22 @@ function mqttConn(url,clientId,h){
       if(buf.length<i+len)return;
       const type=buf[0],body=buf.subarray(i,i+len);buf=buf.slice(i+len);
       const t=type>>4;
-      if(t===2){if(body[1]===0){alive=true;pingT=setInterval(()=>send(new Uint8Array([0xC0,0])),20000);h.onConnect()}else{try{ws.close()}catch(e){}}}
+      if(t===2){if(body[1]===0){alive=true;lastRx=Date.now();pingT=setInterval(()=>{if(Date.now()-lastRx>13000){drop();return}send(new Uint8Array([0xC0,0]))},5000);h.onConnect()}else{try{ws.close()}catch(e){}}}
       else if(t===3){const q=(type>>1)&3;const tl=(body[0]<<8)|body[1];const topic=TD.decode(body.subarray(2,2+tl));let off=2+tl;if(q>0)off+=2;h.onMessage(topic,TD.decode(body.subarray(off)))}
     }
   }
   return{
     subscribe(topic){const id=pid++;send(mpacket(0x82,u8cat(new Uint8Array([id>>8,id&255]),mstr(topic),new Uint8Array([0]))))},
     publish(topic,str){send(mpacket(0x30,u8cat(mstr(topic),TE.encode(str))))},
-    close(){closed=true;clearInterval(pingT);try{send(new Uint8Array([0xE0,0]));ws.close()}catch(e){}},
+    close(){closed=true;clearInterval(pingT);clearTimeout(chkT);try{send(new Uint8Array([0xE0,0]));ws.close()}catch(e){}},
+    check(){if(!alive||dead||closed)return;const t=Date.now();lastRx=Math.min(lastRx,t-1);send(new Uint8Array([0xC0,0]));clearTimeout(chkT);chkT=setTimeout(()=>{if(lastRx<t)drop()},2500)},
     get open(){return alive&&ws.readyState===1}
   };
 }
+const BUSES=new Set();
+function kickBuses(){BUSES.forEach(b=>b.kick())}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')kickBuses()});
+window.addEventListener('pageshow',kickBuses);window.addEventListener('online',kickBuses);window.addEventListener('focus',kickBuses);
 // one auto-reconnecting connection; walks through the broker list until one works
 function makeBus(urls,topics,onMsg,onState){
   let conn=null,bi=0,closed=false,timer=null,fails=0,okNow=false;
@@ -3908,14 +3916,15 @@ function makeBus(urls,topics,onMsg,onState){
     const c=mqttConn(url,'sk'+Math.random().toString(36).slice(2,14),{
       onConnect(){ok=true;clearTimeout(to);fails=0;topics.forEach(t=>c.subscribe(t));setOk(true)},
       onMessage(t,str){let m;try{m=JSON.parse(str)}catch(e){return}onMsg(t,m)},
-      onClose(){clearTimeout(to);if(closed)return;setOk(false);if(!ok)next();else timer=setTimeout(connect,1200)}
+      onClose(){clearTimeout(to);if(closed)return;setOk(false);if(!ok)next();else timer=setTimeout(connect,400)}
     });
     const to=setTimeout(()=>{if(!ok){try{c.close()}catch(e){}next()}},7000);
     conn=c;
   }
   function next(){if(closed)return;fails++;if(urls.length>1)bi++;timer=setTimeout(connect,fails>urls.length?3000:150)}
   connect();
-  return{publish(t,m){if(conn&&conn.open)conn.publish(t,JSON.stringify(m))},close(){closed=true;clearTimeout(timer);try{conn&&conn.close()}catch(e){}},get ok(){return okNow}};
+  const bus={publish(t,m){if(conn&&conn.open)conn.publish(t,JSON.stringify(m))},close(){closed=true;BUSES.delete(bus);clearTimeout(timer);try{conn&&conn.close()}catch(e){}},kick(){try{conn&&conn.check&&conn.check()}catch(e){}},get ok(){return okNow}};
+  BUSES.add(bus);return bus;
 }
 const Transport={
   // host listens on several brokers at once, so guests can use whichever broker works for them
@@ -3924,13 +3933,13 @@ const Transport={
     const buses=list.map((u,k)=>makeBus(k===0?BROKERS:[u],[T+'/h'],(t,m)=>{if(m&&m.from&&m.msg)h.onMsg(m.from,m.msg)},()=>h.onState(buses.some(b=>b.ok))));
     const tag=msg=>Object.assign({},msg,{hep:NET.epoch,hcid:CID});
     return{send(id,msg){const t=tag(msg);buses.forEach(b=>b.publish(T+'/g/'+id,t))},
-      beacon(){const m={from:'host:'+CID,msg:{t:'beacon',cid:CID,ep:NET.epoch}};buses.forEach(b=>b.publish(T+'/h',m))},
+      beacon(){const m={from:'host:'+CID,msg:{t:'beacon',cid:CID,ep:NET.epoch}};const all=tag({t:'beacon'});buses.forEach(b=>{b.publish(T+'/h',m);b.publish(T+'/b',all)})},
       close(){buses.forEach(b=>b.close())}};
   },
   join(code,h){
     const T=TOPIC_BASE+code;const id='g'+CID.slice(0,6)+Math.random().toString(36).slice(2,6);
-    const bus=makeBus(BROKERS,[T+'/g/'+id],(t,m)=>h.onMsg(m),(ok,url)=>h.onState(ok,url));
-    return{send(msg){bus.publish(T+'/h',{from:id,msg:Object.assign({},msg,{ep:NET.epoch})})},close(){bus.close()}};
+    const bus=makeBus(BROKERS,[T+'/g/'+id,T+'/b'],(t,m)=>h.onMsg(m),(ok,url)=>h.onState(ok,url));
+    return{send(msg){bus.publish(T+'/h',{from:id,msg:Object.assign({cid:CID},msg,{ep:NET.epoch})})},close(){bus.close()}};
   }
 };
 function netErrText(e){
@@ -3971,7 +3980,7 @@ function openHostTransport(){
   });
 }
 /* ---- automatic host hand-over ---- */
-const TAKEOVER_MS=7000,TAKEOVER_STEP=4000;
+const TAKEOVER_MS=7000,TAKEOVER_STEP=5000;
 function takeoverRank(){
   if(!G||!G.players)return -1;
   const n=G.players.length,h=G.players.findIndex(p=>p.cid===NET.hostCid);
@@ -4012,7 +4021,13 @@ function resumeEngine(){
 }
 function hostOnMsg(connId,m){
   if(!m||typeof m!=='object')return;
-  if(m.t==='beacon'){if(m.cid!==CID&&(m.ep>NET.epoch||(m.ep===NET.epoch&&String(m.cid)<String(CID))))demoteToGuest();return}
+  if(m.t==='beacon'){
+    if(m.cid!==CID){
+      if(m.ep>NET.epoch||(m.ep===NET.epoch&&String(m.cid)<String(CID)))demoteToGuest();
+      else{try{NET.tp&&NET.tp.beacon()}catch(e){}} // an outdated host is back: tell it right away
+    }
+    return;
+  }
   if(typeof m.ep==='number'&&m.ep>NET.epoch){demoteToGuest();return}
   const cid=m.cid||NET.connCid[connId];
   if(m.t==='hello'){
@@ -4038,6 +4053,15 @@ function hostOnMsg(connId,m){
     return;
   }
   if(!cid)return;
+  if(NET.conns[cid]!==connId){
+    // player of this game whose connection we do not know yet (e.g. right after a host change)
+    const known=G?G.players.some(p=>p.cid===cid):NET.lobby.some(p=>p.cid===cid);
+    if(!known||m.t==='leave')return;
+    NET.connCid[connId]=cid;NET.conns[cid]=connId;
+    for(const [c,data] of Object.entries(NET.imgs))NET.tp.send(connId,{t:'img',cid:c,data});
+    NET.tp.send(connId,{t:'lobby',code:NET.code,lobby:NET.lobby,opt:S.opt});
+    NET.tp.send(connId,{t:'state',G});
+  }
   NET.lastSeen[cid]=Date.now();
   if(!NET.online[cid])setOnline(cid,true);
   if(m.t==='act')handle(m.a,cid);
@@ -4126,7 +4150,8 @@ function hostOk(){return NET.mode==='guest'&&NET.connected&&Date.now()-NET.hostS
 function guestOnMsg(m){
   if(!m||typeof m!=='object')return;
   if(typeof m.hep==='number'){if(m.hep<NET.epoch)return;if(m.hep>NET.epoch)NET.epoch=m.hep}
-  if(m.hcid&&m.hcid!==NET.hostCid){const prev=NET.hostCid;NET.hostCid=m.hcid;if(prev&&G){const p=G.players.find(x=>x.cid===m.hcid);toast((p?p.name:'Ein Mitspieler')+' ist jetzt Host – weiter geht’s.')}}
+  if(m.hcid&&m.hcid!==NET.hostCid){const prev=NET.hostCid;NET.hostCid=m.hcid;if(prev&&G){const p=G.players.find(x=>x.cid===m.hcid);toast((p?p.name:'Ein Mitspieler')+' ist jetzt Host – weiter geht’s.')}
+    if(prev&&NET.tp){NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice});NET.lastHello=Date.now()}}
   NET.hadHost=true;
   const was=hostOk();NET.hostSeen=Date.now();
   if(!was){NET.status='';renderNetBar();renderLobby();render()}
