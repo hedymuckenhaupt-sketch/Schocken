@@ -442,6 +442,30 @@ input{font:inherit;-webkit-user-select:text;user-select:text}
 .pc .aces{display:flex;gap:2px;margin-left:auto;margin-right:4px}
 .pc .aces b{width:14px;height:14px;border-radius:4px;background:#fffdf6;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);position:relative}
 .pc .aces b::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#c3271c}
+
+/* invite (link/QR) – minimal join screen */
+.invitehead{display:none;text-align:center}
+#joinBtnBig{display:none}
+#setup.invite .invitehead{display:block}
+#setup.invite .invitehead .k{font-size:14px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+#setup.invite .invitehead .c{font-family:'Alfa Slab One',serif;font-size:48px;letter-spacing:8px;color:var(--brass);line-height:1.1;padding-left:8px}
+#setup.invite .invitehead .s{font-size:16px;color:var(--muted);margin-top:2px}
+#setup.invite #modeTabs,#setup.invite #resumeBox,#setup.invite #paneLocal,#setup.invite #optsHead,#setup.invite #setupOpts,
+#setup.invite #startBtn,#setup.invite #setupStats,#setup.invite #rulesBtn,#setup.invite #hostBtn,#setup.invite .orline,
+#setup.invite .joinrow,#setup.invite #paneOnline .smallp{display:none!important}
+#setup.invite #paneOnline{display:flex}
+#setup.invite #joinBtnBig{display:flex}
+#setup.invite #onlineWarn .okbox{display:none}
+#setup.invite .logo svg{width:min(44vw,170px)}
+/* collapsible sections in the menu */
+details.fold{margin-top:10px;border-radius:14px;background:rgba(29,19,11,.06)}
+details.fold summary{list-style:none;cursor:pointer;padding:12px 14px;font-size:18px;font-weight:700;display:flex;align-items:baseline;gap:8px}
+details.fold summary::-webkit-details-marker{display:none}
+details.fold summary small{font-size:14px;font-weight:500;color:#7b6b4e}
+details.fold summary::after{content:'▾';margin-left:auto;transition:transform .2s;color:#7b6b4e}
+details.fold[open] summary::after{transform:rotate(180deg)}
+details.fold>.menu-list,details.fold>.kick,details.fold>.statlist{padding:0 14px 10px}
+details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -468,6 +492,7 @@ input{font:inherit;-webkit-user-select:text;user-select:text}
       </svg>
     </div>
 
+    <div class="invitehead" id="inviteHead"></div>
     <div class="modetabs" id="modeTabs">
       <button data-m="local">Ein Handy<small>reihum weitergeben</small></button>
       <button data-m="online">Mehrere Handys<small>jeder am eigenen</small></button>
@@ -486,6 +511,7 @@ input{font:inherit;-webkit-user-select:text;user-select:text}
       <div id="onlineWarn"></div>
       <div class="field"><label for="onName">Dein Name</label><input class="tin" id="onName" maxlength="14" placeholder="z. B. Tim" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"></div>
       <button class="myprof" id="myProf"></button>
+      <button class="btn pri wide" id="joinBtnBig">Beitreten</button>
       <button class="btn pri wide" id="hostBtn">Spiel erstellen<span class="sub">du bekommst einen Code + QR-Code</span></button>
       <div class="orline">oder beitreten</div>
       <div class="joinrow"><input class="tin code" id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"><button class="btn sec" id="joinBtn">Beitreten</button></div>
@@ -3789,7 +3815,10 @@ function showMenu(){
       netHtml+='<div class="kick" style="margin-top:12px">Offline-Spieler</div>'+off.map(({p,i})=>`<div class="opt" style="border-color:rgba(29,19,11,.12)"><div class="lbl">${esc(p.name)}<small>${p.takenOver?'Computer spielt für ihn/sie':'nicht verbunden'}</small></div><button class="pill" style="background:rgba(29,19,11,.1);color:var(--ink)" data-take="${i}">${p.takenOver?'zurückgeben':'Computer übernimmt'}</button></div>`).join('');
     }
   }
-  const html=`<div class="kick">Menü</div><h2>Pause</h2>${netHtml}<div class="menu-list">${optControlsHtml(S.opt,false)}</div>${statsHtml()}`;
+  const st=statsHtml();
+  const html=`<div class="kick">Menü</div><h2>Pause</h2>${netHtml}
+    <details class="fold"><summary>Einstellungen<small>Tisch, Ton …</small></summary><div class="menu-list">${optControlsHtml(S.opt,false)}</div></details>
+    ${st?`<details class="fold"><summary>Strichliste<small>verlorene Spiele</small></summary>${st}</details>`:''}`;
   const acts=[{label:'Weiterspielen',fn:()=>{closeSheet();restoreAfterMenu()}}];
   if(!motion.ok)acts.push({label:'Schütteln aktivieren',cls:'sec',fn:()=>{enableMotion().then(()=>{setTimeout(()=>{toast(motion.ok?'Schütteln aktiv ✓':motion.denied?'Zugriff verweigert – Tab schließen und neu öffnen':'Sensor nicht verfügbar');showMenu()},700)})}});
   acts.push({label:'Spielregeln',cls:'sec',fn:()=>openRules()});
@@ -4241,7 +4270,14 @@ $('#lbLeave').addEventListener('click',()=>leaveNet());
 $('#lbCopy').addEventListener('click',()=>{const l=joinLink();try{navigator.clipboard.writeText(l).then(()=>toast('Link kopiert'),()=>toast('Kopieren nicht möglich'))}catch(e){toast('Kopieren nicht möglich')}});
 
 /* ================= Setup screen ================= */
+const INVITE=!!JOIN_PARAM;
 function renderSetup(){
+  const sc=$('#setup');sc.classList.toggle('invite',INVITE);
+  if(INVITE){
+    S.tab='online';
+    $('#inviteHead').innerHTML=`<div class="k">Du bist eingeladen zum Spiel</div><div class="c">${esc(JOIN_PARAM)}</div><div class="s">Namen eingeben, Bild und Würfel aussuchen – fertig.</div>`;
+    $('#joinBtn').textContent='Beitreten';
+  }
   document.querySelectorAll('#modeTabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.tab));
   $('#paneLocal').classList.toggle('on',S.tab==='local');
   $('#paneOnline').classList.toggle('on',S.tab==='online');
@@ -4307,6 +4343,7 @@ $('#onName').addEventListener('input',e=>{S.myName=e.target.value;saveSetup()});
 $('#joinCode').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)});
 function needName(){const n=($('#onName').value||'').trim();if(!n){toast('Bitte gib deinen Namen ein');$('#onName').focus();return null}S.myName=n;saveSetup();return n}
 $('#hostBtn').addEventListener('click',()=>{enableMotion();ac();if(IN_FRAME&&!TEST_NET){toast('Online-Spiel geht nur außerhalb der Claude-App',true);return}const n=needName();if(n)hostCreate(n)});
+$('#joinBtnBig').addEventListener('click',()=>$('#joinBtn').click());
 $('#joinBtn').addEventListener('click',()=>{enableMotion();ac();if(IN_FRAME&&!TEST_NET){toast('Online-Spiel geht nur außerhalb der Claude-App',true);return}const n=needName();if(!n)return;const c=($('#joinCode').value||'').trim().toUpperCase();if(c.length!==4){toast('Der Code hat 4 Zeichen');$('#joinCode').focus();return}guestJoin(c,n)});
 $('#startBtn').addEventListener('click',()=>{
   enableMotion();ac();
