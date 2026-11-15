@@ -117,7 +117,7 @@ input{font:inherit;-webkit-user-select:text;user-select:text}
 .tablemsg{position:absolute;left:0;right:0;text-align:center;font-size:15px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(244,234,211,.55);pointer-events:none;transition:opacity .3s}
 .tablemsg.hide{opacity:0}
 
-.cup{position:absolute;left:0;top:0;width:calc(var(--ds) * 1.75);height:calc(var(--ds) * 2.05);transform-origin:0 0;z-index:6;
+.cup{position:absolute;left:0;top:0;width:calc(var(--ds) * 2.05);height:calc(var(--ds) * 2.4);transform-origin:0 0;z-index:6;
   transition:transform .55s cubic-bezier(.3,.85,.3,1),opacity .3s;filter:drop-shadow(0 12px 14px rgba(0,0,0,.55));touch-action:none}
 .cup .inner{width:100%;height:100%;transform-origin:50% 88%}
 .cup svg{width:100%;height:100%;display:block}
@@ -539,7 +539,7 @@ input{font:inherit;-webkit-user-select:text;user-select:text}
           <path d="M22 132 H118" stroke="#e7c890" stroke-width="1.6" stroke-dasharray="4 4" opacity=".7"/>
           <path d="M14 140 H126 L128 152 Q70 166 12 152 Z" fill="url(#rim)"/>
           <path d="M50 30 L44 128" stroke="#fff" stroke-width="5" opacity=".08" stroke-linecap="round"/>
-          <text x="70" y="88" text-anchor="middle" font-family="Alfa Slab One, Georgia, serif" font-size="15" fill="#e7c890" opacity=".55">IM</text>
+          <g class="cupsay" font-family="Alfa Slab One, Georgia, serif" text-anchor="middle"></g>
         </svg></div></div>
       <div class="die gone" data-i="0"><div class="ring"></div><div class="cube"></div></div>
       <div class="die gone" data-i="1"><div class="ring"></div><div class="cube"></div></div>
@@ -574,7 +574,7 @@ input{font:inherit;-webkit-user-select:text;user-select:text}
           <path d="M22 132 H118" stroke="#e7c890" stroke-width="1.6" stroke-dasharray="4 4" opacity=".7"/>
           <path d="M14 140 H126 L128 152 Q70 166 12 152 Z" fill="url(#rim)"/>
           <path d="M50 30 L44 128" stroke="#fff" stroke-width="5" opacity=".08" stroke-linecap="round"/>
-          <text x="70" y="88" text-anchor="middle" font-family="Alfa Slab One, Georgia, serif" font-size="15" fill="#e7c890" opacity=".55">IM</text>
+          <g class="cupsay" font-family="Alfa Slab One, Georgia, serif" text-anchor="middle"></g>
         </svg></div>
   <div class="k">Handy weitergeben an</div>
   <div class="n slab" id="pvName"></div>
@@ -2902,7 +2902,7 @@ const LS={
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
   del(k){try{localStorage.removeItem(k)}catch(e){}}
 };
-const DEF_OPT={mode:'klassisch',hidden:true,handOnly:true,flipSix:true,sound:true,vibrate:true,sens:'mittel',speed:'normal'};
+const DEF_OPT={finalFirst:true,mode:'klassisch',hidden:true,handOnly:true,flipSix:true,sound:true,vibrate:true,sens:'mittel',speed:'normal'};
 let S=LS.get('schocken.setup',null);
 if(!S||!Array.isArray(S.players)||S.players.length<2)S={players:[{name:'',cpu:false},{name:'',cpu:false}],opt:{}};
 S.opt=Object.assign({},DEF_OPT,S.opt||{});
@@ -3094,9 +3094,9 @@ function halfName(h){if(G&&G.opt.mode==='schnell')return h===3?'Finale':'Partie'
 function eNewGame(players){
   clearTimers();cpuGen++;
   G={v:3,gid:Math.random().toString(36).slice(2,9),seq:0,tid:0,
-     opt:{mode:S.opt.mode,hidden:S.opt.hidden,handOnly:S.opt.handOnly,flipSix:S.opt.flipSix},
+     opt:{mode:S.opt.mode,hidden:S.opt.hidden,handOnly:S.opt.handOnly,flipSix:S.opt.flipSix,finalFirst:S.opt.finalFirst},
      players:players.map((p,i)=>({name:(p.name||'').trim()||('Spieler '+(i+1)),cpu:!!p.cpu,cid:p.cid||null,color:COLORS[i%8],fig:p.fig||(p.cpu?'🤖':null),dice:p.dice||'weiss',img:NET.mode==='local'?(p.img||null):null})),
-     half:0,halfLosers:[],finalists:null,part:[],chips:players.map(()=>0),pot:13,roundNo:0,
+     half:0,halfLosers:[],finalists:null,part:[],chips:players.map(()=>0),pot:13,roundNo:0,sayings:pickSayings(players.length),
      starter:Math.floor(Math.random()*players.length),round:null,cur:null,status:'start',summary:null};
   eStartHalf(1,G.starter);
 }
@@ -3110,7 +3110,8 @@ function eStartRound(){
   let s=G.starter;
   if(!act.includes(s)){for(let k=1;k<=n;k++){const c=(s+k)%n;if(act.includes(c)){s=c;break}}}
   const order=[];for(let k=0;k<n;k++){const c=(s+k)%n;if(act.includes(c))order.push(c)}
-  G.roundNo++;G.round={order,turn:0,maxRolls:3,results:[]};G.summary=null;
+  const ff=G.half===3&&G.opt.finalFirst&&G.roundNo===0; // only the opening round of the finale
+  G.roundNo++;G.round={order,turn:0,maxRolls:ff?1:3,results:[],firstStands:ff};G.summary=null;
   eStartTurn();
 }
 function eStartTurn(){
@@ -3171,7 +3172,7 @@ function eStand(){
   const c=G.cur,r=G.round,p=r.order[r.turn];
   const ev=evaluate(c.dice,c.lastAll);
   r.results.push({p,ev,rolls:c.rolls,pos:r.turn,dice:[...c.dice]});
-  if(r.turn===0)r.maxRolls=c.rolls;
+  if(r.turn===0&&!r.firstStands)r.maxRolls=c.rolls;
   r.turn++;
   if(r.turn<r.order.length)eStartTurn();else eEndRound();
 }
@@ -3355,12 +3356,12 @@ function sizeFaces(){
 }
 function dims(){const W=tableEl.clientWidth,H=tableEl.clientHeight,ds=dieEls[0].offsetWidth||60;return{W,H,ds,abH:ds+40}}
 function slotPos(i){const{W,H,ds}=dims();return{x:W/2+(i-1)*(ds+16)-ds/2,y:H-ds-17}}
-function cupGeom(){const{W,H,ds,abH}=dims();return{cw:ds*1.75,ch:ds*2.05,W,H,ds,abH}}
+function cupGeom(){const{W,H,ds,abH}=dims();return{cw:ds*2.05,ch:ds*2.4,W,H,ds,abH}}
 function cupCenterPos(){const{W,H,cw,ch,abH}=cupGeom();return{x:W/2-cw/2,y:Math.max(6,(H-abH)/2-ch/2)}}
 function placeCup(where){
   DV.cup=where;const g=cupGeom();let x,y,s;
   if(where==='center'){const p=cupCenterPos();x=p.x;y=p.y;s=1}
-  else{s=.52;x=g.W-g.cw*s-12;y=10}
+  else{s=.46;x=g.W-g.cw*s-12;y=10}
   cupEl.style.transform=`translate(${x}px,${y}px) scale(${s})`;
 }
 function freePosPx(i){const{W,H,ds,abH}=dims();const f=DV.free[i]||{fx:.5,fy:.4};
@@ -3407,6 +3408,7 @@ function scatter(rolled){
 function resetDiceVis(){
   const c=G&&G.status==='turn'?G.cur:null;const vis=canSeeCur();
   if(c)applySkin(curP().dice);
+  updateCupSaying();
   for(let i=0;i<3;i++){
     if(!c||c.rolls===0||!vis)DV.state[i]='cup';
     else if(c.kept[i])DV.state[i]='slot';
@@ -3503,7 +3505,8 @@ function onNewTurn(){
     else if(V.lastTurnPlayer!==pi)showBanner('Jetzt ist dran',p.name,G.round.turn===0?'fängt an':'');
   }
   V.lastTurnPlayer=pi;
-  if(G.round.turn===1&&G.round.maxRolls<3)toast(`Vorgabe: ${G.round.maxRolls} ${plural(G.round.maxRolls,'Wurf','Würfe')}`);
+  if(G.round.turn===0&&G.round.firstStands)toast('Finale: Der erste Wurf steht!');
+  else if(G.round.turn===1&&G.round.maxRolls<3&&!G.round.firstStands)toast(`Vorgabe: ${G.round.maxRolls} ${plural(G.round.maxRolls,'Wurf','Würfe')}`);
   setTimeout(scrollStrip,30);
 }
 function onStatusEnter(st){
@@ -3521,7 +3524,7 @@ function onStatusEnter(st){
 }
 
 /* ---- privacy (one device, hidden) ---- */
-function showPrivacy(p){$('#pvName').textContent=p.name;$('#privacy').classList.add('on')}
+function showPrivacy(p){$('#pvName').textContent=p.name;setCupText($('#privacy'),sayingFor(G.players.indexOf(p)));$('#privacy').classList.add('on')}
 function hidePrivacy(){$('#privacy').classList.remove('on')}
 function privacyOpen(){return $('#privacy').classList.contains('on')}
 $('#pvBtn').addEventListener('click',()=>{ac();V.unlocked=turnKey();hidePrivacy();sfx.ding();viewUpdate()});
@@ -3597,7 +3600,7 @@ function render(){
     else if(!vis)hint='Handy an '+p.name+' geben.';
     else if(anim.shaking)hint=anim.src==='motion'?'Schütteln … zum Werfen kurz stillhalten':anim.src==='hold'?'Loslassen zum Werfen':'';
     else if(anim.waiting)hint='Würfel fallen …';
-    else if(c.rolls===0)hint=(r.turn===0?'Du gibst die Vorgabe für alle. ':'')+(motion.ok?'Handy schütteln – oder „Würfeln“ tippen.':'„Würfeln“ tippen oder Becher gedrückt halten.');
+    else if(c.rolls===0)hint=(r.firstStands?'Finalbeginn – der erste Wurf steht! ':r.turn===0?'Du gibst die Vorgabe für alle. ':'')+(motion.ok?'Handy schütteln – oder „Würfeln“ tippen.':'„Würfeln“ tippen oder Becher gedrückt halten.');
     else if(c.autoEnd)hint=ev&&ev.type==='out'?'Schock aus! Besser geht’s nicht.':'Keine Würfe mehr – Zug wird beendet …';
     else if(c.flipIdx>=0)hint='Sechs zur Eins gedreht – jetzt weiterwürfeln. (Antippen = rückgängig)';
     else if([0,1,2].some(i=>eCanToggle(i)&&!c.kept[i]))hint='Tippe Einsen an, um sie rauszulegen.';
@@ -3676,7 +3679,7 @@ function openStatusSheet(){
     let html=`<div class="kick">${G.half===1?'Neues Spiel':'Weiter geht’s'}</div><h2>${halfName(G.half)}</h2>`;
     if(G.half===1)html+=`<p class="big">${avatar(st,22)} ${pname(st)} wurde ausgelost und fängt an.</p>`;
     else html+=`<p class="big">${avatar(st,22)} ${pname(st)} hat die letzte Hälfte verloren und fängt an.</p>`;
-    if(G.half===3)html+=`<p>Im Finale spielen nur noch ${pname(G.finalists[0])} und ${pname(G.finalists[1])}. Wer verliert, hat das Spiel verloren.</p>`;
+    if(G.half===3)html+=`<p>Im Finale spielen nur noch ${pname(G.finalists[0])} und ${pname(G.finalists[1])}. Wer verliert, hat das Spiel verloren.</p>${G.opt.finalFirst?'<div class="note">🎯 <b>Erster Wurf steht:</b> In der ersten Runde des Finales hat jeder nur einen Wurf – kein Rauslegen, kein Nachwürfeln. Danach geht es normal weiter.</div>':''}`;
     else html+=`<p>13 Deckel liegen im Topf. Der Verlierer jeder Runde bekommt so viele Deckel, wie der beste Wurf der Runde wert ist.</p>`;
     if(G.opt.hidden)html+=`<p style="font-size:16px;color:#7b6b4e">🙈 Verdeckt: Die Würfe der anderen siehst du erst beim Aufdecken am Rundenende.</p>`;
     openSheet(html,[nextBtn('Los geht’s')]);
@@ -3722,7 +3725,8 @@ function optControlsHtml(o,withRules,rulesLocked){
     h+=`<div class="opt"><div class="lbl">Würfe verdeckt<small>wie unterm Becher – aufgedeckt wird erst am Rundenende</small></div><button class="tog ${o.hidden?'on':''}" data-t="hidden" ${rulesLocked?'disabled':''}></button></div>
     <div class="opt"><div class="lbl">Spielmodus<small>${o.mode==='klassisch'?'2 Hälften, ggf. Finale':'Eine Partie entscheidet'}</small></div><div class="seg" data-s="mode"><button class="${o.mode==='klassisch'?'on':''}" data-v="klassisch">Klassisch</button><button class="${o.mode==='schnell'?'on':''}" data-v="schnell">Schnell</button></div></div>
     <div class="opt"><div class="lbl">Straße &amp; General nur aus einem Wurf<small>sonst zählen sie auch mit rausgelegten Einsen</small></div><button class="tog ${o.handOnly?'on':''}" data-t="handOnly"></button></div>
-    <div class="opt"><div class="lbl">Zwei Sechsen → eine Eins<small>eine Sechs umdrehen, die andere mitwürfeln</small></div><button class="tog ${o.flipSix?'on':''}" data-t="flipSix"></button></div>`;
+    <div class="opt"><div class="lbl">Zwei Sechsen → eine Eins<small>eine Sechs umdrehen, die andere mitwürfeln</small></div><button class="tog ${o.flipSix?'on':''}" data-t="flipSix"></button></div>
+    <div class="opt"><div class="lbl">Finale: erster Wurf steht<small>nur in der ersten Finalrunde ein Wurf, danach normal</small></div><button class="tog ${o.finalFirst?'on':''}" data-t="finalFirst"></button></div>`;
   }
   h+=`<div class="opt optcol"><div class="lbl">Tisch</div><div class="boards">${BOARDS.map(([id,n])=>`<button class="bsw ${(o.board||'filz')===id?'on':''}" data-board="${id}"><span class="tbg b-${id}"></span><small>${n}</small></button>`).join('')}</div></div>`;
   h+=`<div class="opt"><div class="lbl">Ton</div><button class="tog ${o.sound?'on':''}" data-t="sound"></button></div>
@@ -3810,7 +3814,7 @@ function openRules(){
   <p><b>Runterspielen:</b> Ist der Topf leer, ist jeder ohne Deckel raus. Jetzt gibt der Spieler mit dem besten Wurf dem Verlierer entsprechend viele <i>eigene</i> Deckel. Wer keine mehr hat, ist ebenfalls raus.</p>
   <p>Wer am Ende alle 13 Deckel hat, verliert die Hälfte. Der Verlierer einer Runde fängt die nächste an.</p>
   <h3>Hälften &amp; Finale</h3>
-  <p>Es werden zwei Hälften gespielt. Verliert derselbe Spieler beide, hat er das Spiel verloren. Sonst spielen die beiden Hälften-Verlierer ein <b>Finale</b>. Im Modus „Schnell“ entscheidet eine einzige Partie.</p>
+  <p>Es werden zwei Hälften gespielt. Verliert derselbe Spieler beide, hat er das Spiel verloren. Sonst spielen die beiden Hälften-Verlierer ein <b>Finale</b>. Im Modus „Schnell“ entscheidet eine einzige Partie. Optional gilt zu Beginn des Finales: <b>Der erste Wurf steht</b> – in der ersten Finalrunde hat jeder nur einen Wurf, danach wird normal weitergespielt.</p>
   <h3>Bedienung</h3>
   <ul>
     <li><b>Handy schütteln</b> = Becher schütteln. Kurz stillhalten = Würfel fallen.</li>
@@ -4115,11 +4119,11 @@ function renderLobby(){
   $('#lbStart').style.display=host?'flex':'none';$('#lbStart').disabled=NET.lobby.length<2;
   $('#lbOptsHead').style.display=host?'flex':'none';
   const lo=$('#lbOpts');
-  if(host){lo.style.display='flex';if(lo.dataset.built!=='1'){lo.dataset.built='1';lo.innerHTML=optControlsHtml(S.opt,true);bindOptControls(lo,k=>{if(['mode','hidden','handOnly','flipSix'].includes(k)){lo.dataset.built='';hostBroadcast({t:'lobby',code:NET.code,lobby:NET.lobby,opt:S.opt});renderLobby()}})}}
+  if(host){lo.style.display='flex';if(lo.dataset.built!=='1'){lo.dataset.built='1';lo.innerHTML=optControlsHtml(S.opt,true);bindOptControls(lo,k=>{if(['mode','hidden','handOnly','flipSix','finalFirst'].includes(k)){lo.dataset.built='';hostBroadcast({t:'lobby',code:NET.code,lobby:NET.lobby,opt:S.opt});renderLobby()}})}}
   else{
     const o=NET.hostOpt||{};
     lo.style.display='flex';lo.dataset.built='';
-    lo.innerHTML=`<div class="opt"><div class="lbl">Regeln vom Host<small>${o.hidden?'Verdeckt':'Offen'} · ${o.mode==='schnell'?'Schnell':'Klassisch'} · ${o.handOnly?'Straße/General nur aus einem Wurf':'Straße/General auch zusammengesetzt'} · ${o.flipSix?'6-6 → 1 erlaubt':'kein 6-6 → 1'}</small></div></div>`+optControlsHtml(S.opt,false);
+    lo.innerHTML=`<div class="opt"><div class="lbl">Regeln vom Host<small>${o.hidden?'Verdeckt':'Offen'} · ${o.mode==='schnell'?'Schnell':'Klassisch'} · ${o.handOnly?'Straße/General nur aus einem Wurf':'Straße/General auch zusammengesetzt'} · ${o.flipSix?'6-6 → 1 erlaubt':'kein 6-6 → 1'}${o.finalFirst?' · Finale: 1. Wurf steht':''}</small></div></div>`+optControlsHtml(S.opt,false);
     bindOptControls(lo);
   }
 }
@@ -4256,6 +4260,24 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='s'||e.key==='Enter'){if(myTurn()&&canSeeCur()&&eCanStand())act({t:'stand'})}
 });
 document.addEventListener('click',function once(e){if(e.target&&e.target.tagName==='INPUT')return;if(!motion.listening||motion.denied)enableMotion();ac();if(motion.listening&&!motion.denied)document.removeEventListener('click',once,true)},true);
+
+/* ================= Cup sayings ("eingebrannt") ================= */
+const SAYINGS=['Doppel-Fünf verliert nicht!','Stehen­lassen!','Eins – zwei – drei, Schock dabei!','Lass mal stehen, kommen ja noch ein paar.','Das zahle ich nicht!','663, schöner Wurf. Reicht.','Der Schock kommt zum Schluss!','Schocken heißt das Spiel!','Schock aus – Deckel in die Mitte!','Das tut weh!','Wer schockt, gewinnt.','Nur die Harten schocken.','Einer geht noch!','Deckel her!','Glück ist auch Taktik.','Hoch die Becher!','Schock oder Schicht im Schacht.','Heute zahl ich nicht!','Der Becher lügt nie.','Drei Einsen, ein Gedicht.'];
+function pickSayings(n){const idx=SAYINGS.map((_,i)=>i);for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]]}return Array.from({length:n},(_,k)=>idx[k%idx.length])}
+function sayingFor(i){if(!G||!G.sayings||G.sayings[i]==null)return null;return SAYINGS[G.sayings[i]]}
+function wrapLines(t,max){const w=t.replace(/\u00ad/g,'').split(' ');const L=[];let cur='';for(const x of w){if(!cur)cur=x;else if((cur+' '+x).length<=max)cur+=' '+x;else{L.push(cur);cur=x}}if(cur)L.push(cur);return L}
+function setCupText(el,text){
+  el.querySelectorAll('.cupsay').forEach(g=>{
+    if(!text){g.innerHTML='';return}
+    let lines=wrapLines(text,10);let fs=14;
+    if(lines.length>3){lines=wrapLines(text,13);fs=11}
+    if(lines.length>4){lines=lines.slice(0,4)}
+    const lh=fs*1.18,y0=84-((lines.length-1)*lh)/2;
+    const ts=lines.map((l,k)=>`<tspan x="70" y="${(y0+k*lh).toFixed(1)}">${esc(l)}</tspan>`).join('');
+    g.innerHTML=`<text font-size="${fs}" fill="#f2c48e" opacity=".38" transform="translate(0 1)">${ts}</text><text font-size="${fs}" fill="#1a0b03" opacity=".92">${ts}</text>`;
+  });
+}
+function updateCupSaying(){if(G&&G.status==='turn')setCupText(cupEl,sayingFor(curIdx()));else setCupText(cupEl,null)}
 
 /* ================= Looks: dice skins, boards, figures, photos ================= */
 function svgUri(svg){return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`}
@@ -4467,7 +4489,7 @@ $('#chatBubble').addEventListener('click',()=>{hideChatBubble();openChat()});
 buildDice();applyBoard();
 if(JOIN_PARAM)S.tab='online';
 renderSetup();
-window.__schocken={sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
+window.__schocken={eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
 })();
 </script>
 </body>
