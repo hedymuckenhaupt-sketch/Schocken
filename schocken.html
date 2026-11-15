@@ -3064,7 +3064,14 @@ setInterval(()=>{
 /* ================= Wake lock ================= */
 let wakeLock=null;
 async function keepAwake(){try{if('wakeLock' in navigator&&!wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}}catch(e){}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('#setup').classList.contains('on'))keepAwake()});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  if(!$('#setup').classList.contains('on'))keepAwake();
+  try{
+    if(NET.mode==='guest'&&NET.tp){NET.lastHello=0;NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice})}
+    else if(NET.mode==='host'&&NET.tp){NET.tp.beacon&&NET.tp.beacon();if(G)hostBroadcast({t:'state',G})}
+  }catch(e){}
+});
 
 /* ================= Persistence ================= */
 function persist(){
@@ -3429,8 +3436,9 @@ function resetDiceVis(){
   if(c)applySkin(curP().dice);
   updateCupSaying();
   for(let i=0;i<3;i++){
-    if(!c||c.rolls===0||!vis)DV.state[i]='cup';
-    else if(c.kept[i])DV.state[i]='slot';
+    if(!c||c.rolls===0)DV.state[i]='cup';
+    else if(c.kept[i])DV.state[i]='slot';   // set-aside aces lie open on the table for everyone
+    else if(!vis)DV.state[i]='cup';
     else DV.state[i]='free';
   }
   if(c&&vis&&c.rolls>0){
@@ -3463,7 +3471,7 @@ function animateRoll(rolled,vis){
       if(['out','schock','general','strasse'].includes(ev.type)&&canSeeCur())celebrate(ev);
     },880);
   }else{
-    for(let i=0;i<3;i++)DV.state[i]='cup';applyAllDice(true);
+    for(let i=0;i<3;i++)if(!c.kept[i])DV.state[i]='cup';applyAllDice(true);
     cupEl.classList.remove('pour','off','shaking','idle','slam');placeCup('center');
     void cupEl.offsetWidth;cupEl.classList.add('slam');sfx.slam();
     schedule(()=>cupEl.classList.remove('slam'),520);
@@ -3475,7 +3483,7 @@ function viewFx(e){
   if(controls(e.p))return;
   if(e.on){
     V.fxShake=true;
-    for(let i=0;i<3;i++)if(!G.cur.kept[i]||!canSeeCur())DV.state[i]='cup';
+    for(let i=0;i<3;i++)if(!G.cur.kept[i])DV.state[i]='cup';
     applyAllDice(true);
     cupEl.classList.remove('off','idle','pour','slam');placeCup('center');cupEl.classList.add('shaking');
     clearInterval(V.fxRattle);V.fxRattle=setInterval(()=>sfx.rattle(true),110);
@@ -3507,6 +3515,10 @@ function viewUpdate(){
         if(c.kept[i]!==V.kept[i]){DV.state[i]=c.kept[i]?'slot':'free';if(!DV.free[i])DV.free[i]={fx:Math.random(),fy:Math.random()};setFace(i,true);keptChanged=true;if(!G.opt.hidden){sfx.tick();vib(8)}}
       }
       if(keptChanged)for(let i=0;i<3;i++)applyDie(i,true);
+    }else{
+      let ch=false;
+      for(let i=0;i<3;i++)if(c.kept[i]!==V.kept[i]){DV.state[i]=c.kept[i]?'slot':'cup';setFace(i,true);ch=true}
+      if(ch)for(let i=0;i<3;i++)applyDie(i,true);
     }
     V.kept=[...c.kept];V.dice=[...c.dice];V.vis=vis;
   }else{
@@ -3642,7 +3654,7 @@ function render(){
     tm.textContent=mine&&vis?(motion.ok?'Schütteln!':'Becher halten'):(!vis?(c.rolls?`${mine?'Du':p.name} · ${c.rolls}/${r.maxRolls} ${plural(c.rolls,'Wurf','Würfe')}`:`${mine?'':p.name+' ist dran'}`):'');
     for(let i=0;i<3;i++){
       const el=dieEls[i];
-      el.classList.toggle('kept',vis&&c.kept[i]&&DV.state[i]==='slot');
+      el.classList.toggle('kept',c.kept[i]&&DV.state[i]==='slot');
       el.classList.toggle('keepable',iAct&&eCanToggle(i)&&!c.kept[i]&&c.dice[i]===1);
     }
     cupEl.classList.toggle('idle',mine&&vis&&c.rolls===0&&!anim.shaking&&!anim.landing&&!anim.waiting);
@@ -3669,7 +3681,7 @@ function scrollStrip(){
 }
 function renderNetBar(){
   const nb=$('#netbar');
-  if(NET.mode==='guest'&&!hostOk()&&$('#game').classList.contains('on')){nb.textContent='Verbindung zum Host wird wiederhergestellt …';nb.classList.add('on')}
+  if(NET.mode==='guest'&&!hostOk()&&$('#game').classList.contains('on')){nb.textContent=NET.hadHost&&NET.connected?'Host nicht erreichbar – Übernahme läuft …':'Verbindung wird wiederhergestellt …';nb.classList.add('on')}
   else if(NET.mode==='host'&&!NET.connected&&!$('#setup').classList.contains('on')){nb.textContent='Verbinde mit dem Server …';nb.classList.add('on')}
   else nb.classList.remove('on');
 }
@@ -4096,6 +4108,7 @@ setInterval(()=>{
   if(sil<4000){if(now-NET.lastPing>3500){NET.tp.send({t:'ping',cid:CID});NET.lastPing=now}return}
   if(now-NET.lastHello>2000){NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice});NET.lastHello=now}
   if(!NET.hadHost&&now-NET.helloAt>8000)NET.status=netErrText({type:'nohost'});
+  if(NET.hadHost&&sil>9000)NET.status='Host gerade nicht erreichbar – gleich übernimmt ein Mitspieler …';
   // host gone during a running game -> the next player in line takes over
   if(NET.hadHost&&G&&G.status!=='gameEnd'){
     const r=takeoverRank();
@@ -4108,7 +4121,15 @@ setInterval(()=>{
 function guestJoin(code,name){
   leaveNet(true);
   if(NET.code!==code){NET.chat=[];NET.unread=0}
+  const rec=LS.get('schocken.guest',null);
   NET.mode='guest';NET.code=code;NET.myName=name;NET.lobby=[];G=null;NET.status='Verbinde …';NET.epoch=0;NET.hostCid=null;NET.hadHost=false;
+  if(rec&&rec.code===code&&rec.G&&rec.G.v===3&&rec.G.status!=='gameEnd'&&rec.G.players.some(p=>p.cid===CID)){
+    // rejoin a running game: continue from the last known state; if the host stays silent, we can take over
+    G=rec.G;NET.epoch=rec.ep||0;NET.hostCid=rec.hcid||null;NET.lobby=rec.lobby||[];NET.online=rec.online||{};
+    NET.hadHost=true;NET.hostSeen=Date.now();V.tkey=null;V.sheetKey=null;
+    LS.set('schocken.guest',Object.assign(rec,{name,t:Date.now()}));
+    showScreen('game');guestConnect();viewUpdate();return;
+  }
   LS.set('schocken.guest',{code,name,t:Date.now()});
   showScreen('lobby');guestConnect();
 }
@@ -4138,6 +4159,7 @@ function guestOnMsg(m){
   if(m.t==='lobby'){NET.lobby=m.lobby||[];NET.hostOpt=m.opt||{};NET.code=m.code||NET.code;if(!G){if(!$('#lobby').classList.contains('on'))showScreen('lobby');renderLobby()}}
   else if(m.t==='state'){
     G=m.G||null;
+    LS.set('schocken.guest',{code:NET.code,name:NET.myName,t:Date.now(),G:(G&&G.status!=='gameEnd')?G:null,ep:NET.epoch,hcid:NET.hostCid,lobby:NET.lobby,online:NET.online});
     if(!G){V.tkey=null;V.sheetKey=null;if(V.sheetKind==='status')closeSheet();showScreen('lobby');renderLobby();return}
     viewUpdate();
   }
