@@ -139,7 +139,7 @@ input{font:inherit;-webkit-user-select:text;user-select:text}
   transition:transform .85s cubic-bezier(.16,.92,.3,1.05),opacity .3s;will-change:transform}
 .die.quick{transition:transform .38s cubic-bezier(.3,.8,.3,1),opacity .25s}
 .die.gone{opacity:0;pointer-events:none}
-.die::before{content:'';position:absolute;left:6%;right:-10%;bottom:-14%;height:34%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.5),transparent);filter:blur(2px)}
+.die .shd{position:absolute;left:4%;right:-12%;bottom:-16%;height:38%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.55),transparent);filter:blur(2px);transform-origin:50% 50%;pointer-events:none}
 .die .ring{position:absolute;inset:-7px;border-radius:26%;border:3px solid transparent;transition:border-color .2s,box-shadow .2s}
 .die.keepable .ring{border-color:rgba(230,171,62,.75);animation:pulse 1.3s ease-in-out infinite}
 .die.kept .ring{border-color:var(--brass);box-shadow:0 0 16px rgba(230,171,62,.65)}
@@ -537,6 +537,17 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
 .mdice.hd i.lk{box-shadow:0 0 0 2px #d9a531}
 .ht{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:1px 5px;border-radius:5px;margin-left:auto}
 .ht.win{background:#2a9d4f;color:#fff}.ht.lose{background:#c3271c;color:#fff}
+
+/* no CSS transitions while a throw animation runs */
+.die.thr,.die.thr .cube{transition:none!important}
+
+
+.cube .core{position:absolute;inset:3%;border-radius:12%;background:var(--fbg,#e9dfc6);filter:brightness(.82)}
+.cube .core.cx{transform:rotateX(90deg)}.cube .core.cy{transform:rotateY(90deg)}
+/* real 3D dice (WebGL) – the CSS cubes stay as invisible proxies for layout, taps and animation */
+#d3{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+.table.gl3d .die .cube{opacity:0}
+.table.gl3d .die .shd{display:none}
 </style>
 </head>
 <body>
@@ -3027,6 +3038,7 @@ const ICON_HUM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 /* ================= Helpers ================= */
 function d6(){const a=new Uint32Array(1);let x;do{crypto.getRandomValues(a);x=a[0]}while(x>=4294967292);return x%6+1}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const D3={ok:false,skin:'weiss',dirty:true,key:''};
 let timers=[];
 function schedule(fn,ms){const id=setTimeout(()=>{timers=timers.filter(t=>t!==id);fn()},Math.max(0,ms));timers.push(id);return id}
 function clearTimers(){timers.forEach(clearTimeout);timers=[]}
@@ -3522,15 +3534,19 @@ const DV={state:['cup','cup','cup'],free:[null,null,null],k:[[0,0],[0,0],[0,0]],
 function buildDice(){
   dieEls.forEach((el,i)=>{
     const cube=el.querySelector('.cube');let h='';
+    h+='<i class="core cx"></i><i class="core cy"></i><i class="core cz"></i>';
     for(let v=1;v<=6;v++)h+=`<div class="face v${v}" data-v="${v}">`+PIPS[v].map(p=>`<span class="pip" style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('')+'</div>';
     cube.innerHTML=h;
+    if(!el.querySelector('.shd')){const sh=document.createElement('i');sh.className='shd';el.insertBefore(sh,el.firstChild)}
     el.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();toggleKeep(i)});
   });
   sizeFaces();
 }
 function sizeFaces(){
   const ds=dieEls[0].offsetWidth||60;
-  dieEls.forEach(el=>el.querySelectorAll('.face').forEach(f=>{f.style.transform=FACE_T[f.dataset.v].replace('H',(ds/2)+'px')}));
+  dieEls.forEach(el=>{
+    el.querySelectorAll('.face').forEach(f=>{f.style.transform=FACE_T[f.dataset.v].replace('H',(ds/2)+'px')});
+  });
 }
 function dims(){const W=tableEl.clientWidth,H=tableEl.clientHeight,ds=dieEls[0].offsetWidth||60;return{W,H,ds,abH:ds+40}}
 const SLOT_SC=.8;
@@ -3571,7 +3587,7 @@ function setFace(i,quick,v){
   const cube=dieEls[i].querySelector('.cube');
   dieEls[i].classList.toggle('quick',!!quick);
   const flat=DV.state[i]==='slot';
-  cube.style.transform=`rotateX(${flat?0:-15}deg) rotateY(${flat?0:15}deg) rotateX(${k[0]*360+r[0]}deg) rotateY(${k[1]*360+r[1]}deg)`;
+  cube.style.transform=`rotateX(${flat?0:-9}deg) rotateY(${flat?0:9}deg) rotateX(${k[0]*360+r[0]}deg) rotateY(${k[1]*360+r[1]}deg)`;
 }
 function scatter(rolled){
   const{W,H,ds,abH}=dims();
@@ -3594,7 +3610,56 @@ function scatter(rolled){
     DV.k[i][0]+=1+Math.floor(Math.random()*2);DV.k[i][1]+=1+Math.floor(Math.random()*2);
     DV.state[i]='free';
   }
-  requestAnimationFrame(()=>{for(const i of rolled){applyDie(i,false);setFace(i,false)}});
+  // real 3D dice: physics simulation; otherwise the keyframed CSS throw
+  if(D3.ok&&D3.throwDice){DV.throwMs=D3.throwDice(rolled);return}
+  DV.throwMs=THROW_MS+rolled.length*70-60;
+  requestAnimationFrame(()=>{rolled.forEach((i,n)=>throwDie(i,n))});
+}
+/* A real-looking throw: out of the cup, arc through the air, 2-3 bounces with tumbling, short roll and a little rock at the end */
+const THROW_MS=1150;
+function throwDie(i,n){
+  const el=dieEls[i],cube=el.querySelector('.cube'),sh=el.querySelector('.shd');
+  if(!el.animate){applyDie(i,false);setFace(i,false);return}
+  const{ds}=dims(),c=cupCenterPos(),g=cupGeom();
+  // start: mouth of the tilted cup (it pours to the left/up)
+  const sx=c.x+g.cw*.30-ds/2,sy=c.y+g.ch*.30-ds/2;
+  const e=freePosPx(i),rzF=DV.rz[i];
+  // final resting pose (no transitions – the animation does the work)
+  [el,cube,sh].forEach(x=>{if(x&&x.getAnimations)x.getAnimations().filter(a=>!(a instanceof CSSAnimation)&&!(a instanceof CSSTransition)).forEach(a=>{a.oncancel=null;a.onfinish=null;a.cancel()})});
+  el.classList.add('thr');applyDie(i,true);setFace(i,true);
+  const dx=e.x-sx,dy=e.y-sy,dist=Math.hypot(dx,dy)||1;
+  const nx=-dy/dist,ny=dx/dist,curve=(Math.random()*.5-.25)*Math.min(90,dist*.35);
+  const spin=(Math.random()<.5?-1:1)*(240+Math.random()*300);
+  const r=ROT[DV.face[i]],k=DV.k[i];
+  const XF=k[0]*360+r[0],YF=k[1]*360+r[1];
+  const tx=(Math.random()<.5?-1:1)*360*(2+Math.floor(Math.random()*2)),ty=(Math.random()<.5?-1:1)*360*(1+Math.floor(Math.random()*2));
+  const tz=(Math.random()*240-120);
+  const big=Math.random()<.5; // two or three bounces
+  // [time, progress along path, height]
+  const P=big?[[0,0,.55],[.17,.30,1],[.36,.58,0],[.48,.75,.38],[.60,.88,0],[.69,.95,.12],[.78,.985,0],[.9,1,0],[1,1,0]]
+             :[[0,0,.55],[.20,.36,1],[.42,.70,0],[.55,.88,.3],[.68,.97,0],[.86,1,0],[1,1,0]];
+  const rockAt=P.length-2;
+  const ease=(j)=>j===P.length-1?'linear':P[j+1][2]>P[j][2]?'cubic-bezier(.25,.6,.4,1)':P[j][2]>0&&P[j+1][2]===0?'cubic-bezier(.55,0,.85,.45)':'cubic-bezier(.2,.7,.3,1)';
+  const outer=[],inner=[],shadow=[];
+  P.forEach(([t,q,h],j)=>{
+    const w=Math.sin(Math.PI*q)*curve;
+    const x=sx+dx*q+nx*w,y=sy+dy*q+ny*w;
+    const lift=h*ds*.9,scl=1+h*.32;
+    const decay=Math.pow(1-q,1.6);
+    const rz=rzF+spin*decay;
+    const rock=j===rockAt?(Math.random()<.5?-7:7):0;
+    outer.push({offset:t,easing:ease(j),opacity:t===0?0:1,transform:`translate(${x.toFixed(1)}px,${(y-lift).toFixed(1)}px) rotate(${rz.toFixed(1)}deg) scale(${scl.toFixed(3)})`});
+    inner.push({offset:t,easing:ease(j),transform:`rotateX(-9deg) rotateY(9deg) rotateX(${(XF-tx*decay+rock).toFixed(1)}deg) rotateY(${(YF-ty*decay).toFixed(1)}deg) rotateZ(${(tz*decay).toFixed(1)}deg)`});
+    shadow.push({offset:t,easing:ease(j),transform:`translateY(${(lift/scl).toFixed(1)}px) scale(${(1-h*.45).toFixed(3)})`,opacity:(t===0?0:.95-h*.6).toFixed(2)});
+  });
+  outer[1].opacity=1;
+  const dur=delay(THROW_MS),del=delay(n*70);
+  const o={duration:dur,delay:del,fill:'backwards'};
+  const a1=el.animate(outer,o);cube.animate(inner,o);if(sh)sh.animate(shadow,o);
+  // bounce clicks (on the device that can see the throw)
+  P.forEach(([t,,h],j)=>{if(j>0&&h===0&&P[j-1][2]>0){const vol=j<4?.5:j<6?.3:.16;schedule(()=>clack(0,{freq:2200+Math.random()*1600,q:6,vol,dur:.035}),del+t*dur)}});
+  a1.onfinish=()=>el.classList.remove('thr');
+  a1.oncancel=()=>el.classList.remove('thr');
 }
 function resetDiceVis(){
   const c=G&&G.status==='turn'?G.cur:null;const vis=canSeeCur();
@@ -3628,13 +3693,13 @@ function animateRoll(rolled,vis){
     applyAllDice(true);
     void cupEl.offsetWidth;cupEl.classList.add('pour');
     scatter(rolled);
-    sfx.land(G.opt.hidden?3:rolled.length);vib([22,40,14,30,10]);
+    if(!D3.ok){thud(.05,.3);setTimeout(()=>vib([22,40,14,30,10]),delay(380))}
     schedule(()=>placeCup('corner'),delay(420));
     schedule(()=>{
       anim.landing=false;cupEl.classList.remove('pour');render();
       const ev=evaluate(G.cur.dice,G.cur.lastAll);
       if(['out','schock','general','strasse'].includes(ev.type)&&canSeeCur())celebrate(ev);
-    },delay(880));
+    },DV.throwMs||delay(THROW_MS));
   }else{
     for(let i=0;i<3;i++)if(!c.kept[i])DV.state[i]='cup';applyAllDice(true);
     cupEl.classList.remove('pour','off','shaking','idle','slam');placeCup('center');
@@ -4640,7 +4705,7 @@ const FLAGS={
   eu:{n:'Europa',s:`<rect width='60' height='60' fill='#003399'/>${Array.from({length:12},(_,k)=>{const a=k*Math.PI/6;return `<circle cx='${(30+19*Math.cos(a)).toFixed(1)}' cy='${(30+19*Math.sin(a)).toFixed(1)}' r='2.4' fill='#ffcc00'/>`}).join('')}`,p:'light'}
 };
 const COLOR_SKINS=[
-  ['weiss','Klassisch','#fffdf6','#ddd2b8','#120d09','#c3271c'],
+  ['weiss','Klassisch','#fbf6ea','#d8cdb4','#0e0d0c','#c3271c'],
   ['elfenbein','Elfenbein','#fff6df','#e2cfa3','#5a3518','#a3221a'],
   ['schwarz','Schwarz','#4a4a4a','#111111','#f4f4f4','#ff5a4a'],
   ['rot','Casino-Rot','#ef5246','#94170f','#ffffff','#ffffff'],
@@ -4672,7 +4737,7 @@ function skinVars(id){
 }
 function skinStyle(id){const v=skinVars(id);return `--fbg:${v.fbg};--pip:${v.pip};--ace:${v.ace};--ring:${v.ring}`.replace(/"/g,'&quot;')}
 function skinName(id){if(!id)return 'Klassisch';if(id.startsWith('c:'))return 'Eigene Farbe';if(id.startsWith('f:'))return (FLAGS[id.slice(2)]||{}).n||'Flagge';const s=COLOR_SKINS.find(x=>x[0]===id);return s?s[1]:'Klassisch'}
-function applySkin(id){const v=skinVars(id);dieEls.forEach(el=>{el.style.setProperty('--fbg',v.fbg);el.style.setProperty('--pip',v.pip);el.style.setProperty('--ace',v.ace);el.style.setProperty('--ring',v.ring)})}
+function applySkin(id){D3.skin=id||'weiss';D3.dirty=true;const v=skinVars(id);dieEls.forEach(el=>{el.style.setProperty('--fbg',v.fbg);el.style.setProperty('--pip',v.pip);el.style.setProperty('--ace',v.ace);el.style.setProperty('--ring',v.ring)})}
 function randomSkin(){const all=COLOR_SKINS.map(s=>s[0]).concat(Object.keys(FLAGS).map(k=>'f:'+k));return all[Math.floor(Math.random()*all.length)]}
 const BOARDS=[['filz','Filz grün'],['blau','Filz blau'],['rot','Filz rot'],['holz','Holztisch'],['marmor','Marmor'],['schiefer','Schiefer'],['tresen','Kneipentresen']];
 function applyBoard(){
@@ -4902,6 +4967,364 @@ buildDice();applyBoard();
 if(JOIN_PARAM)S.tab='online';
 renderSetup();
 window.__schocken={loserShow,becomeHost,eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
+/* ================= 3D-Würfel (WebGL) =================
+   Kleines eigenes 3D-Modell: abgerundeter Würfelkörper, eingelassene Augen, Licht + Glanz.
+   Die CSS-Würfel bleiben als unsichtbare Platzhalter (Position, Animation, Antippen) –
+   der Renderer liest jedes Bild deren aktuelle Lage und zeichnet das 3D-Modell genau dort. */
+
+(function(){
+  const table=document.getElementById('table');if(!table)return;
+  const cv=document.createElement('canvas');cv.id='d3';
+  let gl=null;
+  try{gl=cv.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:true})||cv.getContext('experimental-webgl')}catch(e){}
+  if(!gl)return;
+  table.insertBefore(cv,table.querySelector('.die'));
+
+  /* ---- mesh: rounded box, every face a fine grid ---- */
+  const FACES=[ // value, normal, u-axis, w-axis   (CSS coords: x right, y down, z towards viewer)
+    [1,[0,0,1],[1,0,0],[0,1,0]],[6,[0,0,-1],[-1,0,0],[0,1,0]],
+    [3,[1,0,0],[0,0,-1],[0,1,0]],[4,[-1,0,0],[0,0,1],[0,1,0]],
+    [2,[0,-1,0],[1,0,0],[0,0,1]],[5,[0,1,0],[1,0,0],[0,0,-1]]];
+  const N=26,RAD=.3,IN=1-RAD;
+  const P=[],NO=[],T=[],B=[],UV=[],F=[],IDX=[];
+  const cl=v=>Math.max(-IN,Math.min(IN,v));
+  // denser grid towards the rounded edges
+  const g=k=>{const t=k/N*2-1;return Math.sign(t)*Math.pow(Math.abs(t),.8)};
+  FACES.forEach(([v,n,t,b])=>{
+    const base=P.length/3;
+    for(let j=0;j<=N;j++)for(let i=0;i<=N;i++){
+      const u=g(i),w=g(j);
+      const q=[n[0]+u*t[0]+w*b[0],n[1]+u*t[1]+w*b[1],n[2]+u*t[2]+w*b[2]];
+      const c=[cl(q[0]),cl(q[1]),cl(q[2])];const d=[q[0]-c[0],q[1]-c[1],q[2]-c[2]];
+      const L=Math.hypot(d[0],d[1],d[2])||1;const nn=[d[0]/L,d[1]/L,d[2]/L];
+      P.push(c[0]+nn[0]*RAD,c[1]+nn[1]*RAD,c[2]+nn[2]*RAD);NO.push(...nn);T.push(...t);B.push(...b);UV.push(u,w);F.push(v);
+    }
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){const a=base+j*(N+1)+i;IDX.push(a,a+1,a+N+1,a+1,a+N+2,a+N+1)}
+  });
+
+  const VS=`attribute vec3 aP,aN,aT,aB;attribute vec2 aUV;attribute float aF;
+uniform mat4 uM,uProj;uniform mat3 uNM;
+varying vec3 vN,vT,vB;varying vec2 vUV;varying float vF;
+void main(){vN=uNM*aN;vT=uNM*aT;vB=uNM*aB;vUV=aUV;vF=aF;gl_Position=uProj*uM*vec4(aP,1.0);}`;
+  const FS=`precision mediump float;
+varying vec3 vN,vT,vB;varying vec2 vUV;varying float vF;
+uniform vec3 uBody,uPip,uAce;uniform float uAlpha,uTex;uniform sampler2D uS;
+float best;vec2 bc;
+void tp(vec2 c){float d=distance(vUV,c);if(d<best){best=d;bc=c;}}
+void main(){
+  float v=floor(vF+0.5);float s=0.47;best=10.0;bc=vec2(0.0);
+  if(mod(v,2.0)>0.5)tp(vec2(0.0));
+  if(v>1.5){tp(vec2(s,-s));tp(vec2(-s,s));}
+  if(v>3.5){tp(vec2(-s,-s));tp(vec2(s,s));}
+  if(v>5.5){tp(vec2(-s,0.0));tp(vec2(s,0.0));}
+  float R=v<1.5?0.26:0.175;
+  vec3 N=normalize(vN);
+  vec3 body=uTex>0.5?texture2D(uS,vUV*0.5+0.5).rgb:uBody;
+  vec3 base=body;float shin=38.0;float spk=0.28;float ao=1.0;
+  float inPip=0.0;
+  if(best<R+0.025){
+    vec2 o=(vUV-bc)/R;float r2=dot(o,o);
+    inPip=1.0-smoothstep(R-0.02,R+0.01,best);
+    // spherical dent: normal tilts towards the centre of the pip
+    vec3 dn=normalize(N*1.0+(normalize(vT)*o.x+normalize(vB)*o.y)*0.95*min(1.0,r2+0.15));
+    N=normalize(mix(N,dn,inPip));
+    vec3 pc=v<1.5?uAce:uPip;
+    base=mix(body,pc,inPip);shin=mix(38.0,90.0,inPip);spk=mix(0.28,0.85,inPip);
+    ao=mix(1.0,0.55+0.45*r2,inPip);
+  }
+  vec3 L=normalize(vec3(-0.32,-0.5,1.0));vec3 V=vec3(0.0,0.0,1.0);vec3 H=normalize(L+V);
+  float dif=max(dot(N,L),0.0);
+  float hemi=0.5+0.5*dot(N,vec3(0.0,-1.0,0.25));
+  float sp=pow(max(dot(N,H),0.0),shin)*spk;
+  float rim=pow(1.0-max(dot(N,V),0.0),3.0)*0.18;
+  vec3 col=base*(0.34+0.16*hemi+0.66*dif)*ao+vec3(sp)+vec3(rim);
+  gl_FragColor=vec4(col*uAlpha,uAlpha);
+}`;
+  function sh(t,src){const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.warn(gl.getShaderInfoLog(s));return null}return s}
+  const vs=sh(gl.VERTEX_SHADER,VS),fs=sh(gl.FRAGMENT_SHADER,FS);if(!vs||!fs)return;
+  const pr=gl.createProgram();gl.attachShader(pr,vs);gl.attachShader(pr,fs);gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS))return;
+  gl.useProgram(pr);
+  const BUFS=[];function buf(arr,name,size){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.STATIC_DRAW);const l=gl.getAttribLocation(pr,name);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,size,gl.FLOAT,false,0,0);BUFS.push([b,l,size])}
+  buf(P,'aP',3);buf(NO,'aN',3);buf(T,'aT',3);buf(B,'aB',3);buf(UV,'aUV',2);buf(F,'aF',1);
+  const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(IDX),gl.STATIC_DRAW);
+  const U={};['uM','uProj','uNM','uBody','uPip','uAce','uAlpha','uTex','uS'].forEach(n=>U[n]=gl.getUniformLocation(pr,n));
+  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+  const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.uniform1i(U.uS,0);
+
+
+  /* ---- soft contact shadows (drawn under the dice) ---- */
+  const SVS=`attribute vec2 aQ;uniform vec4 uC;uniform vec2 uWH;varying vec2 vQ;void main(){vQ=aQ;vec2 p=uC.xy+aQ*uC.z;gl_Position=vec4(p.x/uWH.x*2.0-1.0,1.0-p.y/uWH.y*2.0,0.99,1.0);}`;
+  const SFS=`precision mediump float;varying vec2 vQ;uniform float uA;void main(){float d=length(vQ);float a=uA*smoothstep(1.0,0.15,d);gl_FragColor=vec4(0.0,0.0,0.0,a);}`;
+  const svs=sh(gl.VERTEX_SHADER,SVS),sfs=sh(gl.FRAGMENT_SHADER,SFS);const spr=gl.createProgram();gl.attachShader(spr,svs);gl.attachShader(spr,sfs);gl.linkProgram(spr);
+  const qb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,qb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const sU={C:gl.getUniformLocation(spr,'uC'),WH:gl.getUniformLocation(spr,'uWH'),A:gl.getUniformLocation(spr,'uA')},sQ=gl.getAttribLocation(spr,'aQ');
+  // remember the main program's vertex setup so we can switch back
+  const mainBufs=[];
+
+  /* ---- skins ---- */
+  const rgb=h=>{const n=parseInt(String(h).replace('#','').slice(0,6),16);return[((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255]};
+  let texFor=null;
+  function skinGL(id){
+    id=id||'weiss';
+    if(id.startsWith('c:')){const c=id.slice(2),light=hexLum(c)>.58;return{body:rgb(c),pip:rgb(light?'#16110c':'#ffffff'),ace:rgb(light?'#c3271c':'#ffd54a')}}
+    if(id.startsWith('f:')){const f=FLAGS[id.slice(2)]||FLAGS.de,dark=f.p==='dark';return{body:[1,1,1],pip:rgb(dark?'#15100c':'#ffffff'),ace:rgb(dark?'#15100c':'#ffffff'),flag:f}}
+    const s=COLOR_SKINS.find(x=>x[0]===id)||COLOR_SKINS[0];
+    return{body:rgb(s[2]).map((x,i)=>x*.93+rgb(s[3])[i]*.07),pip:rgb(s[4]),ace:rgb(s[5])};
+  }
+  function loadFlag(f,id){
+    const img=new Image();
+    img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.drawImage(img,0,0,128,128);
+      if(D3.skin!==id)return;gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);texFor=id;D3.dirty=true};
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSvg(f.s).replace("preserveAspectRatio='xMidYMid slice'","preserveAspectRatio='none'"));
+  }
+
+  /* ---- matrices ---- */
+  const num=s=>(s.slice(s.indexOf('(')+1).match(/-?[\d.]+(e-?\d+)?/g)||[]).map(Number);
+  function m2(str){if(!str||str==='none')return[1,0,0,1,0,0];const a=num(str);if(str.startsWith('matrix3d'))return[a[0],a[1],a[4],a[5],a[12],a[13]];return a}
+  function m3(str){if(!str||str==='none')return[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];const a=num(str);if(str.startsWith('matrix3d'))return a;return[a[0],a[1],0,0,a[2],a[3],0,0,0,0,1,0,a[4],a[5],0,1]}
+  function mul(a,b){const o=new Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+r]*b[c*4+k];o[c*4+r]=s}return o}
+
+
+  /* ---- tiny rigid-body physics for one die on the table plane ---- */
+  const qmul=(a,b)=>[a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3],a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2],a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1],a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]];
+  const qn=q=>{const l=Math.hypot(q[0],q[1],q[2],q[3])||1;return[q[0]/l,q[1]/l,q[2]/l,q[3]/l]};
+  const qm3=q=>{const[w,x,y,z]=q;return[1-2*(y*y+z*z),2*(x*y+w*z),2*(x*z-w*y), 2*(x*y-w*z),1-2*(x*x+z*z),2*(y*z+w*x), 2*(x*z+w*y),2*(y*z-w*x),1-2*(x*x+y*y)]}; // column-major 3x3
+  const mv=(m,v)=>[m[0]*v[0]+m[3]*v[1]+m[6]*v[2],m[1]*v[0]+m[4]*v[1]+m[7]*v[2],m[2]*v[0]+m[5]*v[1]+m[8]*v[2]];
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const qaxis=(ax,an)=>{const s=Math.sin(an/2),l=Math.hypot(...ax)||1;return[Math.cos(an/2),ax[0]/l*s,ax[1]/l*s,ax[2]/l*s]};
+  const m3mul=(a,b)=>{const o=new Array(9);for(let c=0;c<3;c++)for(let r=0;r<3;r++)o[c*3+r]=a[r]*b[c*3]+a[3+r]*b[c*3+1]+a[6+r]*b[c*3+2];return o};
+  const m3t=a=>[a[0],a[3],a[6],a[1],a[4],a[7],a[2],a[5],a[8]];
+  // contact points of the rounded body (corner .873, edge .912, face 1.0 – matches the mesh)
+  const CP=[];
+  for(const x of[-1,1])for(const y of[-1,1])for(const z of[-1,1])CP.push([x*.873,y*.873,z*.873]);
+  for(const a of[-1,1])for(const b of[-1,1]){CP.push([a*.912,b*.912,0]);CP.push([a*.912,0,b*.912]);CP.push([0,a*.912,b*.912])}
+  for(const a of[-1,1]){CP.push([a,0,0]);CP.push([0,a,0]);CP.push([0,0,a])}
+  // joint simulation of all thrown dice: table contacts, walls, dice bumping into each other
+  function simulateAll(dice,h,bounds,obst){
+    const dt=1/240,g=2400,I=(4*h*h)/6,R2=h*1.86;
+    dice.forEach(d=>{d.p=d.start.slice();d.v=d.vel.slice();d.q=qn([Math.random()-.5,Math.random()-.5,Math.random()-.5,Math.random()-.5]);
+      const ra=cross([0,0,1],[d.v[0],d.v[1],0]),sp=Math.hypot(d.v[0],d.v[1])||1;
+      d.w=[ra[0]/sp*(sp/h)*.5+(Math.random()-.5)*18,ra[1]/sp*(sp/h)*.5+(Math.random()-.5)*18,(Math.random()-.5)*16];
+      d.FR=[];d.EV=[];d.rest=0;d.done=false;d.lastHit=-1});
+    let step=0;const maxSteps=240*3.4;
+    for(;step<maxSteps;step++){
+      const t=step*dt;
+      for(const d of dice){
+        if(t<d.delay||d.done){continue}
+        let{p,v,q,w}=d;
+        v[2]-=g*dt;p[0]+=v[0]*dt;p[1]+=v[1]*dt;p[2]+=v[2]*dt;
+        q=qn(qmul([0,w[0]*dt*.5,w[1]*dt*.5,w[2]*dt*.5],q).map((x,k)=>x+q[k]));
+        const R=qm3(q);let minz=0,touch=false;
+        for(let it=0;it<3;it++)for(const c of CP){
+          const r=mv(R,[c[0]*h,c[1]*h,c[2]*h]);const z=p[2]+r[2];
+          if(z>=0)continue;touch=true;if(z<minz)minz=z;
+          const vp=[v[0]+w[1]*r[2]-w[2]*r[1],v[1]+w[2]*r[0]-w[0]*r[2],v[2]+w[0]*r[1]-w[1]*r[0]];
+          if(vp[2]>=0)continue;
+          const rn=cross(r,[0,0,1]);const kn=1+(rn[0]*rn[0]+rn[1]*rn[1])/I;
+          const e=vp[2]<-90?.5:vp[2]<-40?.2:0;
+          const jn=-(1+e)*vp[2]/kn;
+          if(vp[2]<-140&&t-d.lastHit>.06){d.EV.push([t,Math.min(1,-vp[2]/900)]);d.lastHit=t}
+          v[2]+=jn;const dw=cross(r,[0,0,jn]);w=[w[0]+dw[0]/I,w[1]+dw[1]/I,w[2]+dw[2]/I];
+          const vp2=[v[0]+w[1]*r[2]-w[2]*r[1],v[1]+w[2]*r[0]-w[0]*r[2],0];const vt=Math.hypot(vp2[0],vp2[1]);
+          if(vt>1e-4){
+            const tt=[vp2[0]/vt,vp2[1]/vt,0];const rt=cross(r,tt);const kt=1+(rt[0]*rt[0]+rt[1]*rt[1]+rt[2]*rt[2])/I;
+            const jt=Math.min(vt/kt,.5*jn);
+            v[0]-=tt[0]*jt;v[1]-=tt[1]*jt;const dw2=cross(r,[-tt[0]*jt,-tt[1]*jt,0]);w=[w[0]+dw2[0]/I,w[1]+dw2[1]/I,w[2]+dw2[2]/I];
+          }
+        }
+        if(minz<0)p[2]-=minz;
+        // table rim
+        for(const[k,lo,hi]of[[0,bounds[0],bounds[1]],[1,bounds[2],bounds[3]]]){
+          if(p[k]<lo){p[k]=lo;if(v[k]<0){v[k]=-v[k]*.45;w=w.map(x=>x*.8)}}
+          if(p[k]>hi){p[k]=hi;if(v[k]>0){v[k]=-v[k]*.45;w=w.map(x=>x*.8)}}
+        }
+        const ad=touch?Math.exp(-2.2*dt):Math.exp(-.15*dt);w=w.map(x=>x*ad);
+        if(touch){const ld=Math.exp(-.9*dt);v[0]*=ld;v[1]*=ld}
+        d.p=p;d.v=v;d.q=q;d.w=w;d.touch=touch;
+      }
+      // dice bump into each other and into dice already lying on the table
+      const act=dice.filter(d=>t>=d.delay);
+      for(let a=0;a<act.length;a++){
+        const A=act[a];
+        for(let b=a+1;b<act.length;b++){
+          const B=act[b];const n=[B.p[0]-A.p[0],B.p[1]-A.p[1],B.p[2]-A.p[2]];const dist=Math.hypot(...n);
+          if(dist>=R2||dist<1e-3)continue;n[0]/=dist;n[1]/=dist;n[2]/=dist;
+          const pen=(R2-dist)/2;for(let k=0;k<3;k++){A.p[k]-=n[k]*pen;B.p[k]+=n[k]*pen}
+          A.p[2]=Math.max(A.p[2],h*.95);B.p[2]=Math.max(B.p[2],h*.95);
+          const vr=(B.v[0]-A.v[0])*n[0]+(B.v[1]-A.v[1])*n[1]+(B.v[2]-A.v[2])*n[2];
+          if(vr<0){const j=-(1.45)*vr/2;for(let k=0;k<3;k++){A.v[k]-=j*n[k];B.v[k]+=j*n[k]}
+            A.w=A.w.map(x=>x+(Math.random()-.5)*j*.06);B.w=B.w.map(x=>x+(Math.random()-.5)*j*.06);A.done=B.done=false;A.rest=B.rest=0;
+            if(-vr>120){A.EV.push([t,Math.min(.8,-vr/900)])}}
+        }
+        for(const o of obst){
+          const n=[A.p[0]-o[0],A.p[1]-o[1],0];const dist=Math.hypot(n[0],n[1]);
+          if(dist>=R2||dist<1e-3)continue;n[0]/=dist;n[1]/=dist;
+          A.p[0]+=n[0]*(R2-dist);A.p[1]+=n[1]*(R2-dist);
+          const vr=A.v[0]*n[0]+A.v[1]*n[1];if(vr<0){A.v[0]-=1.4*vr*n[0];A.v[1]-=1.4*vr*n[1]}
+        }
+      }
+      let all=true;
+      for(const d of dice){
+        if(t<d.delay){d.FR.push(d.start[0],d.start[1],d.start[2],d.q[0],d.q[1],d.q[2],d.q[3]);all=false;continue}
+        if(!d.done){const spd=Math.hypot(...d.v),ang=Math.hypot(...d.w);
+          if(d.touch&&spd<14&&ang<.9)d.rest+=dt;else d.rest=0;
+          if(d.rest>.12&&t-d.delay>.4){d.done=true;d.end=t}}
+        if(!d.done)all=false;
+        d.FR.push(d.p[0],d.p[1],d.p[2],d.q[0],d.q[1],d.q[2],d.q[3]);
+      }
+      if(all)break;
+    }
+    dice.forEach(d=>{if(!d.done)d.end=step*dt;d.n=Math.round(d.end/dt)+1;d.FR=d.FR.slice(0,d.n*7)});
+    return dt;
+  }
+  // nearest face-up orientation (keeps the heading)
+  function snapUp(q){
+    const R=qm3(q);const axes=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    let best=null,bz=-2;for(const a of axes){const wv=mv(R,a);if(wv[2]>bz){bz=wv[2];best={a,wv}}}
+    const ax=cross(best.wv,[0,0,1]);const sn=Math.hypot(...ax);const an=Math.atan2(sn,best.wv[2]);
+    return{q:sn<1e-6?q:qn(qmul(qaxis(ax,an),q)),up:best.a};
+  }
+  const NV={1:[0,0,1],6:[0,0,-1],3:[1,0,0],4:[-1,0,0],2:[0,-1,0],5:[0,1,0]};
+  function rotTo(a,b){ // cube symmetry turning body axis a onto b
+    const d=a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+    if(d>.5)return[1,0,0,0,1,0,0,0,1];
+    let ax,an;if(d<-.5){ax=Math.abs(a[0])<.5?[1,0,0]:[0,1,0];an=Math.PI}else{ax=cross(a,b);an=Math.PI/2}
+    return qm3(qaxis(ax,an)).map(x=>Math.round(x));
+  }
+  D3.tracks=[null,null,null];
+  D3.throwDice=function(rolled){
+    const{W:TW,H:TH,ds,abH}=dims(),c=cupCenterPos(),gm=cupGeom();
+    const h=ds/2*.97,now=performance.now(),tf=TF();
+    const bounds=[12+ds/2,TW-12-ds/2,12+ds/2,TH-abH-6-ds/2];
+    const obst=[0,1,2].filter(i=>!rolled.includes(i)&&DV.state[i]==='free').map(i=>{const p=freePosPx(i);return[p.x+ds/2,p.y+ds/2]});
+    const mouth=[c.x+gm.cw*.3,c.y+gm.ch*.3];
+    const dice=rolled.map((i,n)=>{
+      const p=freePosPx(i),tgt=[p.x+ds/2,p.y+ds/2];
+      const ang=Math.atan2(tgt[1]-mouth[1],tgt[0]-mouth[0]);
+      const st=[mouth[0]+Math.cos(ang)*ds*.45+(Math.random()-.5)*ds*.3,mouth[1]+Math.sin(ang)*ds*.45+(Math.random()-.5)*ds*.3,h+ds*(1.35+n*.18)];
+      const dx=tgt[0]-st[0],dy=tgt[1]-st[1],D=Math.hypot(dx,dy)||1,sp=D*1.05+60;
+      return{i,start:st,vel:[dx/D*sp,dy/D*sp,120+Math.random()*80],delay:n*.065};
+    });
+    const dt=simulateAll(dice,h,bounds,obst);
+    let maxEnd=0;
+    dice.forEach(d=>{
+      const i=d.i,el=dieEls[i],cube=el.querySelector('.cube'),f=d.FR,e=(d.n-1)*7;
+      // the die stays where the physics put it (pushed out of the cup corner if needed)
+      let fx=f[e],fy=f[e+1];const cr=cupCornerRect();
+      if(fx+ds/2>cr.x-6&&fy-ds/2<cr.y+cr.h+6){if(cr.x-6-ds/2-fx>-(cr.y+cr.h+6+ds/2-fy))fx=cr.x-6-ds/2;else fy=cr.y+cr.h+6+ds/2}
+      const minX=12,maxX=Math.max(minX,TW-ds-12),minY=12,maxY=Math.max(minY,TH-abH-ds-6);
+      DV.free[i]={fx:Math.max(0,Math.min(1,(fx-ds/2-minX)/((maxX-minX)||1))),fy:Math.max(0,Math.min(1,(fy-ds/2-minY)/((maxY-minY)||1)))};
+      DV.rz[i]=Math.round(Math.random()*44-22);
+      el.classList.add('thr');applyDie(i,true);setFace(i,true); // proxy jumps to the final pose (invisible)
+      const L=m2(getComputedStyle(el).transform),C=m3(getComputedStyle(cube).transform);
+      const tgt=[L[4]+ds/2,L[5]+ds/2];
+      const qe=[f[e+3],f[e+4],f[e+5],f[e+6]];const sn=snapUp(qe);
+      const Q=rotTo(NV[DV.face[i]],sn.up);
+      const Rend=m3mul(qm3(sn.q),Q);
+      const Cf=[C[0],C[1],C[2],C[4],C[5],C[6],C[8],C[9],C[10]];
+      const A=m3mul(Cf,m3t(Rend));
+      const len=new Float32Array(d.n);let acc=0;
+      for(let j=1;j<d.n;j++){acc+=Math.hypot(f[j*7]-f[j*7-7],f[j*7+1]-f[j*7-6]);len[j]=acc}
+      const off=[tgt[0]-f[e],tgt[1]-f[e+1]];
+      const settleS=.16,simDur=(d.n-1)*dt;
+      const dur=(simDur+settleS)*1000*tf;
+      D3.tracks[i]={t0:now,vis:d.delay,dur,sim:{FR:f,n:d.n,dt},len,tot:acc||1,off,Q,A,Lin:[L[0],L[1],L[2],L[3]],qEnd:sn.q,qLast:qe,settleS,simDur,h,ds,tf};
+      d.EV.forEach(([t,s])=>schedule(()=>{clack(0,{freq:1800+Math.random()*1800,q:6,vol:.12+.5*s,dur:.035});if(s>.4)thud(0,.25*s)},t*1000*tf));
+      maxEnd=Math.max(maxEnd,dur);
+    });
+    setTimeout(()=>vib([22,40,14,30,10]),300*tf);
+    D3.dirty=true;
+    return maxEnd+30;
+  };
+  function trackPose(tr,now){
+    const t=(now-tr.t0)/1000/tr.tf;if(t<(tr.vis||0))return null;
+    const f=tr.sim.FR,n=tr.sim.n;let x,y,z,q,j;
+    if(t>=tr.simDur){
+      const e=(n-1)*7;x=f[e];y=f[e+1];z=f[e+2];j=n-1;
+      const a=Math.min(1,(t-tr.simDur)/tr.settleS),s=a*a*(3-2*a);
+      q=qn(tr.qLast.map((v,k)=>v*(1-s)+(tr.qEnd[k]*(tr.qLast[0]*tr.qEnd[0]+tr.qLast[1]*tr.qEnd[1]+tr.qLast[2]*tr.qEnd[2]+tr.qLast[3]*tr.qEnd[3]<0?-1:1))*s));
+      z=z+(tr.h-z)*s;
+    }else{
+      const ft=t/tr.sim.dt;j=Math.min(n-2,Math.floor(ft));const u=ft-j,a=j*7,b=a+7;
+      x=f[a]+(f[b]-f[a])*u;y=f[a+1]+(f[b+1]-f[a+1])*u;z=f[a+2]+(f[b+2]-f[a+2])*u;
+      const d=f[a+3]*f[b+3]+f[a+4]*f[b+4]+f[a+5]*f[b+5]+f[a+6]*f[b+6]<0?-1:1;
+      q=qn([f[a+3]+(f[b+3]*d-f[a+3])*u,f[a+4]+(f[b+4]*d-f[a+4])*u,f[a+5]+(f[b+5]*d-f[a+5])*u,f[a+6]+(f[b+6]*d-f[a+6])*u]);
+    }
+    const s=tr.len[j]/tr.tot;x+=tr.off[0]*s;y+=tr.off[1]*s;
+    return{x,y,z,R:m3mul(tr.A,m3mul(qm3(q),tr.Q)),done:t>=tr.simDur+tr.settleS};
+  }
+
+  let W=0,H=0,dpr=1;
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,3);W=table.clientWidth;H=table.clientHeight;
+    const w=Math.round(W*dpr),h=Math.round(H*dpr);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;D3.dirty=true}
+  }
+  function frame(){
+    requestAnimationFrame(frame);
+    if(document.hidden||!table.offsetParent)return;
+    resize();if(!W||!H)return;
+    const now=D3.fakeNow||performance.now();
+    const items=[];let key=D3.skin+W+'x'+H;let live=false;
+    dieEls.forEach((el,i)=>{
+      const tr=D3.tracks&&D3.tracks[i];
+      if(tr&&DV.state[i]!=='free'){D3.tracks[i]=null;el.classList.remove('thr')}
+      else if(tr){
+        const ps=trackPose(tr,now);live=true;
+        if(!ps)return;                       // still in the cup
+        if(ps.done&&now-tr.t0>tr.dur+80){D3.tracks[i]=null;el.classList.remove('thr')}
+        const zr=Math.max(0,ps.z-tr.h);const sc=1+zr/(tr.ds*3.2);
+        const Ln=tr.Lin;const lin=[Ln[0]*sc,Ln[1]*sc,Ln[2]*sc,Ln[3]*sc];
+        items.push({cx:ps.x,cy:ps.y-zr*.42,gx:ps.x,gy:ps.y,zr,lin,s:sc,R:ps.R,op:1,ds:tr.ds});
+        return;
+      }
+      const cs=getComputedStyle(el);const op=+cs.opacity;
+      if(op<.02||el.classList.contains('gone')&&op<.5)return;
+      const cube=el.querySelector('.cube');const ct=getComputedStyle(cube).transform;
+      const t=cs.transform;key+=t+ct+op;
+      const m=m2(t),C=m3(ct),ds=el.offsetWidth,s=Math.hypot(m[0],m[1])||1;
+      items.push({cx:m[4]+ds/2,cy:m[5]+ds/2,gx:m[4]+ds/2,gy:m[5]+ds/2,zr:0,lin:[m[0],m[1],m[2],m[3]],s,R:[C[0],C[1],C[2],C[4],C[5],C[6],C[8],C[9],C[10]],op,ds});
+    });
+    if(!live&&key===D3.key&&!D3.dirty)return;
+    D3.key=key;D3.dirty=false;
+    const sk=skinGL(D3.skin);
+    if(sk.flag&&texFor!==D3.skin){if(texFor!=='loading:'+D3.skin){texFor='loading:'+D3.skin;loadFlag(sk.flag,D3.skin)}}
+    gl.viewport(0,0,cv.width,cv.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    if(!items.length)return;
+    // shadows
+    gl.useProgram(spr);gl.disable(gl.DEPTH_TEST);
+    BUFS.forEach(([b,l])=>gl.disableVertexAttribArray(l));
+    gl.bindBuffer(gl.ARRAY_BUFFER,qb);gl.enableVertexAttribArray(sQ);gl.vertexAttribPointer(sQ,2,gl.FLOAT,false,0,0);
+    gl.uniform2f(sU.WH,W,H);
+    for(const it of items){const zn=Math.min(1,it.zr/(it.ds*1.6));
+      gl.uniform4f(sU.C,it.gx+it.ds*.07,it.gy+it.ds*.1,it.ds*.62*it.s*(1+zn*.35),0);gl.uniform1f(sU.A,.5*(1-zn*.65)*Math.min(1,it.op));
+      gl.drawArrays(gl.TRIANGLE_STRIP,0,4)}
+    gl.disableVertexAttribArray(sQ);
+    // dice
+    gl.useProgram(pr);gl.enable(gl.DEPTH_TEST);
+    BUFS.forEach(([b,l,size])=>{gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,size,gl.FLOAT,false,0,0)});
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
+    gl.uniform3fv(U.uBody,sk.body);gl.uniform3fv(U.uPip,sk.pip);gl.uniform3fv(U.uAce,sk.ace);gl.uniform1f(U.uTex,sk.flag&&texFor===D3.skin?1:0);
+    gl.uniformMatrix4fv(U.uProj,false,new Float32Array([2/W,0,0,0, 0,-2/H,0,0, 0,0,-1/2000,0, -1,1,0,1]));
+    for(const it of items){
+      const [a,b,c,d]=it.lin,s=it.s,h=it.ds/2*.97,R=it.R;
+      const L=[a,b,0,0, c,d,0,0, 0,0,s,0, it.cx,it.cy,0,1];
+      const Rm=[R[0],R[1],R[2],0, R[3],R[4],R[5],0, R[6],R[7],R[8],0, 0,0,0,1];
+      const LR=mul(L,Rm);const M=mul(LR,[h,0,0,0, 0,h,0,0, 0,0,h,0, 0,0,0,1]);
+      const nm=[LR[0]/s,LR[1]/s,LR[2]/s,LR[4]/s,LR[5]/s,LR[6]/s,LR[8]/s,LR[9]/s,LR[10]/s];
+      gl.uniformMatrix4fv(U.uM,false,new Float32Array(M));gl.uniformMatrix3fv(U.uNM,false,new Float32Array(nm));
+      gl.uniform1f(U.uAlpha,Math.min(1,it.op));
+      gl.drawElements(gl.TRIANGLES,IDX.length,gl.UNSIGNED_SHORT,0);
+    }
+  }
+  cv.addEventListener('webglcontextlost',e=>{e.preventDefault();table.classList.remove('gl3d')});
+  D3.ok=true;table.classList.add('gl3d');window.__d3=D3;
+  requestAnimationFrame(frame);
+})();
+
 })();
 
 /* ---- offline: service worker (only on the real website, e.g. GitHub Pages) ---- */
