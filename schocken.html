@@ -514,6 +514,29 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
 @keyframes lsTear{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(60px)}}
 @keyframes lsStamp{from{opacity:0;transform:rotate(-7deg) scale(3)}to{opacity:1;transform:rotate(-7deg) scale(1)}}
 @keyframes lsUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* host badge */
+.pc .hostb{position:absolute;top:-8px;left:7px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:1px 6px;border-radius:6px;background:linear-gradient(#f6d77a,#d9a531);color:#3a2606;box-shadow:0 2px 6px rgba(0,0,0,.35);z-index:2}
+.pc.ishost{border-color:rgba(243,189,82,.55)}
+/* history */
+.hcard{margin-top:12px;border-radius:14px;background:rgba(29,19,11,.06);padding:8px 10px 6px}
+.hcard.live{background:rgba(243,189,82,.16);box-shadow:inset 0 0 0 1.5px rgba(217,165,49,.5)}
+.hcard .hh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:15px;margin-bottom:4px}
+.hcard .hh span{font-size:13.5px;color:#7b6b4e;text-align:right}
+.hcard.live .hh span{color:#a5741a;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:12px}
+.hrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(29,19,11,.08)}
+.hrow:first-of-type{border-top:0}
+.hrow .hn{width:62px;flex:none;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow .hv{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 5px;min-width:0}
+.hrow .hv em{font-style:normal;font-weight:700;font-size:14px;margin-left:3px}
+.hrow .ha{color:#a3967a;font-weight:700}
+.hrow .hx,p.hx{color:#7b6b4e;font-size:14px}
+.hrow.now .hn{color:#a5741a}
+.hrow.wait{opacity:.55}
+.mdice.hd i{width:16px;height:16px;padding:1.5px;border-radius:4px}
+.mdice.hd i.lk{box-shadow:0 0 0 2px #d9a531}
+.ht{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:1px 5px;border-radius:5px;margin-left:auto}
+.ht.win{background:#2a9d4f;color:#fff}.ht.lose{background:#c3271c;color:#fff}
 </style>
 </head>
 <body>
@@ -599,6 +622,7 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
   <div class="hdr">
     <div class="hl"><span class="t slab" id="hHalf">1. Hälfte</span><span class="s" id="hRound">Runde 1</span></div>
     <div class="pot" id="pot"><div class="stack" id="potStack"></div><span class="n" id="potN">13</span><span class="l" id="potL">im<br>Topf</span></div>
+    <button class="iconbtn" id="histBtn" aria-label="Spielverlauf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg></button>
     <button class="iconbtn chatbtn" id="chatBtn" aria-label="Chat" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><i class="badge"></i></button>
     <button class="iconbtn" id="menuBtn" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
@@ -2982,7 +3006,7 @@ const LS={
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
   del(k){try{localStorage.removeItem(k)}catch(e){}}
 };
-const DEF_OPT={finalFirst:true,mode:'klassisch',hidden:true,handOnly:true,flipSix:true,sound:true,vibrate:true,ads:true,sens:'mittel',speed:'normal'};
+const DEF_OPT={finalFirst:true,mode:'klassisch',hidden:true,handOnly:true,flipSix:true,sound:true,vibrate:true,ads:true,sens:'mittel',speed:'normal',tempo:'schnell'};
 let S=LS.get('schocken.setup',null);
 if(!S||!Array.isArray(S.players)||S.players.length<2)S={players:[{name:'',cpu:false},{name:'',cpu:false}],opt:{}};
 S.opt=Object.assign({},DEF_OPT,S.opt||{});
@@ -3006,7 +3030,19 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 let timers=[];
 function schedule(fn,ms){const id=setTimeout(()=>{timers=timers.filter(t=>t!==id);fn()},Math.max(0,ms));timers.push(id);return id}
 function clearTimers(){timers.forEach(clearTimeout);timers=[]}
-function delay(ms){return ms*({gemuetlich:1.55,normal:1,schnell:.5}[S.opt.speed]||1)}
+const TEMPOS=[['schnell','schnell'],['mittel','mittel'],['gemaessigt','gemäßigt']];
+function TF(){const v=(G&&G.opt&&G.opt.tempo)||S.opt.tempo;return {schnell:1,mittel:1.45,gemaessigt:1.9}[v]||1}
+function delay(ms){return ms*TF()}
+// slow down all CSS animations/transitions on the table, banner, celebrations and loser shows
+(function(){
+  function hook(e){
+    const t=e.target;if(!(t instanceof Element)||!t.getAnimations)return;
+    if(!t.closest('.tablewrap,#fx,#banner,.ls,#strip'))return;
+    const r=1/TF();
+    try{for(const a of t.getAnimations())if(a.effect&&a.effect.target===t&&a.playbackRate!==r)a.playbackRate=r}catch(err){}
+  }
+  document.addEventListener('transitionrun',hook,true);document.addEventListener('animationstart',hook,true);
+})();
 function rules(){return G?G.opt:S.opt}
 function vib(p){if(!S.opt.vibrate)return;try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
 function plural(n,a,b){return n===1?a:b}
@@ -3224,7 +3260,7 @@ function halfName(h){if(G&&G.opt.mode==='schnell')return h===3?'Finale':'Partie'
 function eNewGame(players){
   clearTimers();cpuGen++;
   G={v:3,gid:Math.random().toString(36).slice(2,9),seq:0,tid:0,
-     opt:{mode:S.opt.mode,hidden:S.opt.hidden,handOnly:S.opt.handOnly,flipSix:S.opt.flipSix,finalFirst:S.opt.finalFirst},
+     opt:{mode:S.opt.mode,hidden:S.opt.hidden,handOnly:S.opt.handOnly,flipSix:S.opt.flipSix,finalFirst:S.opt.finalFirst,tempo:S.opt.tempo||'schnell'},hist:[],
      players:players.map((p,i)=>({name:(p.name||'').trim()||('Spieler '+(i+1)),cpu:!!p.cpu,cid:p.cid||null,color:COLORS[i%8],fig:p.fig||(p.cpu?'🤖':null),dice:p.dice||'weiss',img:NET.mode==='local'?(p.img||null):null})),
      half:0,halfLosers:[],finalists:null,part:[],chips:players.map(()=>0),pot:13,roundNo:0,sayings:pickSayings(players.length),
      starter:Math.floor(Math.random()*players.length),round:null,cur:null,status:'start',summary:null};
@@ -3246,7 +3282,7 @@ function eStartRound(){
 }
 function eStartTurn(){
   G.status='turn';G.tid++;
-  G.cur={tid:G.tid,dice:[1,1,1],kept:[false,false,false],locked:[false,false,false],rolls:0,flipIdx:-1,flip2:-1,flipped:false,lastAll:true,autoEnd:false,rollId:0,lastRolled:[]};
+  G.cur={tid:G.tid,dice:[1,1,1],kept:[false,false,false],locked:[false,false,false],rolls:0,th:[],flipIdx:-1,flip2:-1,flipped:false,lastAll:true,autoEnd:false,rollId:0,lastRolled:[]};
   commit();
   if(curP().cpu){cpuGen++;cpuSchedule(cpuRoll,delay(1100))}
 }
@@ -3279,11 +3315,11 @@ function eRoll(){
   c.lastAll=!c.kept.some(k=>k);
   const rolled=[];
   for(let i=0;i<3;i++)if(!c.kept[i]){c.dice[i]=d6();rolled.push(i)}
-  c.locked=[...c.kept];c.rolls++;c.flipIdx=-1;c.flip2=-1;c.flipped=false;c.rollId++;c.lastRolled=rolled;c.autoEnd=false;
+  c.locked=[...c.kept];c.rolls++;(c.th=c.th||[]).push(c.dice.join('')+':'+c.locked.map(x=>x?1:0).join(''));c.flipIdx=-1;c.flip2=-1;c.flipped=false;c.rollId++;c.lastRolled=rolled;c.autoEnd=false;
   const p=curP();
-  if(!p.cpu&&!eCanRoll()){c.autoEnd=true;eAutoStand(2900)}
+  if(!p.cpu&&!eCanRoll()){c.autoEnd=true;eAutoStand(delay(2900))}
   commit();
-  if(p.cpu)cpuSchedule(cpuStep,900+delay(1000));
+  if(p.cpu)cpuSchedule(cpuStep,delay(1900));
 }
 function eAutoStand(ms){const tid=G.cur.tid;schedule(()=>{if(!G||G.status!=='turn'||G.cur.tid!==tid||!eCanStand())return;if(NET.mode==='local'&&localPaused()){return}eStand()},ms)}
 function eKeep(i){
@@ -3308,7 +3344,7 @@ function eStand(){
   if(!eCanStand())return;
   const c=G.cur,r=G.round,p=r.order[r.turn];
   const ev=evaluate(c.dice,c.lastAll);
-  r.results.push({p,ev,rolls:c.rolls,pos:r.turn,dice:[...c.dice],aces:c.kept.filter(Boolean).length});
+  r.results.push({p,ev,rolls:c.rolls,pos:r.turn,dice:[...c.dice],aces:c.kept.filter(Boolean).length,th:c.th||[]});
   if(r.turn===0&&!r.firstStands)r.maxRolls=c.rolls;
   r.turn++;
   if(r.turn<r.order.length)eStartTurn();else eEndRound();
@@ -3328,6 +3364,10 @@ function eEndRound(){
     if(potBefore>0&&best.ev.type!=='out'){sum.phaseChange=true;sum.outs=G.part.filter(i=>G.chips[i]===0)}
     if(holders.length===1)sum.halfLoser=holders[0];
   }
+  G.hist=G.hist||[];
+  G.hist.push({h:G.half,n:G.roundNo,best:best.p,loser:loser.p,amt:sum.amount,from:sum.from,
+    res:G.round.results.map(r=>({p:r.p,l:r.ev.label,th:r.th||[],d:r.dice.join('')}))});
+  if(G.hist.length>16)G.hist.splice(0,G.hist.length-16);
   G.summary=sum;G.status='roundEnd';commit();
 }
 function eProceed(){
@@ -3365,7 +3405,7 @@ function handle(a,from){
   }
   if(a.t==='next'){if(a.seq!==G.seq)return;if(!['halfStart','roundEnd','halfEnd'].includes(G.status))return;eProceed()}
 }
-function localPaused(){return V.sheetKind==='menu'||V.sheetKind==='confirm'||rulesOpen()}
+function localPaused(){return V.sheetKind==='menu'||V.sheetKind==='confirm'||V.sheetKind==='history'||rulesOpen()}
 
 /* ---- Computer player ---- */
 let cpuGen=0;
@@ -3589,17 +3629,17 @@ function animateRoll(rolled,vis){
     void cupEl.offsetWidth;cupEl.classList.add('pour');
     scatter(rolled);
     sfx.land(G.opt.hidden?3:rolled.length);vib([22,40,14,30,10]);
-    schedule(()=>placeCup('corner'),420);
+    schedule(()=>placeCup('corner'),delay(420));
     schedule(()=>{
       anim.landing=false;cupEl.classList.remove('pour');render();
       const ev=evaluate(G.cur.dice,G.cur.lastAll);
       if(['out','schock','general','strasse'].includes(ev.type)&&canSeeCur())celebrate(ev);
-    },880);
+    },delay(880));
   }else{
     for(let i=0;i<3;i++)if(!c.kept[i])DV.state[i]='cup';applyAllDice(true);
     cupEl.classList.remove('pour','off','shaking','idle','slam');placeCup('center');
     void cupEl.offsetWidth;cupEl.classList.add('slam');sfx.slam();
-    schedule(()=>cupEl.classList.remove('slam'),520);
+    schedule(()=>cupEl.classList.remove('slam'),delay(520));
   }
   render();
 }
@@ -3669,7 +3709,7 @@ function onStatusEnter(st){
     if(G.opt.hidden)sfx.reveal();
     const bt=G.summary&&G.summary.bestType;if(G.opt.hidden&&['out','schock','general'].includes(bt))setTimeout(()=>{bt==='out'?sfx.out():bt==='schock'?sfx.schock():sfx.general()},700);
     setTimeout(()=>sfx.lose(),G.opt.hidden?350:0);
-    schedule(()=>openStatusSheet(),G.opt.hidden?350:550);
+    schedule(()=>openStatusSheet(),delay(G.opt.hidden?350:550));
   }else if(st==='gameEnd'){
     const seen=LS.get('schocken.statsSeen','');
     if(seen!==G.gid){const n=G.players[G.loser].name;STATS[n]=(STATS[n]||0)+1;LS.set('schocken.stats',STATS);LS.set('schocken.statsSeen',G.gid)}
@@ -3741,7 +3781,8 @@ function render(){
     let tag='';
     if(worst&&worst.p===i)tag='<span class="tag lose">verliert</span>';
     else if(best&&best.p===i)tag='<span class="tag win">bester</span>';
-    h+=`<div class="${cls}${i===me&&NET.mode!=='local'?' mine':''}" data-p="${i}">${tag}<div class="top">${avatarStrip(i)}<span class="nm">${esc(p.name)}</span></div>
+    const isHost=NET.mode!=='local'&&p.cid&&p.cid===(NET.mode==='host'?CID:NET.hostCid);
+    h+=`<div class="${cls}${i===me&&NET.mode!=='local'?' mine':''}${isHost?' ishost':''}" data-p="${i}">${tag}${isHost?'<span class="hostb">Host</span>':''}<div class="top">${avatarStrip(i)}<span class="nm">${esc(p.name)}</span></div>
       <div class="mid"><span class="chips">${COASTER}${G.chips[i]}</span><span class="aces">${'<b></b>'.repeat(acesOf(i))}</span><span class="halves">${'<i>½</i>'.repeat(halves)}</span></div>
       <div class="rs">${esc(rs)}</div></div>`;
   });
@@ -3903,14 +3944,14 @@ function optControlsHtml(o,withRules,rulesLocked){
     <div class="opt"><div class="lbl">Spielmodus<small>${o.mode==='klassisch'?'2 Hälften, ggf. Finale':'Eine Partie entscheidet'}</small></div><div class="seg" data-s="mode"><button class="${o.mode==='klassisch'?'on':''}" data-v="klassisch">Klassisch</button><button class="${o.mode==='schnell'?'on':''}" data-v="schnell">Schnell</button></div></div>
     <div class="opt"><div class="lbl">Straße &amp; General nur aus einem Wurf<small>sonst zählen sie auch mit rausgelegten Einsen</small></div><button class="tog ${o.handOnly?'on':''}" data-t="handOnly"></button></div>
     <div class="opt"><div class="lbl">Zwei Sechsen → eine Eins<small>eine Sechs umdrehen, die andere mitwürfeln · drei Sechsen → zwei Einsen</small></div><button class="tog ${o.flipSix?'on':''}" data-t="flipSix"></button></div>
-    <div class="opt"><div class="lbl">Finale: erster Wurf steht<small>nur in der ersten Finalrunde ein Wurf, danach normal</small></div><button class="tog ${o.finalFirst?'on':''}" data-t="finalFirst"></button></div>`;
+    <div class="opt"><div class="lbl">Finale: erster Wurf steht<small>nur in der ersten Finalrunde ein Wurf, danach normal</small></div><button class="tog ${o.finalFirst?'on':''}" data-t="finalFirst"></button></div>
+    <div class="opt"><div class="lbl">Spieltempo<small>Würfel, Züge, Computer &amp; Animationen</small></div><div class="seg" data-s="tempo">${TEMPOS.map(([v,l])=>`<button class="${(o.tempo||'schnell')===v?'on':''}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   }
   h+=`<div class="opt optcol"><div class="lbl">Tisch</div><div class="boards">${BOARDS.map(([id,n])=>`<button class="bsw ${(o.board||'filz')===id?'on':''}" data-board="${id}"><span class="tbg b-${id}"></span><small>${n}</small></button>`).join('')}</div></div>`;
   h+=`<div class="opt"><div class="lbl">Werbepause<small>lustige Spots nach jeder Hälfte</small></div><button class="tog ${o.ads!==false?'on':''}" data-t="ads"></button></div>
     <div class="opt"><div class="lbl">Ton</div><button class="tog ${o.sound?'on':''}" data-t="sound"></button></div>
     <div class="opt"><div class="lbl">Vibration<small>nur Android</small></div><button class="tog ${o.vibrate?'on':''}" data-t="vibrate"></button></div>
-    <div class="opt"><div class="lbl">Schüttel-Empfindlichkeit${G||!withRules?`<small>${motion.ok?'Sensor aktiv':motion.denied?'Zugriff verweigert':'kein Sensor erkannt'}</small>`:''}</div><div class="seg" data-s="sens">${['niedrig','mittel','hoch'].map(v=>`<button class="${o.sens===v?'on':''}" data-v="${v}">${v}</button>`).join('')}</div></div>
-    <div class="opt"><div class="lbl">Tempo Computer</div><div class="seg" data-s="speed">${[['gemuetlich','ruhig'],['normal','normal'],['schnell','schnell']].map(([v,l])=>`<button class="${o.speed===v?'on':''}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+    <div class="opt"><div class="lbl">Schüttel-Empfindlichkeit${G||!withRules?`<small>${motion.ok?'Sensor aktiv':motion.denied?'Zugriff verweigert':'kein Sensor erkannt'}</small>`:''}</div><div class="seg" data-s="sens">${['niedrig','mittel','hoch'].map(v=>`<button class="${o.sens===v?'on':''}" data-v="${v}">${v}</button>`).join('')}</div></div>`;
   return h;
 }
 function bindOptControls(root,after){
@@ -3928,10 +3969,15 @@ function showMenu(){
     }
   }
   const st=statsHtml();
-  const html=`<div class="kick">Menü</div><h2>Pause</h2>${netHtml}
+  const tv=(G&&G.opt.tempo)||'schnell';
+  const tempoHtml=!G?'':NET.mode==='guest'
+    ?`<div class="opt" style="margin-top:10px"><div class="lbl">Spieltempo<small>legt der Host fest</small></div><b>${TEMPOS.find(x=>x[0]===tv)[1]}</b></div>`
+    :`<div class="opt" style="margin-top:10px"><div class="lbl">Spieltempo<small>gilt für alle am Tisch</small></div><div class="seg" id="tempoSeg">${TEMPOS.map(([v,l])=>`<button class="${tv===v?'on':''}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+  const html=`<div class="kick">Menü</div><h2>Pause</h2>${netHtml}${tempoHtml}
     <details class="fold"><summary>Einstellungen<small>Tisch, Ton …</small></summary><div class="menu-list">${optControlsHtml(S.opt,false)}</div></details>
     ${st?`<details class="fold"><summary>Strichliste<small>verlorene Spiele</small></summary>${st}</details>`:''}`;
   const acts=[{label:'Weiterspielen',fn:()=>{closeSheet();restoreAfterMenu()}}];
+  if(G)acts.push({label:'Spielverlauf',cls:'sec',fn:()=>openHistory(true)});
   if(!motion.ok)acts.push({label:'Schütteln aktivieren',cls:'sec',fn:()=>{enableMotion().then(()=>{setTimeout(()=>{toast(motion.ok?'Schütteln aktiv ✓':motion.denied?'Zugriff verweigert – Tab schließen und neu öffnen':'Sensor nicht verfügbar');showMenu()},700)})}});
   acts.push({label:'Spielregeln',cls:'sec',fn:()=>openRules()});
   if(NET.mode==='local'){
@@ -3944,6 +3990,11 @@ function showMenu(){
   }
   openSheet(html,acts,true,'menu');
   bindOptControls(sheetCard);
+  const ts=sheetCard.querySelector('#tempoSeg');
+  if(ts)ts.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    if(!G||NET.mode==='guest')return;G.opt.tempo=b.dataset.v;S.opt.tempo=b.dataset.v;saveSetup();
+    ts.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));commit();
+  }));
   sheetCard.querySelectorAll('[data-take]').forEach(b=>b.addEventListener('click',()=>{hostTakeover(+b.dataset.take);showMenu()}));
 }
 function confirmBox(title,text,yes){
@@ -4016,7 +4067,7 @@ $('#rules').addEventListener('click',e=>{if(e.target.id==='rules')closeRules()})
 let bannerT=null,toastT=null;
 function showBanner(k,n,s){
   $('#bannerK').textContent=k;$('#bannerN').textContent=n;$('#bannerS').textContent=s||'';
-  $('#banner').classList.add('on');clearTimeout(bannerT);bannerT=setTimeout(hideBanner,1500);
+  $('#banner').classList.add('on');clearTimeout(bannerT);bannerT=setTimeout(hideBanner,delay(1500));
 }
 function hideBanner(){$('#banner').classList.remove('on')}
 function toast(t,hot){const el=$('#toast');el.textContent=t;el.classList.toggle('hot',!!hot);el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2100)}
@@ -4173,7 +4224,7 @@ function resumeEngine(){
   if(G.status==='turn'){
     const c=G.cur;
     if(curP().cpu){cpuGen++;cpuSchedule(c.rolls===0?cpuRoll:cpuStep,delay(900))}
-    else if(c.autoEnd)eAutoStand(1500);
+    else if(c.autoEnd)eAutoStand(delay(1500));
   }
 }
 function hostOnMsg(connId,m){
@@ -4529,6 +4580,7 @@ cupEl.addEventListener('pointerup',cupUp);cupEl.addEventListener('pointercancel'
 $('#standBtn').addEventListener('click',()=>{if(myTurn()&&canSeeCur()&&!anim.landing&&!anim.waiting&&eCanStand())act({t:'stand'})});
 $('#flipBtn').addEventListener('click',()=>{if(myTurn()&&canSeeCur()&&eCanFlip())act({t:'flip'})});
 $('#menuBtn').addEventListener('click',()=>{ac();showMenu()});
+$('#histBtn').addEventListener('click',()=>{ac();openHistory(false)});
 $('#banner').addEventListener('click',hideBanner);
 document.addEventListener('keydown',e=>{
   if(!$('#game').classList.contains('on')||e.target.tagName==='INPUT')return;
@@ -4696,13 +4748,57 @@ function celebrate(ev){
   }
   add('fxtxt '+kind,`<span>${esc(txt)}</span>`);
   if(kind==='out'||kind==='schock'){const w=document.querySelector('.tablewrap');w.classList.remove('shake');void w.offsetWidth;w.classList.add('shake');setTimeout(()=>w.classList.remove('shake'),700)}
-  clearTimeout(celebrate.t);celebrate.t=setTimeout(()=>{L.innerHTML=''},2300);
+  clearTimeout(celebrate.t);celebrate.t=setTimeout(()=>{L.innerHTML=''},delay(2300));
   if(!G.opt.hidden){ // in hidden mode no sound may reveal a throw
     if(kind==='out')sfx.out();else if(kind==='schock')sfx.schock();else if(kind==='general')sfx.general();else sfx.strasse();
     vib(kind==='out'?[60,60,60,60,120]:[40,40,40]);
   }
 }
 
+
+/* ================= Spielverlauf ================= */
+function histDice(code,skin){
+  const [d,k]=String(code).split(':');
+  return `<span class="mdice hd" style="${skinStyle(skin)}">${d.split('').map((v,i)=>{const h=dieMini(+v);return k&&k[i]==='1'?h.replace('<i class="','<i class="lk '):h}).join('')}</span>`;
+}
+function halfName(h){return h===3?'Finale':h+'. Hälfte'}
+function openHistory(fromMenu){
+  if(!G)return;
+  const pl=i=>G.players[i];
+  const row=(i,inner,cls)=>`<div class="hrow ${cls||''}">${avatar(i,26)}<div class="hn">${esc(pl(i).name)}</div><div class="hv">${inner}</div></div>`;
+  const throws=(th,skin)=>th.map((c,n)=>`${n?'<span class="ha">›</span>':''}${histDice(c,skin)}`).join('');
+  let h=`<div class="kick">Spielverlauf</div><h2 style="margin-bottom:6px">Wie lief’s?</h2>`;
+  // current round (live)
+  const r=G.round;
+  if(r&&(G.status==='turn'||G.status==='roundEnd')){
+    const reveal=G.status==='roundEnd'||!G.opt.hidden;
+    h+=`<div class="hcard live"><div class="hh"><b>${halfName(G.half)} · Runde ${G.roundNo}</b><span>läuft</span></div>`;
+    r.order.forEach((pi,pos)=>{
+      const res=r.results.find(x=>x.p===pi),skin=pl(pi).dice;
+      const mine=NET.mode!=='local'&&pl(pi).cid===CID;
+      if(res){
+        h+=row(pi,(reveal||mine)?`${throws(res.th||[],skin)}<em>${esc(res.ev.label)}</em>`:`<span class="hx">verdeckt · ${res.rolls} ${plural(res.rolls,'Wurf','Würfe')}${res.aces?` · ${res.aces}× Eins raus`:''}</span>`);
+      }else if(G.status==='turn'&&pos===r.turn){
+        const c=G.cur;
+        h+=row(pi,c.rolls&&(reveal||canSeeCur())?`${throws(c.th||[],skin)}<span class="hx">würfelt …</span>`:`<span class="hx">ist dran${c.rolls?` · Wurf ${c.rolls}`:''} …</span>`,'now');
+      }else h+=row(pi,'<span class="hx">wartet</span>','wait');
+    });
+    h+='</div>';
+  }
+  const past=(G.hist||[]).slice().reverse().filter(x=>!(G.status==='roundEnd'&&r&&x.h===G.half&&x.n===G.roundNo));
+  past.forEach(x=>{
+    const fromTxt=x.from==='pot'?'aus dem Topf':x.from==='all'?'– Schock aus, alle 13!':`von ${esc(pl(x.best).name)}`;
+    h+=`<div class="hcard"><div class="hh"><b>${halfName(x.h)} · Runde ${x.n}</b><span>${esc(pl(x.loser).name)} +${x.amt} ${plural(x.amt,'Deckel','Deckel')} ${x.from==='all'?'':fromTxt}</span></div>`;
+    x.res.forEach(e=>{
+      const tg=e.p===x.best?'<i class="ht win">bester</i>':e.p===x.loser?'<i class="ht lose">verliert</i>':'';
+      h+=row(e.p,`${throws(e.th.length?e.th:[e.d],pl(e.p).dice)}<em>${esc(e.l)}</em>${tg}`);
+    });
+    h+='</div>';
+  });
+  if(!past.length&&!(r&&(G.status==='turn'||G.status==='roundEnd')))h+='<p class="hx">Noch keine Züge.</p>';
+  if((G.hist||[]).length>=16)h+='<p class="hx" style="font-size:13px">Es werden die letzten 16 Runden gezeigt.</p>';
+  openSheet(h,[{label:fromMenu?'Zurück':'Schließen',cls:'sec',fn:()=>{if(fromMenu)showMenu();else{closeSheet();restoreAfterMenu()}}}],true,'history');
+}
 
 /* ================= Loser shows ================= */
 const HALF_LINES={
@@ -4740,7 +4836,7 @@ function loserShow(kind,pi,onDone){
   if(kind==='half'){jingle.half();vib([200,120,200,120,500])}else{jingle.game();vib([80,60,80,60,80,200,600])}
   let done=false;
   const end=()=>{if(done)return;done=true;clearTimeout(t);el.classList.remove('on');el.classList.add('off');setTimeout(()=>{el.remove();onDone&&onDone()},350)};
-  const t=setTimeout(end,kind==='half'?4800:6500);
+  const t=setTimeout(end,delay(kind==='half'?4800:6500));
   setTimeout(()=>el.addEventListener('click',end),700);
 }
 
