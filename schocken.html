@@ -586,6 +586,11 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
 .plancard .pi{font-size:28px}.plancard .pt{flex:1;display:flex;flex-direction:column}.plancard .pt b{font-size:18px}.plancard .pt small{font-size:14px;opacity:.8}
 .plancard .pa{font-size:28px;opacity:.6}
 .actions .cbtn.wa{background:#25d366;color:#fff}
+
+.adopt{margin:2px 0 14px;padding:12px;border-radius:14px;background:rgba(243,189,82,.14);border:1.5px solid rgba(243,189,82,.45)}
+.adopt .ah{font-size:18px;font-weight:700;text-align:center;margin-bottom:8px}
+.adopt .ac{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.rchip.big{font-size:19px;padding:5px 14px 5px 5px;background:rgba(244,234,211,.14);color:inherit;border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -4266,7 +4271,7 @@ function makeBus(urls,topics,onMsg,onState){
     const url=urls[bi%urls.length];let ok=false;
     const c=mqttConn(url,'sk'+Math.random().toString(36).slice(2,14),{
       onConnect(){ok=true;clearTimeout(to);fails=0;topics.forEach(t=>c.subscribe(t));setOk(true)},
-      onMessage(t,str){let m;try{m=JSON.parse(str)}catch(e){return}onMsg(t,m)},
+      onMessage(t,str){if(str===''){onMsg(t,null);return}let m;try{m=JSON.parse(str)}catch(e){return}onMsg(t,m)},
       onClose(){clearTimeout(to);if(closed)return;setOk(false);if(!ok)next();else timer=setTimeout(connect,400)}
     });
     const to=setTimeout(()=>{if(!ok){try{c.close()}catch(e){}next()}},7000);
@@ -4274,7 +4279,7 @@ function makeBus(urls,topics,onMsg,onState){
   }
   function next(){if(closed)return;fails++;if(urls.length>1)bi++;timer=setTimeout(connect,fails>urls.length?3000:150)}
   connect();
-  const bus={publish(t,m,retain){if(conn&&conn.open){conn.publish(t,JSON.stringify(m),retain);return true}return false},close(){closed=true;BUSES.delete(bus);clearTimeout(timer);try{conn&&conn.close()}catch(e){}},kick(){try{conn&&conn.check&&conn.check()}catch(e){}},get ok(){return okNow}};
+  const bus={publish(t,m,retain){if(conn&&conn.open){conn.publish(t,m===null?'':JSON.stringify(m),retain);return true}return false},close(){closed=true;BUSES.delete(bus);clearTimeout(timer);try{conn&&conn.close()}catch(e){}},kick(){try{conn&&conn.check&&conn.check()}catch(e){}},get ok(){return okNow}};
   BUSES.add(bus);return bus;
 }
 const Transport={
@@ -4965,7 +4970,7 @@ function planWatch(code,cb){
   planStop();PLAN.code=code;PLAN.info=null;PLAN.rs={};PLAN.pend=[];
   const T=TOPIC_BASE+code;
   PLAN.buses=BROKERS.slice(0,3).map(u=>makeBus([u],[T+'/plan',T+'/rsvp/+'],(t,m)=>{
-    if(!m)return;
+    if(!m){if(t.includes('/rsvp/')){delete PLAN.rs[t.split('/').pop()];PLAN.cb&&PLAN.cb()}return}
     if(t.endsWith('/plan')){if(!PLAN.info||(m.ts||0)>=(PLAN.info.ts||0))PLAN.info=m}
     else{const c=t.split('/').pop();const o=PLAN.rs[c];if(!o||(m.ts||0)>=(o.ts||0))PLAN.rs[c]=m}
     planFlush();PLAN.cb&&PLAN.cb();
@@ -5043,12 +5048,29 @@ function planAnswer(code,yes,nameOverride){
   const n=nameOverride||(S.myName||'').trim()||($('#onName').value||'').trim();
   if(!n){toast('Bitte zuerst deinen Namen eingeben');closeSheet();$('#onName').focus();return}
   if(PLAN.code!==code)planWatch(code,PLAN.cb);
-  const r={t:'rsvp',cid:CID,name:n,fig:S.me.fig,yes,ts:Date.now()};
+  const r={t:'rsvp',cid:CID,name:n,fig:S.me.fig,dice:S.me.dice,img:S.me.img||null,yes,ts:Date.now()};
   PLAN.rs[CID]=r;planPub('/rsvp/'+CID,r);
   const pl=planGet(code);if(pl){pl.yes=yes;planSave(pl)}
   vib(30);toast(yes?'Zugesagt – bis gleich! 👍':'Abgesagt – schade! 👎');
   if(V.sheetKind==='plan')openPlanView(code);else renderInviteRSVP();
 }
+function planAdopt(code,r){
+  S.myName=r.name;$('#onName').value=r.name;
+  S.me={fig:r.fig||S.me.fig,img:r.img||null,dice:r.dice||S.me.dice};saveSetup();
+  // move the answer over to this device so it is not counted twice
+  if(r.cid&&r.cid!==CID){delete PLAN.rs[r.cid];planPub('/rsvp/'+r.cid,null)}
+  const pl=planGet(code)||{code,at:PLAN.info&&PLAN.info.at,host:PLAN.info&&PLAN.info.host,role:'guest'};pl.role='guest';planSave(pl);
+  planAnswer(code,r.yes!==false,r.name);
+  toast('Willkommen zurück, '+r.name+'!');renderSetup();
+}
+function adoptHtml(){
+  if((S.myName||'').trim())return'';
+  const others=Object.values(PLAN.rs).filter(r=>r&&r.name&&r.cid!==CID&&r.cid!==(PLAN.info&&PLAN.info.hostCid));
+  if(!others.length)return'';
+  return `<div class="adopt"><div class="ah">Schon zugesagt? Tippe auf deinen Namen:</div><div class="ac">${others.map(r=>`<button class="rchip big" data-adopt="${esc(r.cid)}">${avatarHtml({name:r.name,color:'#c3271c',fig:r.fig,img:r.img},30)}${esc(r.name)}</button>`).join('')}</div></div>`;
+}
+function showAdopt(){const pb=$('#planBox');if(!pb)return;pb.innerHTML=adoptHtml();bindAdopt(pb,JOIN_PARAM)}
+function bindAdopt(root,code){root.querySelectorAll('[data-adopt]').forEach(b=>b.addEventListener('click',()=>{const r=PLAN.rs[b.dataset.adopt];if(r)planAdopt(code,r)}))}
 function planOpenRoom(code){
   const pl=planGet(code);if(pl){pl.opened=true;planSave(pl)}
   const n=(S.myName||'').trim()||(pl&&pl.host)||'Gastgeber';
@@ -5066,13 +5088,14 @@ function renderInviteRSVP(){
   $('#inviteHead').innerHTML=`<div class="k">${esc(info.host)} lädt dich ein zum</div><div class="c" style="font-size:40px;letter-spacing:2px">Schocken</div><div class="s" style="font-size:20px;color:var(--brass);font-weight:700">${fmtWhen(info.at)}</div>`;
   if(left<=0){
     // room is open: normal joining
-    sc.classList.remove('rsvp');box.innerHTML=`<div class="okbox">🟢 Der Spielraum ist offen – jetzt „Beitreten“ tippen!</div>`;
+    sc.classList.remove('rsvp');box.innerHTML=`<div class="okbox">🟢 Der Spielraum ist offen – jetzt „Beitreten“ tippen!</div>`;showAdopt();
     const mine=PLAN.rs[CID];
     if(mine&&mine.yes&&!renderInviteRSVP.auto&&NET.mode!=='guest'){renderInviteRSVP.auto=true;const n=(S.myName||'').trim()||mine.name;if(n){$('#onName').value=n;$('#joinCode').value=JOIN_PARAM;setTimeout(()=>$('#joinBtn').click(),400)}}
     return;
   }
   sc.classList.add('rsvp');
   const mine=PLAN.rs[CID];
+  showAdopt();
   box.innerHTML=`<div class="rsvp-q">${mine?(mine.yes?'Du hast <b>zugesagt</b> 👍':'Du hast <b>abgesagt</b> 👎'):'Bist du dabei?'}</div>
     <div class="rsvp-btns"><button class="btn wide ${mine&&mine.yes?'pri':'yesb'}" id="rsYes">👍 Ich bin dabei</button><button class="btn wide noB ${mine&&!mine.yes?'on':''}" id="rsNo">👎 Kann leider nicht</button></div>
     <div class="plan-t">⏰ Der Spielraum öffnet ${fmtLeft(left)} (3 Min. vorher)</div>
