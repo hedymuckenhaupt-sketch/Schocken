@@ -548,6 +548,44 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
 #d3{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 .table.gl3d .die .cube{opacity:0}
 .table.gl3d .die .shd{display:none}
+
+/* WhatsApp invite + help */
+.wabtn{background:#25d366!important;color:#fff!important;gap:10px;font-size:20px;box-shadow:0 5px 0 #128c4a!important;margin:6px 0 2px}
+.wabtn span{font-weight:700;letter-spacing:.3px}
+#lbHelp{white-space:nowrap}
+.helplink{display:none;font-size:17px;margin-top:4px}
+#setup.invite .helplink{display:block}
+.helpbox h3{margin:18px 0 6px}
+.hstep{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-top:1px solid rgba(29,19,11,.1)}
+.hstep:first-of-type{border-top:0}
+.hstep .hn{flex:none;width:38px;height:38px;border-radius:50%;background:#8e1c14;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700}
+.hstep .ht2{font-size:19px;font-weight:700;line-height:1.2}
+.hstep .hd{font-size:17px;line-height:1.35;color:#4a3d29;margin-top:2px}
+.wabtn{flex-direction:row!important;align-items:center;justify-content:center}
+#setup.invite #helpBtn{display:none!important}
+
+/* planned games */
+.planbtn{background:rgba(244,234,211,.08)!important;border:1.5px solid var(--line)!important;color:var(--cream,#f4ead3)!important;box-shadow:none!important}
+#setup.invite .planbtn{display:none!important}
+#setup.rsvp #joinBtnBig{display:none!important}
+#rsvpBox .okbox{margin-top:6px}
+.rsvp-q{text-align:center;font-size:22px;margin:4px 0 8px}
+.rsvp-btns{display:flex;flex-direction:column;gap:10px}
+.rsvp-btns .yesb{background:#2a9d4f!important;color:#fff!important;box-shadow:0 5px 0 #1b6b35!important}
+.rsvp-btns .noB{background:rgba(244,234,211,.08)!important;color:var(--cream,#f4ead3)!important;border:1.5px solid var(--line)!important;box-shadow:none!important}
+.rsvp-btns .noB.on{background:#7a1812!important;border-color:#7a1812!important}
+.rsvp-hint{font-size:16px;color:var(--muted);text-align:center;margin:8px 4px 0}
+.plan-t{margin:12px 0 4px;padding:10px 12px;border-radius:12px;background:rgba(243,189,82,.14);font-size:17px;font-weight:600;text-align:center}
+.plan-t.open{background:rgba(42,157,79,.2)}
+.rsvp-l{margin-top:10px}
+.rsvp-l .rh{font-weight:700;font-size:15px;margin:8px 0 4px;opacity:.85}
+.rsvp-l .rc{display:flex;flex-wrap:wrap;gap:6px}
+.rsvp-l .rc i{opacity:.6;font-size:15px}
+.rchip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:20px;background:rgba(127,127,127,.15);font-weight:600;font-size:15px}
+.plancard{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;margin:0 0 12px;border-radius:16px;background:linear-gradient(rgba(243,189,82,.2),rgba(243,189,82,.1));border:1.5px solid rgba(243,189,82,.5);color:inherit}
+.plancard .pi{font-size:28px}.plancard .pt{flex:1;display:flex;flex-direction:column}.plancard .pt b{font-size:18px}.plancard .pt small{font-size:14px;opacity:.8}
+.plancard .pa{font-size:28px;opacity:.6}
+.actions .cbtn.wa{background:#25d366;color:#fff}
 </style>
 </head>
 <body>
@@ -591,10 +629,14 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
     <!-- several devices -->
     <div class="pane" id="paneOnline">
       <div id="onlineWarn"></div>
+      <div id="planBox"></div>
       <div class="field"><label for="onName">Dein Name</label><input class="tin" id="onName" maxlength="14" placeholder="z. B. Tim" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"></div>
       <button class="myprof" id="myProf"></button>
       <button class="btn pri wide" id="joinBtnBig">Beitreten</button>
+      <div id="rsvpBox"></div>
+      <button class="linkbtn helplink" id="inviteHelp">❓ Hilfe – wie funktioniert das?</button>
       <button class="btn pri wide" id="hostBtn">Spiel erstellen<span class="sub">du bekommst einen Code + QR-Code</span></button>
+      <button class="btn wide planbtn" id="planBtn">🗓️ Für später planen<span class="sub">Uhrzeit festlegen, Zu- und Absagen sammeln</span></button>
       <div class="orline">oder beitreten</div>
       <div class="joinrow"><input class="tin code" id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"><button class="btn sec" id="joinBtn">Beitreten</button></div>
       <p class="smallp">Einer erstellt das Spiel, die anderen scannen den QR-Code oder tippen den Code ein. Jeder würfelt am eigenen Handy – was die anderen gewürfelt haben, siehst du erst beim Aufdecken.</p>
@@ -605,7 +647,7 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
 
     <button class="btn pri wide" id="startBtn" style="margin-top:4px">Spiel starten<span class="sub">Bewegungssensor wird aktiviert</span></button>
     <div id="setupStats"></div>
-    <button class="linkbtn" id="rulesBtn">Spielregeln lesen</button>
+    <div class="linkrow"><button class="linkbtn" id="helpBtn">❓ So geht’s</button><button class="linkbtn" id="rulesBtn">Spielregeln lesen</button></div>
   </div>
 </section>
 
@@ -615,7 +657,8 @@ details.fold summary small{white-space:nowrap;overflow:hidden;text-overflow:elli
     <div class="lb-head"><div class="k" id="lbKick">Online-Spiel · Code</div><div class="codebig" id="lbCode">····</div></div>
     <div class="qrbox" id="lbQR"></div>
     <div class="linkrow"><code id="lbLink"></code></div>
-    <div class="linkrow"><button class="pill" id="lbCopy">Link kopieren</button></div>
+    <button class="btn wide wabtn" id="lbWa"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path fill="#fff" d="M16 3.2A12.7 12.7 0 0 0 5.1 22.4L3.3 28.8l6.6-1.7A12.7 12.7 0 1 0 16 3.2zm0 23.2c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.5 10.5 0 1 1 16 26.4zm5.8-7.9c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1-1.9-.9-3.1-1.7-4.4-3.8-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.3 1.4 3.6c.2.2 2.4 3.7 5.9 5.1 2.2.9 3 1 4.1.8.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.1-.3-.2-.6-.4z"/></svg><span>Per WhatsApp einladen</span></button>
+    <div class="linkrow"><button class="pill" id="lbShare">Anders teilen …</button><button class="pill" id="lbCopy">Link kopieren</button><button class="pill" id="lbHelp">❓ So geht’s</button></div>
     <div class="lbstatus" id="lbStatus"></div>
     <div class="linkrow"><button class="pill chatbtn" id="lbChat" style="display:none">💬 Chat<i class="badge"></i></button></div>
     <div class="sec-h"><span>Spieler</span><small id="lbCount"></small></div>
@@ -3039,6 +3082,8 @@ const ICON_HUM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 function d6(){const a=new Uint32Array(1);let x;do{crypto.getRandomValues(a);x=a[0]}while(x>=4294967292);return x%6+1}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const D3={ok:false,skin:'weiss',dirty:true,key:''};
+const PLAN_OPEN=3*60000;
+const PLAN={code:null,buses:[],info:null,rs:{},pend:[],cb:null};
 let timers=[];
 function schedule(fn,ms){const id=setTimeout(()=>{timers=timers.filter(t=>t!==id);fn()},Math.max(0,ms));timers.push(id);return id}
 function clearTimers(){timers.forEach(clearTimeout);timers=[]}
@@ -4043,6 +4088,7 @@ function showMenu(){
     ${st?`<details class="fold"><summary>Strichliste<small>verlorene Spiele</small></summary>${st}</details>`:''}`;
   const acts=[{label:'Weiterspielen',fn:()=>{closeSheet();restoreAfterMenu()}}];
   if(G)acts.push({label:'Spielverlauf',cls:'sec',fn:()=>openHistory(true)});
+  acts.push({label:'Hilfe – so geht’s',cls:'sec',fn:()=>{closeSheet();openHelp('play')}});
   if(!motion.ok)acts.push({label:'Schütteln aktivieren',cls:'sec',fn:()=>{enableMotion().then(()=>{setTimeout(()=>{toast(motion.ok?'Schütteln aktiv ✓':motion.denied?'Zugriff verweigert – Tab schließen und neu öffnen':'Sensor nicht verfügbar');showMenu()},700)})}});
   acts.push({label:'Spielregeln',cls:'sec',fn:()=>openRules()});
   if(NET.mode==='local'){
@@ -4124,6 +4170,38 @@ function openRules(){
   $('#rules').classList.add('open');
   $('#rulesClose').addEventListener('click',closeRules);
 }
+function openHelp(kind){
+  const step=(n,t,d)=>`<div class="hstep"><b class="hn">${n}</b><div><div class="ht2">${t}</div>${d?`<div class="hd">${d}</div>`:''}</div></div>`;
+  const join=`<h3>Einem Spiel beitreten</h3>
+    ${step(1,'Link antippen','Den Link aus WhatsApp antippen oder den QR-Code mit der Handy-Kamera scannen.')}
+    ${step(2,'Namen eingeben','So sehen dich die anderen am Tisch.')}
+    ${step(3,'Profil aussuchen (freiwillig)','Auf „Dein Profil“ tippen: Figur oder eigenes Foto und die Farbe deiner Würfel wählen.')}
+    ${step(4,'„Beitreten“ tippen','Dann siehst du die Mitspieler. Warte, bis der Spielleiter das Spiel startet. Handy dabei bitte entsperrt lassen.')}`;
+  const host=`<h3>Ein Spiel für mehrere Handys erstellen</h3>
+    ${step(1,'„Mehrere Handys“ wählen','Namen eingeben und „Spiel erstellen“ tippen.')}
+    ${step(2,'Mitspieler einladen','„Per WhatsApp einladen“ tippen und die Mitspieler oder die Gruppe auswählen. Wer daneben sitzt, scannt einfach den QR-Code.')}
+    ${step(3,'Starten','Sind alle in der Liste, auf „Spiel starten“ tippen.')}`;
+  const play=`<h3>So wird gespielt</h3>
+    ${step('🎲','Würfeln','Wenn du dran bist: Handy schütteln – oder einfach auf „Würfeln“ tippen. Beim iPhone einmal „Schütteln erlauben“ bestätigen.')}
+    ${step('⚀','Einsen rauslegen','Tippe auf eine Eins, um sie rauszulegen. Die anderen Würfel würfelst du dann nochmal. Nochmal tippen holt sie zurück.')}
+    ${step('✋','Stehen lassen','Gefällt dir dein Wurf, tippe „Stehen lassen“. Du hast höchstens 3 Würfe – oft weniger, wenn der Erste weniger gebraucht hat.')}
+    ${step('🍺','Wer verliert?','Der schlechteste Wurf der Runde bekommt Deckel. Wer am Ende alle Deckel hat, verliert die Hälfte.')}
+    <h3>Gut zu wissen</h3>
+    ${step('💬','Chat','Über die Sprechblase oben rechts kurze Nachrichten an alle schicken.')}
+    ${step('🕘','Verlauf','Über die Uhr oben siehst du, wie die letzten Runden gelaufen sind.')}
+    ${step('🔄','Verbindung weg?','App bzw. Link einfach neu öffnen und „Wieder beitreten“ tippen – du bist sofort wieder am Tisch.')}
+    ${step('🔇','Kein Ton?','Stummschalter am Handy prüfen und die Lautstärke hochdrehen.')}`;
+  const body=kind==='guest'?join+play:kind==='host'?host+play:kind==='play'?play:host+join+play;
+  $('#rulesCard').innerHTML=`<button class="closex" id="rulesClose">×</button>
+  <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#7b6b4e;font-weight:700">Hilfe</div>
+  <h2 style="font-family:'Alfa Slab One',serif;font-weight:400;margin:2px 0 8px;color:#8e1c14;font-size:28px">So geht’s</h2>
+  <div class="helpbox">${body}</div>
+  <p style="margin-top:14px"><button class="btn pri wide" id="helpOk">Alles klar!</button></p>
+  <p style="text-align:center"><button class="linkbtn" id="helpRules" style="color:#7b6b4e">Alle Spielregeln lesen</button></p>`;
+  $('#rules').classList.add('open');$('#rules').scrollTop=0;$('#rulesCard').scrollTop=0;
+  $('#rulesClose').addEventListener('click',closeRules);$('#helpOk').addEventListener('click',closeRules);
+  $('#helpRules').addEventListener('click',openRules);
+}
 function closeRules(){$('#rules').classList.remove('open');if(G&&$('#game').classList.contains('on')&&!sheetIsOpen())restoreAfterMenu()}
 function rulesOpen(){return $('#rules').classList.contains('open')}
 $('#rules').addEventListener('click',e=>{if(e.target.id==='rules')closeRules()});
@@ -4169,7 +4247,7 @@ function mqttConn(url,clientId,h){
   }
   return{
     subscribe(topic){const id=pid++;send(mpacket(0x82,u8cat(new Uint8Array([id>>8,id&255]),mstr(topic),new Uint8Array([0]))))},
-    publish(topic,str){send(mpacket(0x30,u8cat(mstr(topic),TE.encode(str))))},
+    publish(topic,str,retain){send(mpacket(retain?0x31:0x30,u8cat(mstr(topic),TE.encode(str))))},
     close(){closed=true;clearInterval(pingT);clearTimeout(chkT);try{send(new Uint8Array([0xE0,0]));ws.close()}catch(e){}},
     check(){if(!alive||dead||closed)return;const t=Date.now();lastRx=Math.min(lastRx,t-1);send(new Uint8Array([0xC0,0]));clearTimeout(chkT);chkT=setTimeout(()=>{if(lastRx<t)drop()},2500)},
     get open(){return alive&&ws.readyState===1}
@@ -4196,7 +4274,7 @@ function makeBus(urls,topics,onMsg,onState){
   }
   function next(){if(closed)return;fails++;if(urls.length>1)bi++;timer=setTimeout(connect,fails>urls.length?3000:150)}
   connect();
-  const bus={publish(t,m){if(conn&&conn.open)conn.publish(t,JSON.stringify(m))},close(){closed=true;BUSES.delete(bus);clearTimeout(timer);try{conn&&conn.close()}catch(e){}},kick(){try{conn&&conn.check&&conn.check()}catch(e){}},get ok(){return okNow}};
+  const bus={publish(t,m,retain){if(conn&&conn.open){conn.publish(t,JSON.stringify(m),retain);return true}return false},close(){closed=true;BUSES.delete(bus);clearTimeout(timer);try{conn&&conn.close()}catch(e){}},kick(){try{conn&&conn.check&&conn.check()}catch(e){}},get ok(){return okNow}};
   BUSES.add(bus);return bus;
 }
 const Transport={
@@ -4227,9 +4305,9 @@ function netErrText(e){
 }
 
 /* ---- host ---- */
-function hostCreate(name){
+function hostCreate(name,code){
   const lobby=[{name,cpu:false,cid:CID,fig:S.me.fig,dice:S.me.dice}];NET.imgs={};if(S.me.img)NET.imgs[CID]=S.me.img;
-  startHost(genCode(),lobby,null,true);
+  startHost(code||genCode(),lobby,null,true);
 }
 function startHost(code,lobby,savedG,fresh,ep){
   leaveNet(true);
@@ -4385,9 +4463,10 @@ setInterval(()=>{
 setInterval(()=>{
   if(NET.mode!=='guest'||!NET.tp||!NET.connected)return;
   const now=Date.now(),sil=now-NET.hostSeen;
-  if(sil<4000){if(now-NET.lastPing>3500){NET.tp.send({t:'ping',cid:CID});NET.lastPing=now}return}
+  const inRoom=!!G||NET.lobby.some(p=>p.cid===CID);
+  if(sil<4000&&NET.hadHost&&inRoom){if(now-NET.lastPing>3500){NET.tp.send({t:'ping',cid:CID});NET.lastPing=now}return}
   if(now-NET.lastHello>2000){NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice});NET.lastHello=now}
-  if(!NET.hadHost&&now-NET.helloAt>8000)NET.status=netErrText({type:'nohost'});
+  if(!NET.hadHost&&now-NET.helloAt>8000){const pl=planGet(NET.code);NET.status=pl&&pl.role==='guest'?`Warte auf ${pl.host} – sobald der Raum offen ist, geht’s los …`:netErrText({type:'nohost'})}
   if(NET.hadHost&&sil>9000)NET.status='Host gerade nicht erreichbar – gleich übernimmt ein Mitspieler …';
   // host gone during a running game -> the next player in line takes over
   if(NET.hadHost&&G&&G.status!=='gameEnd'){
@@ -4434,7 +4513,7 @@ function guestOnMsg(m){
   if(typeof m.hep==='number'){if(m.hep<NET.epoch)return;if(m.hep>NET.epoch)NET.epoch=m.hep}
   if(m.hcid&&m.hcid!==NET.hostCid){const prev=NET.hostCid;NET.hostCid=m.hcid;if(prev&&G){const p=G.players.find(x=>x.cid===m.hcid);toast((p?p.name:'Ein Mitspieler')+' ist jetzt Host – weiter geht’s.')}
     if(prev&&NET.tp){NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice});NET.lastHello=Date.now()}}
-  NET.hadHost=true;
+  if(m.t!=='beacon')NET.hadHost=true;
   const was=hostOk();NET.hostSeen=Date.now();
   if(!was){NET.status='';renderNetBar();renderLobby();render()}
   if(m.t==='lobby'){NET.lobby=m.lobby||[];NET.hostOpt=m.opt||{};NET.code=m.code||NET.code;if(!G){if(!$('#lobby').classList.contains('on'))showScreen('lobby');renderLobby()}}
@@ -4469,6 +4548,43 @@ function leaveNet(silent){
 
 /* ---- lobby screen ---- */
 function joinLink(){return location.origin+location.pathname+'?join='+NET.code}
+function inviteText(){
+  const pl=planGet(NET.code);
+  const me=(NET.myName||(NET.lobby[0]&&NET.lobby[0].name)||(pl&&pl.role==='host'&&pl.host)||S.myName||(S.me&&S.me.name)||'').trim();
+  if(pl&&pl.at&&Date.now()<pl.at-PLAN_OPEN)return `🎲 ${me?me+' lädt dich zum *Schocken* ein':'Du bist zum *Schocken* eingeladen'} – ${fmtWhen(pl.at)}!
+
+👉 Bitte kurz auf den Link tippen und zu- oder absagen:
+${joinLink()}
+
+So geht's:
+1️⃣ Deinen Namen eingeben
+2️⃣ Wenn du magst: Foto oder Figur und Würfel aussuchen
+3️⃣ *Ich bin dabei* oder *Kann nicht* tippen
+
+⏰ 3 Minuten vorher öffnet sich der Spielraum. Dann den Link nochmal öffnen und *Beitreten* tippen (bleibt die Seite offen, geht's von allein).
+Spiel-Code: *${NET.code}*`;
+  return `🎲 ${me?me+' lädt dich zum *Schocken* ein!':'Du bist zum *Schocken* eingeladen!'}
+
+👉 Einfach auf den Link tippen:
+${joinLink()}
+
+So geht's:
+1️⃣ Deinen Namen eingeben
+2️⃣ Wenn du magst: Foto oder Figur und Würfel aussuchen
+3️⃣ Auf *Beitreten* tippen – fertig!
+
+Gewürfelt wird durch Schütteln des Handys. Hilfe gibt's in der App unter „So geht's“.
+Spiel-Code: *${NET.code}*`;
+}
+function shareWhatsApp(){
+  const url='https://wa.me/?text='+encodeURIComponent(inviteText());
+  const w=window.open(url,'_blank');if(!w)location.href=url;
+}
+function shareOther(){
+  const t=inviteText();
+  if(navigator.share){navigator.share({title:'Schocken',text:t}).catch(()=>{})}
+  else{try{navigator.clipboard.writeText(t).then(()=>toast('Einladung kopiert – jetzt einfügen und senden'),()=>toast('Kopieren nicht möglich'))}catch(e){toast('Kopieren nicht möglich')}}
+}
 function renderLobby(){
   if(!$('#lobby').classList.contains('on'))return;
   const host=NET.mode==='host';
@@ -4480,6 +4596,7 @@ function renderLobby(){
   if(qr.dataset.for!==link){qr.dataset.for=link;try{const q=qrcode(0,'M');q.addData(link);q.make();qr.innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){qr.innerHTML=''}}
   qr.style.display=host?'block':'none';
   $('#lbCopy').parentElement.style.display=host?'flex':'none';
+  $('#lbWa').style.display=host?'flex':'none';
   $('#lbLink').parentElement.style.display=host?'flex':'none';
   let status=NET.status;
   if(!status){
@@ -4519,6 +4636,11 @@ function editMyProfile(){
 $('#lbAddCpu').addEventListener('click',()=>{if(NET.mode!=='host'||NET.lobby.length>=8)return;const n=NET.lobby.filter(p=>p.cpu).length+1;NET.lobby.push({name:'Computer '+n,cpu:true,cid:'cpu'+Math.random().toString(36).slice(2,7),fig:'🤖',dice:randomSkin()});hostBroadcast({t:'lobby',code:NET.code,lobby:NET.lobby,opt:S.opt});persist();renderLobby()});
 $('#lbStart').addEventListener('click',hostStart);
 $('#lbLeave').addEventListener('click',()=>leaveNet());
+$('#lbWa').addEventListener('click',shareWhatsApp);
+$('#lbShare').addEventListener('click',shareOther);
+$('#lbHelp').addEventListener('click',()=>openHelp(NET.mode==='host'?'host':'guest'));
+$('#helpBtn').addEventListener('click',()=>openHelp('all'));
+$('#inviteHelp').addEventListener('click',()=>openHelp('guest'));
 $('#lbCopy').addEventListener('click',()=>{const l=joinLink();try{navigator.clipboard.writeText(l).then(()=>toast('Link kopiert'),()=>toast('Kopieren nicht möglich'))}catch(e){toast('Kopieren nicht möglich')}});
 
 /* ================= Setup screen ================= */
@@ -4571,6 +4693,7 @@ function renderSetup(){
   $('#onName').value=S.myName;
   $('#myProf').innerHTML=`${avatarHtml({name:S.myName||'?',color:COLORS[0],fig:S.me.fig,img:S.me.img},44)}<span><b>Dein Profil</b><small>Figur/Foto · Würfel: ${esc(skinName(S.me.dice))}</small></span>${miniDiceHtml([1,6],S.me.dice)}`;
   if(INVITE&&!$('#joinCode').value)$('#joinCode').value=JOIN_PARAM;
+  renderPlanBox();if(INVITE)renderInviteRSVP();
   const warn=$('#onlineWarn');
   if(IN_FRAME&&!TEST_NET){warn.innerHTML='<div class="warnbox">Hier in der Claude-App ist das Online-Spiel gesperrt (genau wie das Schütteln). Öffne die App über ihre eigene Webadresse im Browser – dann klappt beides.</div>'}
   else if(INVITE){warn.innerHTML=`<div class="okbox">Du wurdest zum Spiel <b>${esc(JOIN_PARAM)}</b> eingeladen. Namen eingeben und „Beitreten“ tippen.</div>`}
@@ -4599,6 +4722,8 @@ $('#joinCode').addEventListener('input',e=>{e.target.value=e.target.value.toUppe
 function needName(){const n=($('#onName').value||'').trim();if(!n){toast('Bitte gib deinen Namen ein');$('#onName').focus();return null}S.myName=n;saveSetup();return n}
 $('#hostBtn').addEventListener('click',()=>{enableMotion();ac();if(IN_FRAME&&!TEST_NET){toast('Online-Spiel geht nur außerhalb der Claude-App',true);return}const n=needName();if(n)hostCreate(n)});
 $('#joinBtnBig').addEventListener('click',()=>$('#joinBtn').click());
+$('#planBtn').addEventListener('click',()=>{ac();if(IN_FRAME&&!TEST_NET){toast('Online-Spiel geht nur außerhalb der Claude-App',true);return}openPlanCreate()});
+if(JOIN_PARAM)planWatch(JOIN_PARAM,()=>{if($('#setup').classList.contains('on'))renderInviteRSVP()});
 $('#joinBtn').addEventListener('click',()=>{enableMotion();ac();if(IN_FRAME&&!TEST_NET){toast('Online-Spiel geht nur außerhalb der Claude-App',true);return}const n=needName();if(!n)return;const c=($('#joinCode').value||'').trim().toUpperCase();if(c.length!==4){toast('Der Code hat 4 Zeichen');$('#joinCode').focus();return}guestJoin(c,n)});
 $('#startBtn').addEventListener('click',()=>{
   enableMotion();ac();
@@ -4821,6 +4946,159 @@ function celebrate(ev){
 }
 
 
+/* ================= Geplante Spiele (Zusagen / Absagen) =================
+   Die Termine liegen als "behaltene" Nachrichten auf den öffentlichen Servern – so kommen Zusagen
+   auch an, wenn das Handy des Gastgebers gerade aus ist. Zusätzlich merkt sich jedes Handy den Termin. */
+function plansAll(){const now=Date.now();return(LS.get('schocken.plans',[])||[]).filter(p=>p&&p.at&&now<p.at+3*3600000)}
+function planGet(code){return code?plansAll().find(p=>p.code===code):null}
+function planSave(o){const l=plansAll().filter(p=>p.code!==o.code);l.push(o);LS.set('schocken.plans',l)}
+function planDrop(code){LS.set('schocken.plans',plansAll().filter(p=>p.code!==code))}
+function fmtWhen(at){
+  const d=new Date(at),n=new Date(),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime();
+  const day=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()-t0)/864e5);
+  const hm=d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr';
+  return (day===0?'heute':day===1?'morgen':d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}))+' um '+hm;
+}
+function fmtLeft(ms){if(ms<=0)return'jetzt';const m=Math.ceil(ms/60000);if(m<60)return'in '+m+' Min.';const h=Math.floor(m/60),r=m%60;return'in '+h+' Std.'+(r?' '+r+' Min.':'')}
+function planWatch(code,cb){
+  PLAN.cb=cb||null;if(PLAN.code===code&&PLAN.buses.length)return;
+  planStop();PLAN.code=code;PLAN.info=null;PLAN.rs={};PLAN.pend=[];
+  const T=TOPIC_BASE+code;
+  PLAN.buses=BROKERS.slice(0,3).map(u=>makeBus([u],[T+'/plan',T+'/rsvp/+'],(t,m)=>{
+    if(!m)return;
+    if(t.endsWith('/plan')){if(!PLAN.info||(m.ts||0)>=(PLAN.info.ts||0))PLAN.info=m}
+    else{const c=t.split('/').pop();const o=PLAN.rs[c];if(!o||(m.ts||0)>=(o.ts||0))PLAN.rs[c]=m}
+    planFlush();PLAN.cb&&PLAN.cb();
+  },ok=>{if(ok)planFlush()}));
+}
+function planStop(){PLAN.buses.forEach(b=>b.close());PLAN.buses=[];PLAN.code=null}
+function planPub(sub,obj){PLAN.pend.push({topic:TOPIC_BASE+PLAN.code+sub,obj,sent:new Set()});planFlush()}
+function planFlush(){PLAN.pend.forEach(p=>PLAN.buses.forEach((b,k)=>{if(!p.sent.has(k)&&b.publish(p.topic,p.obj,true))p.sent.add(k)}));PLAN.pend=PLAN.pend.filter(p=>p.sent.size<PLAN.buses.length)}
+setInterval(planFlush,2500);
+function rsvpLists(){
+  const yes=[],no=[];
+  Object.values(PLAN.rs).forEach(r=>{if(r&&r.name)(r.yes?yes:no).push(r)});
+  return{yes,no};
+}
+function rsvpHtml(){
+  const{yes,no}=rsvpLists();const pl=planGet(PLAN.code);
+  const hostName=pl&&pl.role==='guest'?(pl.host||(PLAN.info&&PLAN.info.host)):null;
+  if(hostName)yes.unshift({name:hostName+' (Gastgeber)',fig:null});
+  const chip=r=>`<span class="rchip">${avatarHtml({name:r.name,color:'#c3271c',fig:r.fig},22)}${esc(r.name)}</span>`;
+  return `<div class="rsvp-l"><div class="rh">👍 Dabei (${yes.length+(pl&&pl.role==='host'?1:0)})</div><div class="rc">${pl&&pl.role==='host'?chip({name:(S.myName||S.me.name||'Du')+' (du)',fig:S.me.fig}):''}${yes.map(chip).join('')||(pl&&pl.role==='host'?'':'<i>noch niemand</i>')}</div>
+    ${no.length?`<div class="rh">👎 Kann nicht (${no.length})</div><div class="rc">${no.map(chip).join('')}</div>`:''}</div>`;
+}
+// ---- host: plan a game ----
+function openPlanCreate(){
+  const n=needName();if(!n)return;
+  const d=new Date(Date.now()+60*60000);d.setMinutes(d.getMinutes()<30?30:60,0,0);
+  const hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0');
+  const tomorrow=d.getDate()!==new Date().getDate();
+  openSheet(`<div class="kick">Für später planen</div><h2>Wann wird gespielt?</h2>
+    <div class="opt"><div class="lbl">Tag</div><div class="seg" id="plDay"><button class="${tomorrow?'':'on'}" data-v="0">heute</button><button class="${tomorrow?'on':''}" data-v="1">morgen</button><button data-v="2">übermorgen</button></div></div>
+    <div class="opt"><div class="lbl">Uhrzeit</div><input type="time" class="tin" id="plTime" value="${hh}:${mm}" style="width:140px;text-align:center;font-size:22px"></div>
+    <p class="hx" style="font-size:15px;margin-top:10px">Die Eingeladenen können zu- oder absagen. 3 Minuten vor der Uhrzeit öffnet sich der Spielraum.</p>`,
+    [{label:'Planen &amp; einladen',fn:()=>{
+      const day=+(sheetCard.querySelector('#plDay .on')||{dataset:{v:0}}).dataset.v;
+      const [H,M]=(sheetCard.querySelector('#plTime').value||'20:00').split(':').map(Number);
+      const t=new Date();t.setDate(t.getDate()+day);t.setHours(H,M,0,0);
+      if(t.getTime()<Date.now()+PLAN_OPEN){toast('Bitte eine spätere Uhrzeit wählen');return}
+      const code=genCode();
+      planSave({code,at:t.getTime(),host:n,role:'host'});
+      planWatch(code,()=>{if(V.sheetKind==='plan')openPlanView(code)});
+      planPub('/plan',{t:'plan',code,at:t.getTime(),host:n,hostCid:CID,ts:Date.now()});
+      NET.code=code;openPlanView(code);
+    }},{label:'Abbrechen',cls:'sec',fn:closeSheet}],false,'plancreate');
+  sheetCard.querySelectorAll('#plDay button').forEach(b=>b.addEventListener('click',()=>sheetCard.querySelectorAll('#plDay button').forEach(x=>x.classList.toggle('on',x===b))));
+}
+// ---- plan card (host and guests) ----
+function openPlanView(code){
+  const pl=planGet(code);if(!pl){closeSheet();renderSetup();return}
+  planWatch(code,()=>{if(V.sheetKind==='plan')openPlanView(code)});
+  const info=PLAN.info&&PLAN.info.code===code?PLAN.info:null;
+  if(info&&info.cancel){planDrop(code);openSheet(`<div class="kick">Geplantes Spiel</div><h2>Abgesagt</h2><p>${esc(pl.host)} hat das Spiel ${fmtWhen(pl.at)} abgesagt.</p>`,[{label:'OK',fn:()=>{closeSheet();renderSetup()}}],true,'plan');return}
+  if(info&&info.at&&info.at!==pl.at){pl.at=info.at;planSave(pl)}
+  const left=pl.at-PLAN_OPEN-Date.now(),open=left<=0,host=pl.role==='host';
+  const mine=PLAN.rs[CID];
+  const head=`<div class="kick">Geplantes Spiel · Code ${code}</div><h2>Schocken ${fmtWhen(pl.at)}</h2>
+    <div class="plan-t ${open?'open':''}">${open?'🟢 Der Spielraum ist offen!':`⏰ Spielraum öffnet ${fmtLeft(left)}`}</div>
+    ${host?'':`<p style="margin:6px 0 0">Eingeladen von <b>${esc(pl.host)}</b>${mine?` · du hast <b>${mine.yes?'zugesagt 👍':'abgesagt 👎'}</b>`:''}</p>`}
+    ${rsvpHtml()}`;
+  const acts=[];
+  if(host){
+    acts.push({label:'Per WhatsApp einladen',cls:'pri wa',fn:()=>{NET.code=code;shareWhatsApp()}});
+    acts.push({label:open?'Spielraum öffnen':'Spielraum jetzt schon öffnen',cls:open?'pri':'sec',fn:()=>{closeSheet();planOpenRoom(code)}});
+    acts.push({label:'Spiel absagen',cls:'sec',fn:()=>{if(!confirm('Das geplante Spiel wirklich absagen?'))return;planPub('/plan',{t:'plan',code,cancel:true,ts:Date.now()});planDrop(code);closeSheet();renderSetup();toast('Spiel abgesagt')}});
+  }else{
+    if(open)acts.push({label:'Jetzt beitreten',fn:()=>{closeSheet();$('#joinCode').value=code;const n=(S.myName||'').trim()||mine&&mine.name;if(n){$('#onName').value=n;guestJoin(code,n)}else renderSetup()}});
+    else{
+      acts.push({label:'👍 Ich bin dabei',cls:mine&&mine.yes?'pri':'sec',fn:()=>planAnswer(code,true)});
+      acts.push({label:'👎 Kann leider nicht',cls:mine&&!mine.yes?'pri':'sec',fn:()=>planAnswer(code,false)});
+    }
+  }
+  acts.push({label:'Schließen',cls:'sec',fn:()=>{closeSheet();renderSetup()}});
+  openSheet(head,acts,false,'plan');
+}
+function planAnswer(code,yes,nameOverride){
+  const n=nameOverride||(S.myName||'').trim()||($('#onName').value||'').trim();
+  if(!n){toast('Bitte zuerst deinen Namen eingeben');closeSheet();$('#onName').focus();return}
+  if(PLAN.code!==code)planWatch(code,PLAN.cb);
+  const r={t:'rsvp',cid:CID,name:n,fig:S.me.fig,yes,ts:Date.now()};
+  PLAN.rs[CID]=r;planPub('/rsvp/'+CID,r);
+  const pl=planGet(code);if(pl){pl.yes=yes;planSave(pl)}
+  vib(30);toast(yes?'Zugesagt – bis gleich! 👍':'Abgesagt – schade! 👎');
+  if(V.sheetKind==='plan')openPlanView(code);else renderInviteRSVP();
+}
+function planOpenRoom(code){
+  const pl=planGet(code);if(pl){pl.opened=true;planSave(pl)}
+  const n=(S.myName||'').trim()||(pl&&pl.host)||'Gastgeber';
+  hostCreate(n,code);
+}
+// guest: invitation link opened before the room is open → zusagen / absagen
+function renderInviteRSVP(){
+  const sc=$('#setup'),box=$('#rsvpBox');if(!box)return;
+  const pl=planGet(JOIN_PARAM),info=PLAN.info;
+  const planned=INVITE&&info&&info.code===JOIN_PARAM&&!info.cancel&&info.at;
+  if(INVITE&&info&&info.code===JOIN_PARAM&&info.cancel){sc.classList.remove('rsvp');box.innerHTML=`<div class="okbox">Dieses Spiel wurde von ${esc(info.host||'dem Gastgeber')} abgesagt.</div>`;return}
+  if(!planned){sc.classList.remove('rsvp');box.innerHTML='';return}
+  if(!pl||pl.at!==info.at)planSave(Object.assign(pl||{},{code:JOIN_PARAM,at:info.at,host:info.host,role:'guest'}));
+  const left=info.at-PLAN_OPEN-Date.now();
+  $('#inviteHead').innerHTML=`<div class="k">${esc(info.host)} lädt dich ein zum</div><div class="c" style="font-size:40px;letter-spacing:2px">Schocken</div><div class="s" style="font-size:20px;color:var(--brass);font-weight:700">${fmtWhen(info.at)}</div>`;
+  if(left<=0){
+    // room is open: normal joining
+    sc.classList.remove('rsvp');box.innerHTML=`<div class="okbox">🟢 Der Spielraum ist offen – jetzt „Beitreten“ tippen!</div>`;
+    const mine=PLAN.rs[CID];
+    if(mine&&mine.yes&&!renderInviteRSVP.auto&&NET.mode!=='guest'){renderInviteRSVP.auto=true;const n=(S.myName||'').trim()||mine.name;if(n){$('#onName').value=n;$('#joinCode').value=JOIN_PARAM;setTimeout(()=>$('#joinBtn').click(),400)}}
+    return;
+  }
+  sc.classList.add('rsvp');
+  const mine=PLAN.rs[CID];
+  box.innerHTML=`<div class="rsvp-q">${mine?(mine.yes?'Du hast <b>zugesagt</b> 👍':'Du hast <b>abgesagt</b> 👎'):'Bist du dabei?'}</div>
+    <div class="rsvp-btns"><button class="btn wide ${mine&&mine.yes?'pri':'yesb'}" id="rsYes">👍 Ich bin dabei</button><button class="btn wide noB ${mine&&!mine.yes?'on':''}" id="rsNo">👎 Kann leider nicht</button></div>
+    <div class="plan-t">⏰ Der Spielraum öffnet ${fmtLeft(left)} (3 Min. vorher)</div>
+    ${mine&&mine.yes?'<p class="rsvp-hint">Du kannst die App jetzt schließen. Kurz vorher den Link nochmal antippen – oder die Seite einfach offen lassen, dann geht’s von allein los.</p>':''}
+    ${rsvpHtml()}`;
+  $('#rsYes').addEventListener('click',()=>{const n=needName();if(n)planAnswer(JOIN_PARAM,true,n)});
+  $('#rsNo').addEventListener('click',()=>{const n=needName();if(n)planAnswer(JOIN_PARAM,false,n)});
+}
+// once a minute: refresh countdowns, open the room for the host, let guests in
+setInterval(()=>{
+  const setupOn=$('#setup').classList.contains('on');
+  if(INVITE&&setupOn)renderInviteRSVP();
+  if(V.sheetKind==='plan'&&PLAN.code)openPlanView(PLAN.code);
+  if(setupOn&&NET.mode==='local'&&!G){
+    const due=plansAll().find(p=>p.role==='host'&&!p.opened&&Date.now()>=p.at-PLAN_OPEN);
+    if(due){toast('Dein geplantes Spiel beginnt – Spielraum wird geöffnet');planOpenRoom(due.code)}
+  }
+  if(setupOn)renderPlanBox();
+},15000);
+function renderPlanBox(){
+  const box=$('#planBox');if(!box)return;
+  const l=INVITE?[]:plansAll();
+  box.innerHTML=l.map(p=>{const open=Date.now()>=p.at-PLAN_OPEN;return `<button class="plancard" data-plan="${p.code}"><span class="pi">🗓️</span><span class="pt"><b>Schocken ${fmtWhen(p.at)}</b><small>${p.role==='host'?'von dir geplant':'mit '+esc(p.host)}${p.role==='guest'&&p.yes!=null?(p.yes?' · zugesagt':' · abgesagt'):''} · ${open?'Raum offen':'Raum öffnet '+fmtLeft(p.at-PLAN_OPEN-Date.now())}</small></span><span class="pa">›</span></button>`}).join('');
+  box.querySelectorAll('[data-plan]').forEach(b=>b.addEventListener('click',()=>{ac();openPlanView(b.dataset.plan)}));
+}
+
 /* ================= Spielverlauf ================= */
 function histDice(code,skin){
   const [d,k]=String(code).split(':');
@@ -4966,7 +5244,7 @@ $('#chatBubble').addEventListener('click',()=>{hideChatBubble();openChat()});
 buildDice();applyBoard();
 if(JOIN_PARAM)S.tab='online';
 renderSetup();
-window.__schocken={loserShow,becomeHost,eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
+window.__schocken={planPub,get PLAN(){return PLAN},loserShow,becomeHost,eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
 /* ================= 3D-Würfel (WebGL) =================
    Kleines eigenes 3D-Modell: abgerundeter Würfelkörper, eingelassene Augen, Licht + Glanz.
    Die CSS-Würfel bleiben als unsichtbare Platzhalter (Position, Animation, Antippen) –
