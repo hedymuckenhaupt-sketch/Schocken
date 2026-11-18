@@ -656,6 +656,60 @@ html.big .eval{font-size:30px}
 .pc.mini .mid,.pc.mini .tag,.pc.mini .hostb{display:none}
 .pc.mini .rs{font-size:10.5px;text-align:center}
 .pc.mini.mine{opacity:.8}
+
+/* your turn: bigger, golden, pulsing */
+.banner.me{border-color:#f3bd52;box-shadow:0 0 0 4px rgba(243,189,82,.35),0 20px 60px rgba(0,0,0,.6);animation:meP .9s ease-in-out infinite alternate}
+.banner.me .k{font-size:22px;color:#f3bd52;letter-spacing:1px}
+.banner.me .n{font-size:44px}
+@keyframes meP{from{box-shadow:0 0 0 4px rgba(243,189,82,.25),0 20px 60px rgba(0,0,0,.6)}to{box-shadow:0 0 0 12px rgba(243,189,82,.08),0 20px 60px rgba(0,0,0,.6)}}
+/* spectators: calm info instead of disabled buttons */
+.watchbox{display:none}
+body.watching .controls .btn,body.watching .controls .flipbtn,body.watching .coach{display:none!important}
+body.watching .watchbox{display:flex;flex:1;align-items:center;justify-content:center;gap:10px;min-height:64px;border-radius:18px;background:rgba(0,0,0,.25);border:1.5px dashed var(--line);font-size:18px;text-align:center;padding:8px 14px}
+body.watching .watchbox span{display:block;font-size:15.5px;color:var(--muted)}
+html.big body.watching .watchbox{font-size:21px}
+.calbtn{margin-top:10px;background:rgba(244,234,211,.1)!important;color:var(--cream,#f4ead3)!important;border:1.5px solid var(--line)!important;box-shadow:none!important;font-size:18px}
+
+/* reactions */
+.reactbar{display:flex;align-items:center;gap:8px;padding:2px 0 8px;border-bottom:1px solid rgba(29,19,11,.1)}
+.reactbar span{font-size:13px;font-weight:700;color:#7b6b4e;white-space:nowrap}
+#chatReact{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+#chatReact button{flex:none;width:42px;height:42px;border-radius:50%;background:rgba(29,19,11,.07);font-size:24px;display:grid;place-items:center}
+#chatReact button:active{transform:scale(.85)}
+.reactlayer{position:fixed;inset:0;pointer-events:none;z-index:45;overflow:hidden}
+.rx{position:absolute;bottom:18%;display:flex;flex-direction:column;align-items:center;animation:rxUp 2.5s cubic-bezier(.2,.7,.3,1) forwards}
+.rx .re{font-size:64px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.rx .rn{margin-top:2px;font-size:14px;font-weight:700;background:rgba(0,0,0,.55);color:#fff;padding:1px 8px;border-radius:9px}
+.rx.small .re{font-size:34px}
+@keyframes rxUp{0%{transform:translate(0,40px) scale(.4);opacity:0}12%{transform:translate(0,0) scale(1.15);opacity:1}70%{opacity:1}100%{transform:translate(var(--dx),-48vh) scale(.9);opacity:0}}
+/* stickers */
+.stkbar{display:flex;gap:6px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none;border-top:1px solid rgba(29,19,11,.1)}
+.stkbar button{flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;width:64px;padding:4px 2px;border-radius:12px;background:rgba(29,19,11,.06);font-size:26px;line-height:1}
+.stkbar button small{font-size:10.5px;font-weight:700;color:#5b4d36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px}
+.stk{display:flex;flex-direction:column;align-items:center;padding:4px 10px 2px}
+.stk .se{font-size:58px;line-height:1.05;display:inline-block}
+.stk .st{font-family:'Alfa Slab One',serif;font-size:17px;color:#8e1c14;text-shadow:0 2px 0 rgba(255,255,255,.6)}
+.cmsg.me .stk .st{color:#ffd54a;text-shadow:none}
+.stk.a-clink .se{animation:stkClink .9s ease-in-out infinite}
+.stk.a-zap .se{animation:stkZap .5s steps(2) infinite}
+.stk.a-shake .se{animation:stkShake .45s ease-in-out infinite}
+.stk.a-wobble .se{animation:stkWob 1.2s ease-in-out infinite}
+.stk.a-pop .se{animation:stkPop 1s ease-in-out infinite}
+.stk.a-bounce .se{animation:stkBounce .8s cubic-bezier(.3,1.6,.5,1) infinite}
+@keyframes stkClink{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg) scale(1.1)}}
+@keyframes stkZap{0%{transform:scale(1);filter:brightness(1)}100%{transform:scale(1.15);filter:brightness(1.6) drop-shadow(0 0 10px #ffd54a)}}
+@keyframes stkShake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-4px) rotate(-6deg)}75%{transform:translateX(4px) rotate(6deg)}}
+@keyframes stkWob{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes stkPop{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+@keyframes stkBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+/* photos */
+.picbtn{flex:none;width:44px;height:44px;border-radius:50%;background:rgba(29,19,11,.08);font-size:22px;display:grid;place-items:center;margin-right:6px}
+.cmsg.media{max-width:78%}
+.cimg{display:block;max-width:100%;max-height:240px;border-radius:12px;margin:3px 0;object-fit:cover}
+.imgview{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:16px}
+.imgview.on{display:flex}.imgview img{max-width:100%;max-height:100%;border-radius:10px}
+.cmsg .cb .stk .se{font-size:58px;line-height:1.05}
+.cmsg .cb .stk .st{font-size:17px;line-height:1.1}
 </style>
 </head>
 <body>
@@ -785,6 +839,7 @@ html.big .eval{font-size:30px}
   </div>
   <div class="controls">
     <button class="btn sec" id="standBtn">Stehen<br>lassen</button>
+    <div class="watchbox" id="watchTxt"></div>
     <div class="coach" id="coach">👇 Handy schütteln<br>oder hier tippen</div>
     <button class="btn pri" id="rollBtn">Würfeln<span class="sub" id="rollSub">oder Handy schütteln</span></button>
   </div>
@@ -816,11 +871,15 @@ html.big .eval{font-size:30px}
 <div class="fxlayer" id="fx"></div>
 <div class="chatwrap" id="chat"><div class="chatcard">
   <div class="chathead"><b class="slab">Chat</b><span>an alle am Tisch</span><button id="chatClose" aria-label="Schließen">×</button></div>
+  <div class="reactbar"><span>Schnell reagieren:</span><div id="chatReact"></div></div>
   <div class="chatlist" id="chatList"></div>
+  <div class="stkbar" id="chatStk"></div>
   <div class="quick" id="chatQuick"></div>
-  <form class="chatform" id="chatForm" autocomplete="off"><input id="chatInput" maxlength="140" placeholder="Nachricht …" enterkeyhint="send" autocorrect="on"><button type="submit" aria-label="Senden"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></button></form>
+  <form class="chatform" id="chatForm" autocomplete="off"><button type="button" class="picbtn" id="chatPic" aria-label="Foto oder GIF senden">📷</button><input id="chatInput" maxlength="140" placeholder="Nachricht …" enterkeyhint="send" autocorrect="on"><button type="submit" aria-label="Senden"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></button></form>
 </div></div>
 <div class="chatbubble" id="chatBubble"></div>
+<div class="reactlayer" id="reactLayer"></div>
+<div class="imgview" id="imgView"><img alt=""></div>
 <div class="toast" id="toast"></div>
 <div class="netbar" id="netbar">Verbindung wird wiederhergestellt …</div>
 
@@ -3294,6 +3353,7 @@ const sfx={
   tick(){clack(0,{freq:3200,q:8,vol:.25,dur:.03})},
   flip(){clack(0,{freq:2600,q:7,vol:.35,dur:.04});clack(.09,{freq:3100,q:7,vol:.3,dur:.035})},
   ding(){notes([[880,0,.12],[1175,.1,.25]],'sine',.16)},
+  yourTurn(){notes([[784,0,.14],[988,.13,.14],[1175,.26,.14],[1568,.4,.42]],'triangle',.2);notes([[392,.4,.45]],'sine',.12)},
   lose(){notes([[392,0,.18],[330,.16,.18],[262,.32,.42]],'triangle',.16)},
   out(){notes([[523,0,.15],[659,.12,.15],[784,.24,.15],[1047,.36,.5]],'square',.07)},
   half(){notes([[196,0,.3],[185,.25,.3],[175,.5,.3],[147,.75,.7]],'sawtooth',.06)},
@@ -3348,6 +3408,7 @@ async function keepAwake(){try{if('wakeLock' in navigator&&!wakeLock){wakeLock=a
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState!=='visible')return;
   if(!$('#setup').classList.contains('on'))keepAwake();
+  try{if(G&&G.status==='turn'&&NET.mode!=='local'&&controls(curIdx())&&G.cur&&G.cur.rolls===0&&Date.now()-(V.alertAt||0)>8000)setTimeout(()=>yourTurnAlert(G.players[curIdx()]),400)}catch(e){}
   try{
     if(NET.mode==='guest'&&NET.tp){NET.lastHello=0;NET.tp.send({t:'hello',cid:CID,name:NET.myName,fig:S.me.fig,dice:S.me.dice})}
     else if(NET.mode==='host'&&NET.tp){NET.tp.beacon&&NET.tp.beacon();if(G)hostBroadcast({t:'state',G})}
@@ -3880,13 +3941,18 @@ function viewUpdate(){
   }
   render();
 }
+function yourTurnAlert(p){
+  showBanner('Du bist dran!',p.name,G.round.turn===0?'Du fängst an und gibst die Vorgabe':'Handy schütteln oder „Würfeln“ tippen',true);
+  sfx.yourTurn();vib([120,80,120,80,300]);announce(p.name+', du bist dran!');
+  V.alertAt=Date.now();
+}
 function onNewTurn(){
   const pi=curIdx(),p=G.players[pi];
   hidePrivacy();
   if(controls(pi)){
-    if(needPrivacy()&&V.unlocked!==turnKey())showPrivacy(p);
-    else if(NET.mode!=='local'){showBanner('Du bist dran!',p.name,G.round.turn===0?'Du fängst an und gibst die Vorgabe':'Schütteln!');sfx.ding();vib([40,60,40])}
-    else if(V.lastTurnPlayer!==pi)showBanner('Jetzt ist dran',p.name,G.round.turn===0?'fängt an':'');
+    if(needPrivacy()&&V.unlocked!==turnKey()){showPrivacy(p);announce('Handy an '+p.name+' geben.')}
+    else if(NET.mode!=='local'){yourTurnAlert(p)}
+    else if(V.lastTurnPlayer!==pi){showBanner('Jetzt ist dran',p.name,G.round.turn===0?'fängt an':'');if(!p.cpu)announce(p.name+' ist dran.')}
   }
   V.lastTurnPlayer=pi;
   if(G.round.turn===0&&G.round.firstStands)toast('Finale: Der erste Wurf steht!');
@@ -4010,6 +4076,9 @@ function render(){
     else if(c.rolls<r.maxRolls)hint='Weiterwürfeln oder stehen lassen?';
     if(!mine&&NET.mode!=='local'&&isWatching(myIdx()))hint='👀 Du bist in dieser Hälfte raus und schaust zu'+(iWatch()&&G.opt.hidden?' – du siehst die Würfe.':'.');
     $('#hint').textContent=hint;
+    const watching=NET.mode!=='local'&&isWatching(myIdx());
+    document.body.classList.toggle('watching',watching);
+    if(watching){$('#watchTxt').innerHTML=`<div><b>👀 Du schaust zu</b><span>${esc(p.name)} ${G.cur&&G.cur.rolls?'würfelt gerade':'ist dran'}${iWatch()&&G.opt.hidden?' – du siehst die Würfe':''}</span></div>`}
     coach(mine&&vis&&c.rolls===0&&!anim.shaking&&!anim.landing&&!anim.waiting&&!p.cpu);
     const iAct=mine&&vis&&!anim.shaking&&!anim.landing&&!anim.waiting;
     flipBtn.classList.toggle('on',iAct&&eCanFlip());
@@ -4030,7 +4099,7 @@ function render(){
     }
     cupEl.classList.toggle('idle',mine&&vis&&c.rolls===0&&!anim.shaking&&!anim.landing&&!anim.waiting);
   }else{
-    $('#who').innerHTML='';$('#rolls').innerHTML='';$('#eval').textContent='';$('#hint').textContent='';
+    $('#who').innerHTML='';$('#rolls').innerHTML='';$('#eval').textContent='';$('#hint').textContent='';document.body.classList.remove('watching');
     flipBtn.classList.remove('on');rollBtn.disabled=true;standBtn.disabled=true;standBtn.innerHTML='Stehen<br>lassen';standBtn.classList.remove('go');
     tm.classList.add('hide');
     dieEls.forEach(el=>el.classList.remove('keepable'));
@@ -4144,6 +4213,7 @@ function optControlsHtml(o,withRules,rulesLocked){
   h+=`<div class="opt optcol"><div class="lbl">Tisch</div><div class="boards">${BOARDS.map(([id,n])=>`<button class="bsw ${(o.board||'filz')===id?'on':''}" data-board="${id}"><span class="tbg b-${id}"></span><small>${n}</small></button>`).join('')}</div></div>`;
   h+=`<div class="opt"><div class="lbl">Werbepause<small>lustige Spots nach jeder Hälfte</small></div><button class="tog ${o.ads!==false?'on':''}" data-t="ads"></button></div>
     <div class="opt"><div class="lbl">Große Schrift<small>alles größer und leichter lesbar</small></div><button class="tog ${o.big?'on':''}" data-t="big"></button></div>
+    <div class="opt"><div class="lbl">Ansage vorlesen<small>das Handy sagt laut, wer dran ist</small></div><button class="tog ${o.voice?'on':''}" data-t="voice"></button></div>
     <div class="opt"><div class="lbl">Ton</div><button class="tog ${o.sound?'on':''}" data-t="sound"></button></div>
     <div class="opt"><div class="lbl">Vibration<small>nur Android</small></div><button class="tog ${o.vibrate?'on':''}" data-t="vibrate"></button></div>
     <div class="opt"><div class="lbl">Schüttel-Empfindlichkeit${G||!withRules?`<small>${motion.ok?'Sensor aktiv':motion.denied?'Zugriff verweigert':'kein Sensor erkannt'}</small>`:''}</div><div class="seg" data-s="sens">${['niedrig','mittel','hoch'].map(v=>`<button class="${o.sens===v?'on':''}" data-v="${v}">${v}</button>`).join('')}</div></div>`;
@@ -4151,7 +4221,7 @@ function optControlsHtml(o,withRules,rulesLocked){
 }
 function bindOptControls(root,after){
   root.querySelectorAll('[data-board]').forEach(b=>b.addEventListener('click',()=>{S.opt.board=b.dataset.board;root.querySelectorAll('[data-board]').forEach(x=>x.classList.toggle('on',x===b));saveSetup();applyBoard();after&&after('board')}));
-  root.querySelectorAll('.tog[data-t]').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;const k=b.dataset.t;S.opt[k]=!S.opt[k];b.classList.toggle('on',S.opt[k]);if(k==='big'){applyBig();setTimeout(()=>window.dispatchEvent(new Event('resize')),60)}if(k==='sound'&&S.opt.sound){ac();sfx.tick()}saveSetup();after&&after(k)}));
+  root.querySelectorAll('.tog[data-t]').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;const k=b.dataset.t;S.opt[k]=!S.opt[k];b.classList.toggle('on',S.opt[k]);if(k==='big'){applyBig();setTimeout(()=>window.dispatchEvent(new Event('resize')),60)}if(k==='sound'&&S.opt.sound){ac();sfx.tick()}if(k==='voice'&&S.opt.voice){S.opt.voice=true;announce('So klingt die Ansage.')}saveSetup();after&&after(k)}));
   root.querySelectorAll('.seg[data-s]').forEach(sg=>sg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{S.opt[sg.dataset.s]=b.dataset.v;sg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));saveSetup();after&&after(sg.dataset.s)})));
 }
 function showMenu(){
@@ -4293,9 +4363,10 @@ $('#rules').addEventListener('click',e=>{if(e.target.id==='rules')closeRules()})
 
 /* ================= Banner / Toast ================= */
 let bannerT=null,toastT=null;
-function showBanner(k,n,s){
+function showBanner(k,n,s,me){
   $('#bannerK').textContent=k;$('#bannerN').textContent=n;$('#bannerS').textContent=s||'';
-  $('#banner').classList.add('on');clearTimeout(bannerT);bannerT=setTimeout(hideBanner,delay(1500));
+  $('#banner').classList.toggle('me',!!me);
+  $('#banner').classList.add('on');clearTimeout(bannerT);bannerT=setTimeout(hideBanner,delay(me?2600:1500));
 }
 function hideBanner(){$('#banner').classList.remove('on')}
 function toast(t,hot){const el=$('#toast');el.textContent=t;el.classList.toggle('hot',!!hot);el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2100)}
@@ -4480,7 +4551,7 @@ function hostOnMsg(connId,m){
       else NET.lobby.push({name,cpu:false,cid:m.cid,fig,dice});
     }
     for(const [c,data] of Object.entries(NET.imgs))NET.tp.send(connId,{t:'img',cid:c,data});
-    if(NET.chat.length)NET.tp.send(connId,{t:'chatlog',list:NET.chat.slice(-40)});
+    if(NET.chat.length){const l=NET.chat.slice(-40);const keep=new Set(l.filter(x=>x.img).slice(-4).map(x=>x.id));NET.tp.send(connId,{t:'chatlog',list:l.map(x=>x.img&&!keep.has(x.id)?Object.assign({},x,{img:null,text:x.text||'📷 Foto'}):x)})}
     setOnline(m.cid,true);
     NET.tp.send(connId,{t:'lobby',code:NET.code,lobby:NET.lobby,opt:S.opt});
     NET.tp.send(connId,{t:'state',G});
@@ -4503,7 +4574,8 @@ function hostOnMsg(connId,m){
   if(m.t==='act')handle(m.a,cid);
   else if(m.t==='img'){if(typeof m.data==='string'&&m.data.length<60000&&/^data:image\//.test(m.data)){NET.imgs[cid]=m.data;hostBroadcast({t:'img',cid,data:m.data});renderLobby();render()}else if(m.data===null){delete NET.imgs[cid];hostBroadcast({t:'img',cid,data:null});renderLobby();render()}}
   else if(m.t==='profile'){applyProfile(cid,m)}
-  else if(m.t==='chat'){hostChat(cid,m.text)}
+  else if(m.t==='chat'){hostChat(cid,m.text,m.img,m.stk)}
+  else if(m.t==='react'){hostReact(cid,m.e)}
   else if(m.t==='fx'){viewFx(m.e);hostBroadcast({t:'fx',e:m.e},cid)}
   else if(m.t==='leave'){
     if(!G){NET.lobby=NET.lobby.filter(p=>p.cid!==cid);hostBroadcast({t:'lobby',code:NET.code,lobby:NET.lobby,opt:S.opt});renderLobby()}
@@ -4611,6 +4683,7 @@ function guestOnMsg(m){
   else if(m.t==='presence'){NET.online=m.online||{};render();renderLobby()}
   else if(m.t==='img'){if(m.data)NET.imgs[m.cid]=m.data;else delete NET.imgs[m.cid];render();renderLobby()}
   else if(m.t==='chat')chatAdd(m.m);
+  else if(m.t==='react')showReaction(m.cid,m.e);
   else if(m.t==='chatlog'&&Array.isArray(m.list)){const had=new Set(NET.chat.map(x=>x.id));m.list.forEach(x=>{if(!had.has(x.id))NET.chat.push(x)});NET.chat.sort((a,b)=>a.ts-b.ts);if(chatOpen())renderChat()}
   else if(m.t==='fx')viewFx(m.e);
   else if(m.t==='full'){toast('Das Spiel ist voll (8 Spieler).',true);leaveNet()}
@@ -4957,6 +5030,11 @@ function coach(show){
   if(on&&!el.classList.contains('on')){LS.set('schocken.coach',n+1)}
   el.classList.toggle('on',on);
 }
+function announce(text){
+  if(!S.opt.voice||!window.speechSynthesis)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='de-DE';u.rate=.95;
+    const v=speechSynthesis.getVoices().find(x=>/^de/i.test(x.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}
+}
 function applyBig(){document.documentElement.classList.toggle('big',!!S.opt.big)}
 function applyBoard(){
   const b=S.opt.board||'filz';
@@ -5126,6 +5204,8 @@ function openPlanView(code){
   const acts=[];
   if(host){
     acts.push({label:'Per WhatsApp einladen',cls:'pri wa',fn:()=>{NET.code=code;shareWhatsApp()}});
+    acts.push({label:'⏰ „Gleich geht’s los“ senden',cls:'sec',fn:()=>planRemind(code)});
+    acts.push({label:'📅 In meinen Kalender',cls:'sec',fn:()=>planCalendar(code)});
     acts.push({label:open?'Spielraum öffnen':'Spielraum jetzt schon öffnen',cls:open?'pri':'sec',fn:()=>{closeSheet();planOpenRoom(code)}});
     acts.push({label:'Spiel absagen',cls:'sec',fn:()=>{if(!confirm('Das geplante Spiel wirklich absagen?'))return;planPub('/plan',{t:'plan',code,cancel:true,ts:Date.now()});planDrop(code);closeSheet();renderSetup();toast('Spiel abgesagt')}});
   }else{
@@ -5133,10 +5213,46 @@ function openPlanView(code){
     else{
       acts.push({label:'👍 Ich bin dabei',cls:mine&&mine.yes?'pri':'sec',fn:()=>planAnswer(code,true)});
       acts.push({label:'👎 Kann leider nicht',cls:mine&&!mine.yes?'pri':'sec',fn:()=>planAnswer(code,false)});
+      acts.push({label:'📅 In meinen Kalender',cls:'sec',fn:()=>planCalendar(code)});
     }
   }
   acts.push({label:'Schließen',cls:'sec',fn:()=>{closeSheet();renderSetup()}});
   openSheet(head,acts,false,'plan');
+}
+/* ---- reminders: calendar entry + "gleich geht's los" message ---- */
+function calStamp(t){return new Date(t).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}
+function planCalendar(code){
+  const pl=planGet(code);if(!pl)return;
+  const link=location.origin+location.pathname+'?join='+code;
+  const title='Schocken mit '+(pl.role==='host'?'deiner Runde':pl.host);
+  const desc='Spiel-Code '+code+' – kurz vorher auf den Link tippen: '+link;
+  openSheet(`<div class="kick">Erinnerung</div><h2>In den Kalender eintragen</h2><p>Dein Handy erinnert dich dann 10 Minuten vorher.</p>`,[
+    {label:'iPhone / Apple-Kalender',fn:()=>{
+      const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Schocken//DE','BEGIN:VEVENT','UID:'+code+'-'+pl.at+'@schocken','DTSTAMP:'+calStamp(Date.now()),
+        'DTSTART:'+calStamp(pl.at),'DTEND:'+calStamp(pl.at+2*3600000),'SUMMARY:'+title,'DESCRIPTION:'+desc,'URL:'+link,
+        'BEGIN:VALARM','TRIGGER:-PT10M','ACTION:DISPLAY','DESCRIPTION:'+title,'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+      const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
+      const a=document.createElement('a');a.href=url;a.download='schocken-'+code+'.ics';document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);closeSheet();openPlanView(code);
+    }},
+    {label:'Google Kalender',cls:'sec',fn:()=>{
+      const u='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)+'&dates='+calStamp(pl.at)+'/'+calStamp(pl.at+2*3600000)+'&details='+encodeURIComponent(desc);
+      window.open(u,'_blank')||(location.href=u);closeSheet();openPlanView(code);
+    }},
+    {label:'Zurück',cls:'sec',fn:()=>openPlanView(code)}],false,'plancal');
+}
+function planRemind(code){
+  const pl=planGet(code);if(!pl)return;
+  const link=location.origin+location.pathname+'?join='+code;
+  const left=Math.max(0,Math.round((pl.at-Date.now())/60000));
+  const when=left<=1?'jetzt':left<60?'in '+left+' Minuten':fmtWhen(pl.at);
+  const t=`⏰ Gleich geht's los mit *Schocken* – ${when}!
+
+👉 Tippe auf den Link und dann auf *Beitreten*:
+${link}
+
+Bis gleich! 🎲`;
+  const url='https://wa.me/?text='+encodeURIComponent(t);const w=window.open(url,'_blank');if(!w)location.href=url;
 }
 function planAnswer(code,yes,nameOverride){
   const n=nameOverride||(S.myName||'').trim()||($('#onName').value||'').trim();
@@ -5194,8 +5310,10 @@ function renderInviteRSVP(){
   box.innerHTML=`<div class="rsvp-q">${mine?(mine.yes?'Du hast <b>zugesagt</b> 👍':'Du hast <b>abgesagt</b> 👎'):'Bist du dabei?'}</div>
     <div class="rsvp-btns"><button class="btn wide ${mine&&mine.yes?'pri':'yesb'}" id="rsYes">👍 Ich bin dabei</button><button class="btn wide noB ${mine&&!mine.yes?'on':''}" id="rsNo">👎 Kann leider nicht</button></div>
     <div class="plan-t">⏰ Der Spielraum öffnet ${fmtLeft(left)} (3 Min. vorher)</div>
+    ${mine&&mine.yes?'<button class="btn wide calbtn" id="rsCal">📅 In meinen Kalender eintragen</button>':''}
     ${mine&&mine.yes?'<p class="rsvp-hint">Du kannst die App jetzt schließen. Kurz vorher den Link nochmal antippen – oder die Seite einfach offen lassen, dann geht’s von allein los.</p>':''}
     ${rsvpHtml()}`;
+  if($('#rsCal'))$('#rsCal').addEventListener('click',()=>planCalendar(JOIN_PARAM));
   $('#rsYes').addEventListener('click',()=>{const n=needName();if(n)planAnswer(JOIN_PARAM,true,n)});
   $('#rsNo').addEventListener('click',()=>{const n=needName();if(n)planAnswer(JOIN_PARAM,false,n)});
 }
@@ -5318,7 +5436,9 @@ function renderChat(){
   const l=$('#chatList');
   if(!NET.chat.length){l.innerHTML='<div class="chatempty">Noch keine Nachrichten. Sag Hallo! 👋</div>';return}
   l.innerHTML=NET.chat.map(m=>{const me=m.cid===CID;const pp=personFor(m.cid);
-    return `<div class="cmsg ${me?'me':''}">${me?'':avatarHtml(pp,28)}<div class="cb">${me?'':`<b>${esc(pp.name||m.name)}</b>`}<span>${esc(m.text)}</span></div></div>`}).join('');
+    const body=(m.stk?stickerHtml(m.stk):'')+(m.img?`<img class="cimg" src="${m.img}" alt="">`:'')+(m.text?`<span>${esc(m.text)}</span>`:'');
+    return `<div class="cmsg ${me?'me':''}${m.img||m.stk?' media':''}">${me?'':avatarHtml(pp,28)}<div class="cb">${me?'':`<b>${esc(pp.name||m.name)}</b>`}${body}</div></div>`}).join('');
+  l.querySelectorAll('.cimg').forEach(im=>{im.addEventListener('load',()=>{l.scrollTop=l.scrollHeight});im.addEventListener('click',()=>{const v=$('#imgView');v.querySelector('img').src=im.src;v.classList.add('on')})});
   l.scrollTop=l.scrollHeight;
 }
 function renderChatBtn(){
@@ -5328,12 +5448,12 @@ function renderChatBtn(){
 let bubbleT=null;
 function showChatBubble(m){
   const pp=personFor(m.cid);const b=$('#chatBubble');
-  b.innerHTML=`${avatarHtml(pp,26)}<span><b>${esc(pp.name||m.name)}</b> ${esc(m.text)}</span>`;
+  b.innerHTML=`${avatarHtml(pp,26)}<span><b>${esc(pp.name||m.name)}</b> ${m.stk?STICKERS[m.stk].e+' '+esc(STICKERS[m.stk].t):m.img?'📷 hat ein Bild geschickt':esc(m.text)}</span>`;
   b.classList.add('on');clearTimeout(bubbleT);bubbleT=setTimeout(hideChatBubble,3800);
 }
 function hideChatBubble(){$('#chatBubble').classList.remove('on')}
 function chatAdd(m){
-  if(!m||typeof m.text!=='string')return;
+  if(!m||(typeof m.text!=='string'&&!m.img&&!m.stk))return;m.text=m.text||'';
   if(NET.chat.some(x=>x.id===m.id))return;
   NET.chat.push(m);if(NET.chat.length>80)NET.chat.shift();
   if(chatOpen())renderChat();
@@ -5341,16 +5461,64 @@ function chatAdd(m){
   if(m.cid!==CID)sfx.pop();
   renderChatBtn();
 }
-function hostChat(cid,text){
-  text=String(text||'').replace(/\s+/g,' ').trim().slice(0,140);if(!text)return;
-  const m={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),cid,name:personFor(cid).name,text,ts:Date.now()};
+function hostChat(cid,text,img,stk){
+  text=String(text||'').replace(/\s+/g,' ').trim().slice(0,140);
+  img=typeof img==='string'&&/^data:image\/(jpeg|png|gif|webp);base64,/.test(img)&&img.length<420000?img:null;
+  stk=typeof stk==='string'&&STICKERS[stk]?stk:null;
+  if(!text&&!img&&!stk)return;
+  const m={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),cid,name:personFor(cid).name,text,img,stk,ts:Date.now()};
   hostBroadcast({t:'chat',m});chatAdd(m);
 }
-function sendChat(text){
-  text=String(text||'').trim();if(!text)return;
-  if(NET.mode==='host')hostChat(CID,text);
-  else if(NET.mode==='guest'){if(NET.tp&&hostOk())NET.tp.send({t:'chat',cid:CID,text:text.slice(0,140)});else toast('Keine Verbindung zum Spielleiter')}
+function sendChat(text,img,stk){
+  text=String(text||'').trim();if(!text&&!img&&!stk)return;
+  if(NET.mode==='host')hostChat(CID,text,img,stk);
+  else if(NET.mode==='guest'){if(NET.tp&&hostOk())NET.tp.send({t:'chat',cid:CID,text:text.slice(0,140),img:img||null,stk:stk||null});else toast('Keine Verbindung zum Spielleiter')}
 }
+/* ---- reactions flying over the table ---- */
+const REACTS=['👏','😂','🍺','😱','🔥','🙈','🎉','😭'];
+let lastReact=0;
+function sendReact(e){
+  if(!REACTS.includes(e)||Date.now()-lastReact<600)return;lastReact=Date.now();
+  if(NET.mode==='host')hostReact(CID,e);
+  else if(NET.mode==='guest'&&NET.tp&&hostOk()){NET.tp.send({t:'react',cid:CID,e});showReaction(CID,e)}
+}
+function hostReact(cid,e){if(!REACTS.includes(e))return;hostBroadcast({t:'react',cid,e});showReaction(cid,e)}
+function showReaction(cid,e){
+  if(!REACTS.includes(e))return;
+  const L=$('#reactLayer');if(!L)return;const pp=personFor(cid);
+  const el=document.createElement('div');el.className='rx';
+  el.style.left=(12+Math.random()*70)+'%';el.style.setProperty('--dx',(Math.random()*60-30)+'px');
+  el.innerHTML=`<span class="re">${e}</span><span class="rn">${esc((pp&&pp.name)||'')}</span>`;
+  L.appendChild(el);setTimeout(()=>el.remove(),2600);
+  for(let k=0;k<3;k++){const m=document.createElement('div');m.className='rx small';m.style.left=(10+Math.random()*80)+'%';m.style.animationDelay=(0.15+k*.12)+'s';m.style.setProperty('--dx',(Math.random()*80-40)+'px');m.innerHTML=`<span class="re">${e}</span>`;L.appendChild(m);setTimeout(()=>m.remove(),2800)}
+  if(cid!==CID)sfx.pop();
+}
+/* ---- animated stickers (our own "GIFs") ---- */
+const STICKERS={
+  prost:{e:'🍻',t:'Prost!',a:'clink'},schock:{e:'⚡',t:'Schock!',a:'zap'},haha:{e:'😂',t:'Haha!',a:'shake'},
+  pech:{e:'🙈',t:'Pech gehabt',a:'wobble'},bravo:{e:'🎉',t:'Glückwunsch!',a:'pop'},ohne:{e:'😱',t:'Oh nein!',a:'shake'},
+  lokal:{e:'🍺',t:'Lokalrunde!',a:'bounce'},cool:{e:'😎',t:'Läuft bei mir',a:'pop'}
+};
+function stickerHtml(k){const s=STICKERS[k];if(!s)return'';return `<div class="stk a-${s.a}"><span class="se">${s.e}</span><span class="st">${esc(s.t)}</span></div>`}
+/* ---- photos & GIFs ---- */
+function pickChatImage(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;
+    if(f.type==='image/gif'&&f.size<=280000){const r=new FileReader();r.onload=()=>{sendChat('',r.result);toast('GIF gesendet')};r.readAsDataURL(f);return}
+    const url=URL.createObjectURL(f);const img=new Image();
+    img.onload=()=>{const mx=640,sc=Math.min(1,mx/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      let q=.75,d=c.toDataURL('image/jpeg',q);while(d.length>300000&&q>.35){q-=.1;d=c.toDataURL('image/jpeg',q)}
+      sendChat('',d);if(f.type==='image/gif')toast('GIF war zu groß – als Bild gesendet');};
+    img.onerror=()=>{URL.revokeObjectURL(url);toast('Bild konnte nicht gelesen werden')};img.src=url;};
+  inp.click();
+}
+$('#chatReact').innerHTML=REACTS.map(e=>`<button data-r="${e}">${e}</button>`).join('');
+$('#chatReact').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ac();sendReact(b.dataset.r);closeChat()}));
+$('#chatStk').innerHTML=Object.keys(STICKERS).map(k=>`<button data-s="${k}">${STICKERS[k].e}<small>${esc(STICKERS[k].t)}</small></button>`).join('');
+$('#chatStk').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ac();sendChat('',null,b.dataset.s)}));
+$('#chatPic').addEventListener('click',()=>{ac();pickChatImage()});
+$('#imgView').addEventListener('click',()=>$('#imgView').classList.remove('on'));
 $('#chatQuick').innerHTML=QUICK.map(q=>`<button>${esc(q)}</button>`).join('');
 $('#chatQuick').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ac();sendChat(b.textContent)}));
 $('#chatForm').addEventListener('submit',e=>{e.preventDefault();const i=$('#chatInput');sendChat(i.value);i.value=''});
@@ -5364,7 +5532,7 @@ $('#chatBubble').addEventListener('click',()=>{hideChatBubble();openChat()});
 buildDice();applyBoard();applyBig();
 if(JOIN_PARAM)S.tab='online';
 renderSetup();
-window.__schocken={eStartRound,commit,planPub,get PLAN(){return PLAN},loserShow,becomeHost,eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
+window.__schocken={sendReact,planCalendar,planRemind,eStartRound,commit,planPub,get PLAN(){return PLAN},loserShow,becomeHost,eStartHalf,sendChat,openChat,celebrate,applyBoard,get G(){return G},get NET(){return NET},get V(){return V},evaluate,beats,act,startShake,releaseShake,S,CID};
 /* ================= 3D-Würfel (WebGL) =================
    Kleines eigenes 3D-Modell: abgerundeter Würfelkörper, eingelassene Augen, Licht + Glanz.
    Die CSS-Würfel bleiben als unsichtbare Platzhalter (Position, Animation, Antippen) –
