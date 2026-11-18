@@ -4964,6 +4964,12 @@ function fmtWhen(at){
   const hm=d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr';
   return (day===0?'heute':day===1?'morgen':d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}))+' um '+hm;
 }
+function planOpen(pl){
+  if(!pl)return false;
+  const info=PLAN.code===pl.code?PLAN.info:null;
+  if(info&&info.opened&&!pl.opened){pl.opened=true;planSave(pl)}
+  return Date.now()>=pl.at-PLAN_OPEN||!!pl.opened||!!(info&&info.opened);
+}
 function fmtLeft(ms){if(ms<=0)return'jetzt';const m=Math.ceil(ms/60000);if(m<60)return'in '+m+' Min.';const h=Math.floor(m/60),r=m%60;return'in '+h+' Std.'+(r?' '+r+' Min.':'')}
 function planWatch(code,cb){
   PLAN.cb=cb||null;if(PLAN.code===code&&PLAN.buses.length)return;
@@ -5023,7 +5029,7 @@ function openPlanView(code){
   const info=PLAN.info&&PLAN.info.code===code?PLAN.info:null;
   if(info&&info.cancel){planDrop(code);openSheet(`<div class="kick">Geplantes Spiel</div><h2>Abgesagt</h2><p>${esc(pl.host)} hat das Spiel ${fmtWhen(pl.at)} abgesagt.</p>`,[{label:'OK',fn:()=>{closeSheet();renderSetup()}}],true,'plan');return}
   if(info&&info.at&&info.at!==pl.at){pl.at=info.at;planSave(pl)}
-  const left=pl.at-PLAN_OPEN-Date.now(),open=left<=0,host=pl.role==='host';
+  const left=pl.at-PLAN_OPEN-Date.now(),open=planOpen(pl),host=pl.role==='host';
   const mine=PLAN.rs[CID];
   const head=`<div class="kick">Geplantes Spiel · Code ${code}</div><h2>Schocken ${fmtWhen(pl.at)}</h2>
     <div class="plan-t ${open?'open':''}">${open?'🟢 Der Spielraum ist offen!':`⏰ Spielraum öffnet ${fmtLeft(left)}`}</div>
@@ -5073,6 +5079,7 @@ function showAdopt(){const pb=$('#planBox');if(!pb)return;pb.innerHTML=adoptHtml
 function bindAdopt(root,code){root.querySelectorAll('[data-adopt]').forEach(b=>b.addEventListener('click',()=>{const r=PLAN.rs[b.dataset.adopt];if(r)planAdopt(code,r)}))}
 function planOpenRoom(code){
   const pl=planGet(code);if(pl){pl.opened=true;planSave(pl)}
+  if(pl){if(PLAN.code!==code)planWatch(code,PLAN.cb);planPub('/plan',{t:'plan',code,at:pl.at,host:pl.host,hostCid:CID,opened:true,ts:Date.now()})}
   const n=(S.myName||'').trim()||(pl&&pl.host)||'Gastgeber';
   hostCreate(n,code);
 }
@@ -5084,9 +5091,9 @@ function renderInviteRSVP(){
   if(INVITE&&info&&info.code===JOIN_PARAM&&info.cancel){sc.classList.remove('rsvp');box.innerHTML=`<div class="okbox">Dieses Spiel wurde von ${esc(info.host||'dem Gastgeber')} abgesagt.</div>`;return}
   if(!planned){sc.classList.remove('rsvp');box.innerHTML='';return}
   if(!pl||pl.at!==info.at)planSave(Object.assign(pl||{},{code:JOIN_PARAM,at:info.at,host:info.host,role:'guest'}));
-  const left=info.at-PLAN_OPEN-Date.now();
+  const left=info.at-PLAN_OPEN-Date.now();const isOpen=left<=0||!!info.opened;
   $('#inviteHead').innerHTML=`<div class="k">${esc(info.host)} lädt dich ein zum</div><div class="c" style="font-size:40px;letter-spacing:2px">Schocken</div><div class="s" style="font-size:20px;color:var(--brass);font-weight:700">${fmtWhen(info.at)}</div>`;
-  if(left<=0){
+  if(isOpen){
     // room is open: normal joining
     sc.classList.remove('rsvp');box.innerHTML=`<div class="okbox">🟢 Der Spielraum ist offen – jetzt „Beitreten“ tippen!</div>`;showAdopt();
     const mine=PLAN.rs[CID];
@@ -5118,7 +5125,9 @@ setInterval(()=>{
 function renderPlanBox(){
   const box=$('#planBox');if(!box)return;
   const l=INVITE?[]:plansAll();
-  box.innerHTML=l.map(p=>{const open=Date.now()>=p.at-PLAN_OPEN;return `<button class="plancard" data-plan="${p.code}"><span class="pi">🗓️</span><span class="pt"><b>Schocken ${fmtWhen(p.at)}</b><small>${p.role==='host'?'von dir geplant':'mit '+esc(p.host)}${p.role==='guest'&&p.yes!=null?(p.yes?' · zugesagt':' · abgesagt'):''} · ${open?'Raum offen':'Raum öffnet '+fmtLeft(p.at-PLAN_OPEN-Date.now())}</small></span><span class="pa">›</span></button>`}).join('');
+  const gp=l.find(p=>p.role==='guest'&&!planOpen(p));
+  if(gp&&PLAN.code!==gp.code)planWatch(gp.code,()=>{renderPlanBox();if(V.sheetKind==='plan')openPlanView(gp.code)});
+  box.innerHTML=l.map(p=>{const open=planOpen(p);return `<button class="plancard" data-plan="${p.code}"><span class="pi">🗓️</span><span class="pt"><b>Schocken ${fmtWhen(p.at)}</b><small>${p.role==='host'?'von dir geplant':'mit '+esc(p.host)}${p.role==='guest'&&p.yes!=null?(p.yes?' · zugesagt':' · abgesagt'):''} · ${open?'Raum offen':'Raum öffnet '+fmtLeft(p.at-PLAN_OPEN-Date.now())}</small></span><span class="pa">›</span></button>`}).join('');
   box.querySelectorAll('[data-plan]').forEach(b=>b.addEventListener('click',()=>{ac();openPlanView(b.dataset.plan)}));
 }
 
