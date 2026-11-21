@@ -1,0 +1,33 @@
+{
+ "name": "Schiffe versenken",
+ "short_name": "Schiffe",
+ "description": "Seeschlacht für 2 – gegen den Computer oder mit zwei Handys",
+ "id": "./schiffe.html",
+ "start_url": "./schiffe.html",
+ "scope": "./",
+ "display": "fullscreen",
+ "orientation": "portrait",
+ "background_color": "#071a2e",
+ "theme_color": "#071a2e",
+ "lang": "de",
+ "icons": [
+  {
+   "src": "schiffe-icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "schiffe-icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "schiffe-icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
