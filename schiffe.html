@@ -607,7 +607,7 @@ function rebuildBoards3D(n){if(!HAS3D||!scene||BSIZE===n)return;BSIZE=n;const vi
  OWNX=-(n/2+2.2);TGTX=n/2+2.2;water.material.uniforms.uB.value.set(OWNX,TGTX,n/2+.4);
  makeBoard('own',OWNX,new THREE.Color(.45,.8,1));makeBoard('tgt',TGTX,new THREE.Color(1,.55,.35));BOARDS.own.g.visible=vis;BOARDS.tgt.g.visible=vis;
  if(CAM.mode==='fixed'&&CAM.key){const v=camView(CAM.key);CAM.pos.copy(v.pos);CAM.tgt.copy(v.tgt)}}
-function setSel(b,r,c){if(!HAS3D)return;for(const k in BOARDS)BOARDS[k].gm.uniforms.uSel.value.set(-9,-9);if(b&&r!=null)BOARDS[b].gm.uniforms.uSel.value.set(c,9-r)}
+function setSel(b,r,c){if(!HAS3D)return;for(const k in BOARDS)BOARDS[k].gm.uniforms.uSel.value.set(-9,-9);if(b&&r!=null)BOARDS[b].gm.uniforms.uSel.value.set(c,BN()-1-r)}
 function clearBoard(b){const B=BOARDS[b];while(B.content.children.length)B.content.remove(B.content.children[0]);B.ships={};EMIT=EMIT.filter(e=>e.b!==B)}
 
 /* ---------- Schiffsmodelle ---------- */
@@ -667,9 +667,9 @@ function buildMenuFleet(){MENU=new THREE.Group();scene.add(MENU);
 
 /* ---------- Kamera ---------- */
 function camView(key){
- const a=innerWidth/innerHeight,tv=Math.tan(THREE.MathUtils.degToRad(cam.fov)/2),th=tv*a,wide=a>1.3,el=THREE.MathUtils.degToRad(wide?52:66);
+ const a=innerWidth/innerHeight,tv=Math.tan(THREE.MathUtils.degToRad(cam.fov)/2),th=tv*a,wide=a>1.3,el=THREE.MathUtils.degToRad(wide?68:80);
  let cx=key==='own'?OWNX:TGTX,W=BN()+2.2;if(wide){cx=cx*.16;W=2*TGTX+BN()+1.6}
- const dW=(W/2)/th+3.2,dH=((BN()+2.4)*Math.sin(el)*.5)/tv/(wide?.7:.6)+2;const d=Math.max(dW,dH);
+ const dW=(W/2)/th+(BN()/2+1)*Math.cos(el)+.6,dH=((BN()+2.4)*Math.sin(el)*.5)/tv/(wide?.7:.6)+2;const d=Math.max(dW,dH);
  const tz=wide?.9:.55;
  return{pos:new THREE.Vector3(cx,Math.sin(el)*d,Math.cos(el)*d+tz),tgt:new THREE.Vector3(cx,0,tz)}}
 function camTo(key,dur=1.05){
