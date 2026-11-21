@@ -113,6 +113,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
 /* modal */
 .modal{position:fixed;inset:0;z-index:30;background:rgba(2,10,20,.6);display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .modal.on{display:flex;animation:fadeIn .2s}
+.modal .card{background:rgba(6,20,38,.97)}
 .help{max-height:80vh;overflow:auto}
 .help h3{margin:10px 0 4px;font-size:17px;color:var(--gold)}
 .help p,.help li{font-size:16px;color:#d3e4f3;line-height:1.5}
@@ -158,6 +159,64 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
 #cine .tag{position:absolute;left:14px;top:calc(15vh + 10px);font-size:12px;letter-spacing:.3em;color:#ff5a3c;font-weight:800;opacity:0;transition:opacity .3s .4s}
 #cine.on .tag{opacity:1;animation:pulse 1s infinite}
 #hud{transition:opacity .35s}
+/* Avatare, Profil, Abzeichen, Orden */
+.ava{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#3d6fa8,#122848);object-fit:cover;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border:2px solid rgba(255,210,120,.7)}
+.ava.sm{width:22px;height:22px;border-width:1px;vertical-align:middle}
+.ava.lg{width:66px;height:66px}
+.prof{display:flex;gap:12px;align-items:center}
+.pAva{padding:0;border:0;background:none;border-radius:50%;position:relative;flex:0 0 auto}
+.pAva:after{content:"✎";position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:#2a1500;font-size:13px;display:flex;align-items:center;justify-content:center}
+.pInfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.pInfo input{padding:9px 11px;font-size:17px}
+.pRank{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;color:#ffe2a0}
+.pXp{font-size:12px;color:var(--mut)}
+.xpb{height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.xpb i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffcf6b,#ff8a3d);border-radius:99px;transition:width 1.6s cubic-bezier(.3,.8,.3,1)}
+.medBtn{font-size:16px}
+.badge{display:inline-flex;align-items:center;justify-content:center;gap:1px;min-width:26px;height:17px;padding:0 4px;border-radius:4px;background:linear-gradient(180deg,#1f3768,#0d1c3c);border:1px solid #f2c14e;vertical-align:middle;flex:0 0 auto}
+.badge b{color:#f2c14e;font-size:10px;line-height:1;font-weight:900}
+.badge .chev{width:9px;height:6px;border:2px solid #f2c14e;border-bottom:0;border-right:0;transform:rotate(45deg) translate(1px,1px);margin:0 1px}
+.badge .dot{width:5px;height:5px;border-radius:50%;background:#f2c14e}
+.badge.b-a{background:linear-gradient(180deg,#f2c14e,#b8862b);border-color:#fff3c4}.badge.b-a b{color:#1b2c55}
+.badge.big{height:24px;min-width:38px;padding:0 6px}.badge.big b{font-size:14px}
+.fl .nm b{display:flex;align-items:center;gap:5px;min-width:0}.fl .nm b span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.segL{font-size:13px;color:var(--mut);margin-top:2px}
+.seg{display:flex;gap:6px}.seg button{flex:1;padding:9px 4px;font-size:15px;line-height:1.15;display:flex;flex-direction:column;align-items:center}
+.seg button small{font-size:11px;color:var(--mut);font-weight:500}
+.seg button.on{background:linear-gradient(180deg,#ffcf6b,#e88a2a);color:#2a1500;border:0}.seg button.on small{color:#4a2a00}
+.avaStage{height:220px;border-radius:16px;background:radial-gradient(circle at 50% 60%,#2a5a8a,#0b1a30 70%);overflow:hidden;display:flex;justify-content:center}
+.avaName{text-align:center;font-family:"Black Ops One",Impact,sans-serif;font-size:22px;color:var(--gold)}
+#avaGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#avaGrid button{padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px}
+#avaGrid button.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset;background:rgba(80,60,10,.6)}
+#avaGrid small{font-size:10px;line-height:1.1;color:#cfe0f0;font-weight:500}
+.endStage{height:140px;width:100%;display:flex;justify-content:center;margin:-6px 0 -10px}
+.avStage{display:block}
+.mh{display:flex;gap:12px;align-items:center}.mh>div{flex:1}.mhR{font-weight:800;font-size:17px;color:#ffe2a0;display:flex;gap:8px;align-items:center;margin-bottom:6px}.mhS{font-size:13px;color:var(--mut);margin-top:4px}
+.medGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px}
+.medal2{display:flex;flex-direction:column;align-items:center;position:relative;text-align:center}
+.medal2 .rib{width:30px;height:22px;clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)}
+.medal2 .coin{width:46px;height:46px;border-radius:50%;margin-top:-6px;background:radial-gradient(circle at 35% 30%,#fff6cf,#f2c14e 45%,#a6741c);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 0 0 3px rgba(255,255,255,.25);font-size:23px}
+.medal2 .mn{font-size:11px;font-weight:700;margin-top:4px;line-height:1.15;max-width:100%;overflow-wrap:anywhere;hyphens:auto;-webkit-hyphens:auto}
+.medal2 .cnt{position:absolute;top:18px;right:10%;font-size:11px;background:#c0303a;border-radius:99px;padding:1px 5px;font-weight:800}
+.medal2 .nw{position:absolute;top:-4px;right:6%;font-size:10px;background:var(--green);color:#03260f;border-radius:99px;padding:1px 5px;font-weight:900}
+.medal2.locked{opacity:.35;filter:grayscale(1)}
+#rankList{display:flex;flex-direction:column;gap:5px}
+.rl{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;font-size:15px}.rl span{flex:1}.rl small{color:var(--mut)}
+.rl.on{background:rgba(242,193,78,.18);border:1px solid var(--gold)}.rl.lk{opacity:.45}
+.aw{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.awT{display:flex;justify-content:space-between;align-items:center}.awT b{font-size:20px;color:var(--green)}.awT span{display:flex;gap:6px;align-items:center;font-weight:700;color:#ffe2a0}
+.aw small{font-size:12px;color:var(--mut)}
+.promo{text-align:center;font-family:"Black Ops One",Impact,sans-serif;font-size:22px;color:var(--gold);animation:promo 1.2s .8s both cubic-bezier(.2,1.6,.4,1)}
+.promo span{font-family:system-ui;font-size:15px;font-weight:800;display:inline-flex;gap:6px;align-items:center;color:#fff}
+@keyframes promo{from{opacity:0;transform:scale(2.4)}to{opacity:1;transform:none}}
+.awM{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:4px}
+.awM .drop{width:76px;animation:medalDrop 1s both cubic-bezier(.2,1.4,.4,1);perspective:400px}
+.awM .coin{width:40px;height:40px;font-size:20px}
+@keyframes medalDrop{0%{opacity:0;transform:translateY(-60px) rotateY(540deg) scale(1.6)}100%{opacity:1;transform:none}}
+#end .card{max-height:calc(100vh - 30px);overflow:auto}
+#cine .cav{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .4s}
+#cine.title .cav{opacity:1}#cine .cav .ava{width:52px;height:52px}
 </style>
 </head>
 <body>
@@ -171,7 +230,8 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
 <div id="menu" class="scr">
   <div class="logo small"><span class="t1">SCHIFFE</span><span class="t2">VERSENKEN</span></div>
   <div class="card">
-    <label class="fld">Dein Name<input id="inName" maxlength="14" placeholder="z. B. Tim" autocomplete="off"></label>
+    <div class="prof"><button id="profAva" class="pAva" title="Avatar wählen"></button><div class="pInfo"><input id="inName" maxlength="14" placeholder="Dein Name" autocomplete="off"><div id="profRank" class="pRank"></div><div class="xpb"><i id="profBar"></i></div><small id="profXp" class="pXp"></small></div></div>
+    <button id="profMed" class="medBtn">🎖️ Orden &amp; Dienstgrade</button>
     <button id="btnResume" class="big gold hide"><span class="ic">↩️</span><span>Online-Spiel fortsetzen<small id="resumeInfo"></small></span></button>
     <button class="big" data-go="cpuSel"><span class="ic">🤖</span><span>Gegen den Computer<small>Allein spielen – 3 Stufen</small></span></button>
     <button class="big" data-go="onlineSel"><span class="ic">📱</span><span>Zwei Handys<small>Jeder spielt am eigenen Handy</small></span></button>
@@ -185,6 +245,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
     <h2>Gegen den Computer</h2>
     <p style="text-align:center">Wie stark soll der Computer sein?</p>
     <div class="lvl">
+      <div class="segL">Spielfeld</div><div class="seg" id="segCpu"></div>
       <button class="big" data-lvl="1"><span class="ic">🐟</span><span>Leicht<small>Schießt meist ins Blaue</small></span></button>
       <button class="big" data-lvl="2"><span class="ic">🦈</span><span>Mittel<small>Sucht clever nach Schiffen</small></span></button>
       <button class="big" data-lvl="3"><span class="ic">⚓</span><span>Admiral<small>Rechnet jede Möglichkeit durch</small></span></button>
@@ -197,6 +258,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   <div class="card">
     <h2>Zwei Handys</h2>
     <p>Einer erstellt das Spiel und zeigt den Code. Der andere scannt den QR-Code oder tippt den Code ein.</p>
+    <div class="segL">Spielfeld (bestimmt der Ersteller)</div><div class="seg" id="segOn"></div>
     <button class="big gold" id="btnCreate"><span class="ic">➕</span><span>Spiel erstellen</span></button>
     <div style="height:4px"></div>
     <label class="fld">Code vom Mitspieler<input id="inCode" class="codeIn" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="····"></label>
@@ -226,6 +288,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
     <p>Ihr gebt das Handy nach jedem Zug weiter. Vor jedem Wechsel wird der Bildschirm abgedeckt, damit niemand die Flotte des anderen sieht.</p>
     <label class="fld">Spieler 1<input id="inP1" maxlength="14" autocomplete="off"></label>
     <label class="fld">Spieler 2<input id="inP2" maxlength="14" autocomplete="off"></label>
+    <div class="segL">Spielfeld</div><div class="seg" id="segLoc"></div>
     <button class="big go" id="btnLocal"><span class="ic">⚓</span><span>Los geht's</span></button>
     <button class="back" data-go="menu">‹ Zurück</button>
   </div>
@@ -246,6 +309,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
     <div class="endT" id="endT">SIEG!</div>
     <p id="endP" style="text-align:center"></p>
     <div class="stats" id="endS"></div>
+    <div id="endAward"></div>
     <button class="big gold" id="btnAgain" style="justify-content:center">🔁 Revanche</button>
     <button id="btnEndView">🔍 Spielfeld ansehen</button>
     <button class="back" id="btnEndMenu">Hauptmenü</button>
@@ -282,7 +346,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   </div>
 </div>
 
-<div id="cine"><div class="lb t"></div><div class="tag">● LIVE</div><div class="skip">Tippen zum Überspringen</div><div class="lb b"><div class="ct"></div><div class="cs"></div></div></div>
+<div id="cine"><div class="lb t"></div><div class="tag">● LIVE</div><div class="skip">Tippen zum Überspringen</div><div class="lb b"><div class="cav"></div><div class="ct"></div><div class="cs"></div></div></div>
 <div id="banner"><div class="b1"></div><div class="b2"></div></div>
 
 <div id="mHelp" class="modal"><div class="card help">
@@ -324,6 +388,25 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
 
 <div id="mConfirm" class="modal"><div class="card" style="text-align:center"><h2 id="cfT">Sicher?</h2><p id="cfP"></p><div class="row"><button id="cfNo">Nein</button><button id="cfYes" style="background:#b8322a;border:0">Ja</button></div></div></div>
 
+<div id="mAva" class="modal"><div class="card">
+  <h2>Wähle deinen Kommandeur</h2>
+  <div id="avaStage" class="avaStage"></div>
+  <div id="avaName" class="avaName"></div>
+  <div id="avaGrid"></div>
+  <button class="big gold" id="avaOk" style="justify-content:center">⚓ Kommando übernehmen</button>
+  <button class="back" data-close>Abbrechen</button>
+</div></div>
+
+<div id="mMed" class="modal"><div class="card help">
+  <h2>Orden &amp; Dienstgrade</h2>
+  <div id="medHead"></div>
+  <h3>Orden</h3><p style="font-size:14px">Für besondere Leistungen in Spielen gegen den Computer oder online.</p>
+  <div id="medGrid" class="medGrid"></div>
+  <h3>Dienstgrade (Abzeichen)</h3><p style="font-size:14px">Erfahrungspunkte (EP) gibt es für jedes Spiel – mehr für Siege, schwere Gegner und große Karten.</p>
+  <div id="rankList"></div>
+  <button class="go" data-close>Schließen</button>
+</div></div>
+
 <div id="toast"></div>
 <script>
 'use strict';
@@ -362,7 +445,7 @@ const AU={ctx:null,
 function vib(p){if(SET.vib&&navigator.vibrate){try{navigator.vibrate(p)}catch(e){}}}
 
 /* ================= 3D SZENE ================= */
-const OWNX=-7.2,TGTX=7.2;
+let OWNX=-7.2,TGTX=7.2;const BN=()=>(typeof N!=='undefined'?N:10);
 let R,scene,cam,water,flash,PSA,PSN,T=0;
 const SUN=HAS3D?new THREE.Vector3(-.35,.16,-1).normalize():null;
 const BOARDS={};
@@ -407,11 +490,11 @@ function init3D(){
  flash=new THREE.PointLight(0xffa050,0,14,2);scene.add(flash);
  // Wasser
  const wg=new THREE.PlaneGeometry(320,320,150,150);wg.rotateX(-Math.PI/2);
- water=new THREE.Mesh(wg,new THREE.ShaderMaterial({uniforms:{uT:{value:0},uSun:{value:SUN},uCalm:{value:1}},
-  vertexShader:`uniform float uT;uniform float uCalm;varying vec3 vW;varying vec3 vN;
+ water=new THREE.Mesh(wg,new THREE.ShaderMaterial({uniforms:{uT:{value:0},uSun:{value:SUN},uCalm:{value:1},uB:{value:new THREE.Vector3(OWNX,TGTX,5.4)}},
+  vertexShader:`uniform float uT;uniform float uCalm;uniform vec3 uB;varying vec3 vW;varying vec3 vN;
   float W(vec2 p,vec2 d,float f,float a,float s,inout vec2 g){float ph=dot(p,d)*f+uT*s;g+=d*f*a*cos(ph);return a*sin(ph);}
   void main(){vec4 w=modelMatrix*vec4(position,1.);vec2 p=w.xz;
-   float b1=max(abs(p.x+${(-OWNX).toFixed(1)})-5.4,abs(p.y)-5.4),b2=max(abs(p.x-${TGTX.toFixed(1)})-5.4,abs(p.y)-5.4);
+   float b1=max(abs(p.x-uB.x)-uB.z,abs(p.y)-uB.z),b2=max(abs(p.x-uB.y)-uB.z,abs(p.y)-uB.z);
    float m=mix(1.,mix(.1,1.,smoothstep(0.,5.,min(b1,b2))),uCalm);
    vec2 g=vec2(0.);float h=0.;
    h+=W(p,normalize(vec2(1.,.3)),.32,.22,1.0,g);h+=W(p,normalize(vec2(-.4,1.)),.5,.12,1.5,g);
@@ -434,7 +517,7 @@ function init3D(){
    gl_FragColor=vec4(col,1.);}`}));
  water.renderOrder=-5;scene.add(water);
  PSA=new PSys(2600,THREE.AdditiveBlending);PSN=new PSys(2200,THREE.NormalBlending);
- makeBoard('own',OWNX,new THREE.Color(.45,.8,1));makeBoard('tgt',TGTX,new THREE.Color(1,.55,.35));
+ rebuildBoards3D(BN());
  showBoards(false);
  buildMenuFleet();
  resize();addEventListener('resize',resize);
@@ -493,31 +576,37 @@ function updEmit(dt){for(const e of EMIT){if(!e.b.g.visible)continue;const X=e.b
  e.sm+=dt*(e.fire?4:2.5);while(e.sm>1){e.sm--;PSN.spawn(X+rnd(-.1,.1),.5,Z+rnd(-.1,.1),rnd(-.1,.1)+.25,rnd(.6,1.1),rnd(-.1,.1)-.1,rnd(1.6,2.6),.25,rnd(1,1.5),[.1,.1,.1,.55],[.35,.33,.33,0],-.15,.3)}}}
 
 /* ---------- Spielfelder ---------- */
-function labelTex(col){const cv=document.createElement('canvas');cv.width=cv.height=1024;const x=cv.getContext('2d'),u=1024/12;
+function labelTex(col){const cv=document.createElement('canvas');cv.width=cv.height=1024;const n=BN(),x=cv.getContext('2d'),u=1024/(n+2);
  x.font=`bold ${u*.48}px Arial,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillStyle=`rgb(${col.r*255|0},${col.g*255|0},${col.b*255|0})`;x.shadowColor='rgba(0,0,0,.9)';x.shadowBlur=10;
- for(let i=0;i<10;i++){x.fillText('ABCDEFGHIJ'[i],u*(1.5+i),u*.5);x.fillText(String(i+1),u*.5,u*(1.5+i))}
+ for(let i=0;i<n;i++){x.fillText('ABCDEFGHIJKLMNO'[i],u*(1.5+i),u*.5);x.fillText(String(i+1),u*.5,u*(1.5+i))}
  const t=new THREE.CanvasTexture(cv);t.anisotropy=4;return t}
 function makeBoard(key,x,col){
  const g=new THREE.Group();g.position.x=x;scene.add(g);
- const gm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uC:{value:col},uT:{value:0},uSel:{value:new THREE.Vector2(-9,-9)},uRad:{value:key==='tgt'?1:0},uHi:{value:0}},
+ const gm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uN:{value:BN()},uC:{value:col},uT:{value:0},uSel:{value:new THREE.Vector2(-9,-9)},uRad:{value:key==='tgt'?1:0},uHi:{value:0}},
   vertexShader:`varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`uniform vec3 uC;uniform float uT,uRad,uHi;uniform vec2 uSel;varying vec2 vU;
-  void main(){vec2 g=vU*10.;vec2 f=fract(g);vec2 cl=floor(g);vec2 d=min(f,1.-f);
-   float ln=1.-smoothstep(0.,.05,min(d.x,d.y));vec2 e=min(vU,1.-vU)*10.;float bd=1.-smoothstep(0.,.09,min(e.x,e.y));
+  fragmentShader:`uniform vec3 uC;uniform float uN,uT,uRad,uHi;uniform vec2 uSel;varying vec2 vU;
+  void main(){vec2 g=vU*uN;vec2 f=fract(g);vec2 cl=floor(g);vec2 d=min(f,1.-f);
+   float ln=1.-smoothstep(0.,.05,min(d.x,d.y));vec2 e=min(vU,1.-vU)*uN;float bd=1.-smoothstep(0.,.09,min(e.x,e.y));
    float a=.07+ln*.5+bd*.95+uHi*.08;vec3 c=uC;
    vec2 p=vU-.5;float r=length(p);
    if(uRad>0.){float an=atan(p.y,p.x);float sw=mod(uT*1.3-an,6.2832);float s=exp(-sw*3.)*smoothstep(.75,.6,r);a+=s*.28;c=mix(c,vec3(1.,.8,.5),s*.5);}
    a+=.05*sin(r*40.-uT*3.)*smoothstep(.7,.0,r)*uRad;
    if(all(lessThan(abs(cl-uSel),vec2(.5)))){float pu=.5+.5*sin(uT*9.);float ring=1.-smoothstep(.06,.14,min(d.x,d.y));a+=.25+.2*pu+ring*.6;c=mix(c,vec3(1.,.9,.25),.85);}
    gl_FragColor=vec4(c*1.25,clamp(a,0.,1.));}`});
- const grid=new THREE.Mesh(new THREE.PlaneGeometry(10,10),gm);grid.rotation.x=-Math.PI/2;grid.position.y=.12;grid.renderOrder=2;g.add(grid);
- const lab=new THREE.Mesh(new THREE.PlaneGeometry(12,12),new THREE.MeshBasicMaterial({map:labelTex(col),transparent:true,depthWrite:false}));
+ const grid=new THREE.Mesh(new THREE.PlaneGeometry(BN(),BN()),gm);grid.rotation.x=-Math.PI/2;grid.position.y=.12;grid.renderOrder=2;g.add(grid);
+ const lab=new THREE.Mesh(new THREE.PlaneGeometry(BN()+2,BN()+2),new THREE.MeshBasicMaterial({map:labelTex(col),transparent:true,depthWrite:false}));
  lab.rotation.x=-Math.PI/2;lab.position.y=.13;lab.renderOrder=3;g.add(lab);
- const hit=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshBasicMaterial({visible:false}));hit.rotation.x=-Math.PI/2;hit.position.y=.12;g.add(hit);
+ const hit=new THREE.Mesh(new THREE.PlaneGeometry(BN(),BN()),new THREE.MeshBasicMaterial({visible:false}));hit.rotation.x=-Math.PI/2;hit.position.y=.12;g.add(hit);
  const content=new THREE.Group();g.add(content);
  BOARDS[key]={key,g,grid,gm,hit,content,ships:{},x};}
 function showBoards(v){if(!HAS3D)return;BOARDS.own.g.visible=v;BOARDS.tgt.g.visible=v;water.material.uniforms.uCalm.value=v?1:0}
-function cellPos(r,c){return{x:c-4.5,z:r-4.5}}
+function cellPos(r,c){const h=(BN()-1)/2;return{x:c-h,z:r-h}}
+let BSIZE=0;
+function rebuildBoards3D(n){if(!HAS3D||!scene||BSIZE===n)return;BSIZE=n;const vis=BOARDS.own?BOARDS.own.g.visible:false;
+ for(const k of ['own','tgt']){const B=BOARDS[k];if(B){EMIT=EMIT.filter(e=>e.b!==B);scene.remove(B.g);B.g.traverse(o=>{if(o.geometry)o.geometry.dispose()})}}
+ OWNX=-(n/2+2.2);TGTX=n/2+2.2;water.material.uniforms.uB.value.set(OWNX,TGTX,n/2+.4);
+ makeBoard('own',OWNX,new THREE.Color(.45,.8,1));makeBoard('tgt',TGTX,new THREE.Color(1,.55,.35));BOARDS.own.g.visible=vis;BOARDS.tgt.g.visible=vis;
+ if(CAM.mode==='fixed'&&CAM.key){const v=camView(CAM.key);CAM.pos.copy(v.pos);CAM.tgt.copy(v.tgt)}}
 function setSel(b,r,c){if(!HAS3D)return;for(const k in BOARDS)BOARDS[k].gm.uniforms.uSel.value.set(-9,-9);if(b&&r!=null)BOARDS[b].gm.uniforms.uSel.value.set(c,9-r)}
 function clearBoard(b){const B=BOARDS[b];while(B.content.children.length)B.content.remove(B.content.children[0]);B.ships={};EMIT=EMIT.filter(e=>e.b!==B)}
 
@@ -579,8 +668,8 @@ function buildMenuFleet(){MENU=new THREE.Group();scene.add(MENU);
 /* ---------- Kamera ---------- */
 function camView(key){
  const a=innerWidth/innerHeight,tv=Math.tan(THREE.MathUtils.degToRad(cam.fov)/2),th=tv*a,wide=a>1.3,el=THREE.MathUtils.degToRad(wide?52:66);
- let cx=key==='own'?OWNX:TGTX,W=12.2;if(wide){cx=cx*.16;W=28}
- const dW=(W/2)/th+3.2,dH=(12.4*Math.sin(el)*.5)/tv/(wide?.7:.6)+2;const d=Math.max(dW,dH);
+ let cx=key==='own'?OWNX:TGTX,W=BN()+2.2;if(wide){cx=cx*.16;W=2*TGTX+BN()+1.6}
+ const dW=(W/2)/th+3.2,dH=((BN()+2.4)*Math.sin(el)*.5)/tv/(wide?.7:.6)+2;const d=Math.max(dW,dH);
  const tz=wide?.9:.55;
  return{pos:new THREE.Vector3(cx,Math.sin(el)*d,Math.cos(el)*d+tz),tgt:new THREE.Vector3(cx,0,tz)}}
 function camTo(key,dur=1.05){
@@ -616,13 +705,13 @@ function introCam(dt){if(introT<0)introT=0;introT+=dt;const k=Math.min(1,introT/
  if(k>=1)CAM.mode='orbit'}
 
 /* ---------- 3D-Einspieler: Schiff wird versenkt ---------- */
-function cinematic(id,len,mine,title,sub){
+function cinematic(id,len,mine,title,sub,ava){
  if(!HAS3D||!SET.cine)return Promise.resolve();
  return new Promise(res=>{
   const Z=-62,X0=-4,SC=2.4,el=$('#cine');
-  const m=shipModel(id,len);m.scale.setScalar(SC);m.position.set(X0,0,Z);scene.add(m);
+  const m=shipModel(STYPE(id),len);m.scale.setScalar(SC);m.position.set(X0,0,Z);scene.add(m);
   const body=m.userData.body,half=(len*.97)/2;
-  const ct=el.querySelector('.ct');ct.textContent=title;ct.className='ct '+(mine?'c-gold':'c-sunk');el.querySelector('.cs').textContent=sub||'';
+  const ct=el.querySelector('.ct');ct.textContent=title;ct.className='ct '+(mine?'c-gold':'c-sunk');el.querySelector('.cs').textContent=sub||'';const cav=el.querySelector('.cav');if(cav)cav.innerHTML=ava&&typeof avImg==='function'?avImg(ava):'';
   el.classList.remove('title');el.classList.add('on');$('#hud').style.opacity='0';$('#banner').classList.remove('play');
   CAM.tok++;CAM.mode='cine';CAM.moving=false;
   let t=0,done=false,hit=false,nextSec=0,secN=0,titled=false,sunkS=false;const v=new THREE.Vector3();
@@ -650,10 +739,168 @@ function cinematic(id,len,mine,title,sub){
    if(!titled&&t>2.0){titled=true;el.classList.add('title');AU.horn()}
    if(t>4.6)finish()};
  })}
+/* ================= 3D-KOMMANDEURE (Comic-Avatare) ================= */
+const AVATARS=[
+ {id:'blaubart',name:"Käpt'n Blaubart",g:'m',skin:0xf1c09a,hair:0x23305c,hat:'cap',beard:'full',brow:0x23305c},
+ {id:'stella',name:'Admiralin Stella',g:'w',skin:0xf6cfb0,hair:0xe8c25a,hat:'bicorne',hairS:'bun',lips:0xd2465a},
+ {id:'kalle',name:'Kommodore Kalle',g:'m',skin:0xe9b48c,hair:0x8a5a2b,hat:'cap',beard:'mustache',extra:'monocle',brow:0x6a4320},
+ {id:'jule',name:'Kapitänin Jule',g:'w',skin:0xf3c5a2,hair:0xc4471e,hat:'cap',hairS:'pony',lips:0xc83a48,freckles:1},
+ {id:'muecke',name:'Maat Mücke',g:'m',skin:0xf5d0b4,hair:0x3b2a1a,hat:'sailor',beard:'none',brow:0x3b2a1a,big:1},
+ {id:'lotte',name:'Leutnantin Lotte',g:'w',skin:0x9c6a48,hair:0x1a1210,hat:'beret',hairS:'bob',lips:0x8a2a38},
+ {id:'graubart',name:'Admiral Graubart',g:'m',skin:0xe2ae8a,hair:0xd8d8d8,hat:'bicorne',beard:'side',brow:0xcfcfcf},
+ {id:'rosa',name:'Kapitänin Rosa',g:'w',skin:0xc98d66,hair:0x5a1e2e,hat:'cap',hairS:'curly',lips:0xb02a40,extra:'patch'}
+];
+const AVA=id=>AVATARS.find(a=>a.id===id)||AVATARS[0];
+function buildAvatar(d){
+ const g=new THREE.Group();const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.55,metalness:0},o));
+ const skin=M(d.skin),hair=M(d.hair,{roughness:.8}),navy=M(0x1b2c55,{roughness:.7}),gold=M(0xf2c14e,{metalness:.6,roughness:.3}),white=M(0xffffff,{roughness:.4}),black=M(0x111111,{roughness:.4});
+ const add=(geo,mat,x,y,z,par=g)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);par.add(m);return m};
+ const S=(r,ws=20,hs=14)=>new THREE.SphereGeometry(r,ws,hs);
+ // Körper
+ const body=new THREE.Group();g.add(body);
+ const torso=add(new THREE.CapsuleGeometry(.5,.45,8,16),navy,0,.15,0,body);torso.scale.set(1,1,.8);
+ if(d.g==='w'){const sk=add(new THREE.CylinderGeometry(.5,.66,.45,18),navy,0,-.3,0,body);sk.scale.z=.85}
+ for(let i=0;i<3;i++)add(S(.05,8,6),gold,0,.42-i*.2,.41,body);
+ add(new THREE.BoxGeometry(.9,.06,.05),gold,0,-.08,.4,body);
+ // Kragen + Orden
+ const col=add(new THREE.ConeGeometry(.24,.22,4),white,0,.58,.25,body);col.rotation.x=Math.PI;col.rotation.y=Math.PI/4;col.scale.z=.4;
+ add(new THREE.BoxGeometry(.18,.12,.04),M(0xc0303a),-.24,.38,.4,body);add(S(.06,10,8),gold,-.24,.26,.42,body);
+ // Arme
+ const arm=side=>{const p=new THREE.Group();p.position.set(.55*side,.5,0);body.add(p);
+  add(new THREE.CylinderGeometry(.2,.2,.08,14),gold,0,.08,0,p).scale.set(1,1,.8);
+  add(new THREE.CapsuleGeometry(.14,.45,6,10),navy,0,-.32,0,p);add(new THREE.CylinderGeometry(.15,.15,.06,10),gold,0,-.58,0,p);
+  add(S(.17,12,10),skin,0,-.72,0,p);p.rotation.z=.12*side;return p};
+ const armL=arm(1),armR=arm(-1);
+ // Beine
+ add(new THREE.CapsuleGeometry(.16,.3,6,10),navy,-.2,-.6,0,body);add(new THREE.CapsuleGeometry(.16,.3,6,10),navy,.2,-.6,0,body);
+ add(S(.2,12,8),black,-.2,-.88,.06,body).scale.set(1,.6,1.3);add(S(.2,12,8),black,.2,-.88,.06,body).scale.set(1,.6,1.3);
+ // Kopf
+ const head=new THREE.Group();head.position.set(0,1.45,0);g.add(head);
+ add(S(.85,28,20),skin,0,0,0,head);
+ add(S(.17,10,8),skin,-.84,0,0,head);add(S(.17,10,8),skin,.84,0,0,head);
+ const nose=add(S(.16,12,10),M(d.skin).clone(),0,-.08,.84,head);nose.material.color.offsetHSL(0,.05,-.06);nose.scale.set(1,.9,1.1);
+ const eye=x=>{const e=new THREE.Group();e.position.set(x,.16,.7);head.add(e);add(S(.2,16,12),white,0,0,0,e).scale.set(1,1.15,.7);add(S(.1,12,10),M(0x3a5c8a),0,-.01,.12,e);add(S(.055,8,6),black,0,-.01,.18,e);add(S(.025,6,4),white,.03,.03,.21,e);
+  if(d.g==='w'){const l=add(new THREE.BoxGeometry(.3,.04,.05),black,0,.22,.08,e);l.rotation.z=x>0?-.2:.2}return e};
+ const eL=eye(-.3),eR=eye(.3);
+ const brow=x=>{const b=add(new THREE.BoxGeometry(.3,.07,.07),M(d.brow||d.hair),x,.46,.74,head);b.rotation.z=x>0?-.18:.18;return b};brow(-.3);brow(.3);
+ const mouth=add(new THREE.TorusGeometry(.2,.045,8,18,Math.PI),M(d.lips||0x8a3a32),0,-.32,.78,head);mouth.rotation.z=Math.PI;
+ if(d.g==='w'||d.big){add(S(.12,10,8),M(0xff8a9a,{transparent:true,opacity:.55}),-.48,-.18,.66,head);add(S(.12,10,8),M(0xff8a9a,{transparent:true,opacity:.55}),.48,-.18,.66,head)}
+ if(d.freckles)for(let i=0;i<6;i++)add(S(.02,6,4),M(0xa0522d),(i<3?-1:1)*(.32+(i%3)*.08),-.08+(i%2)*.05,.78,head);
+ // Haare
+ const hs=d.hairS||'short';
+ if(d.g==='m'){const h=add(new THREE.SphereGeometry(.88,24,16,0,Math.PI*2,0,Math.PI*.42),hair,0,.04,-.05,head);h.rotation.x=-.25}
+ else{const h=add(new THREE.SphereGeometry(.9,24,16,0,Math.PI*2,0,Math.PI*.5),hair,0,.02,-.06,head);h.rotation.x=-.3;
+  const back=add(new THREE.SphereGeometry(.92,24,16,Math.PI*.15,Math.PI*.7,Math.PI*.3,Math.PI*.55),hair,0,0,-.04,head);back.rotation.y=Math.PI;
+  if(hs==='bun')add(S(.34,14,12),hair,0,.55,-.62,head);
+  if(hs==='pony'){add(S(.16,10,8),hair,0,.25,-.86,head);const p=add(new THREE.ConeGeometry(.24,.9,12),hair,0,-.25,-1.0,head);p.rotation.x=-.5}
+  if(hs==='bob'){add(S(.42,14,12),hair,-.62,-.32,-.05,head).scale.set(.7,1,1);add(S(.42,14,12),hair,.62,-.32,-.05,head).scale.set(.7,1,1)}
+  if(hs==='curly')for(let i=0;i<12;i++){const a=i/12*Math.PI*2;add(S(.22,10,8),hair,Math.cos(a)*.82,-.25+Math.sin(i*1.7)*.1,Math.sin(a)*.6-.25,head)}}
+ // Bart
+ if(d.beard==='full'){add(S(.62,20,14),hair,0,-.48,.32,head).scale.set(1.05,.85,.75);mouth.position.z=.92;mouth.position.y=-.3;mouth.material.color.set(0xd06a6a)}
+ if(d.beard==='mustache'){[-1,1].forEach(s=>{const m=add(new THREE.CapsuleGeometry(.07,.28,4,8),hair,.17*s,-.22,.86,head);m.rotation.z=Math.PI/2+.35*s})}
+ if(d.beard==='side'){[-1,1].forEach(s=>add(S(.3,12,10),hair,.72*s,-.3,.25,head).scale.set(.6,1.1,.9));[-1,1].forEach(s=>{const m=add(new THREE.CapsuleGeometry(.07,.3,4,8),hair,.18*s,-.22,.86,head);m.rotation.z=Math.PI/2+.25*s})}
+ // Extras
+ if(d.extra==='monocle'){const mo=add(new THREE.TorusGeometry(.2,.025,8,20),gold,.3,.16,.86,head);add(new THREE.CylinderGeometry(.006,.006,.6,4),gold,.45,-.15,.8,head)}
+ if(d.extra==='patch'){add(new THREE.CylinderGeometry(.21,.21,.04,16),black,-.3,.16,.86,head).rotation.x=Math.PI/2;const st=add(new THREE.TorusGeometry(.87,.025,6,40),black,0,.2,0,head);st.rotation.x=Math.PI/2-.3;st.rotation.z=.5}
+ // Hüte
+ const hat=new THREE.Group();hat.position.y=.55;head.add(hat);
+ if(d.hat==='cap'){add(new THREE.CylinderGeometry(.92,.78,.36,28),white,0,.2,-.04,hat).rotation.x=-.12;add(new THREE.CylinderGeometry(.8,.8,.14,28),black,0,.03,-.02,hat);
+  const v=add(new THREE.CylinderGeometry(.62,.62,.04,24,1,false,-Math.PI/2,Math.PI),black,0,-.03,.46,hat);v.scale.z=.7;v.rotation.x=.25;
+  add(S(.12,10,8),gold,0,.18,.78,hat).scale.set(1.2,1,.5);add(new THREE.TorusGeometry(.13,.03,6,16,Math.PI),gold,0,.02,.82,hat)}
+ if(d.hat==='bicorne'){const b=add(S(.9,24,12),black,0,.25,0,hat);b.scale.set(1.45,.6,.55);add(new THREE.TorusGeometry(.9,.04,6,32),gold,0,.08,0,hat).scale.set(1.45,.35,.55);
+  add(S(.15,10,8),M(0x2a62d8),0,.4,.44,hat);add(S(.07,8,6),gold,0,.4,.52,hat)}
+ if(d.hat==='sailor'){add(new THREE.CylinderGeometry(.82,.86,.3,24),white,0,.06,0,hat);add(new THREE.CylinderGeometry(.87,.87,.08,24),M(0x2350a8),0,-.06,0,hat);add(S(.1,8,6),M(0xd03030),0,.24,0,hat)}
+ if(d.hat==='beret'){const b=add(S(.9,24,12),M(0x2350a8),.15,.1,-.05,hat);b.scale.set(1.08,.38,1.05);b.rotation.z=-.18;add(S(.1,8,6),gold,-.35,.18,.6,hat)}
+ mouth.userData.y0=mouth.position.y;g.userData={head,body,armL,armR,eL,eR,mouth,hat};
+ g.traverse(o=>{if(o.isMesh)o.frustumCulled=false});
+ return g}
+function poseAvatar(a,pose,t){const u=a.userData;if(!u.head)return;
+ const s=Math.sin(t*2);u.head.rotation.set(0,Math.sin(t*.7)*.15,s*.03);u.body.rotation.set(0,0,0);a.position.y=0;
+ const bl=(t%3.3)<.12?.1:1;u.eL.scale.y=bl;u.eR.scale.y=bl;
+ u.armL.rotation.set(0,0,.12+s*.03);u.armR.rotation.set(0,0,-.12-s*.03);u.mouth.scale.set(1,1,1);u.mouth.rotation.z=Math.PI;
+ if(pose==='wave'){u.armR.rotation.z=-2.6+Math.sin(t*9)*.35;u.head.rotation.z=.08}
+ if(pose==='salute'){u.armR.rotation.set(-.4,0,-2.55);u.head.rotation.y=0}
+ if(pose==='cheer'){const j=Math.abs(Math.sin(t*5));a.position.y=j*.35;u.armL.rotation.z=2.7+Math.sin(t*10)*.2;u.armR.rotation.z=-2.7-Math.sin(t*10)*.2;u.mouth.scale.set(1.3,1.6,1)}
+ u.mouth.position.y=u.mouth.userData.y0;
+ if(pose==='sad'){u.head.rotation.set(.35,Math.sin(t*1.2)*.25,0);u.body.rotation.x=.12;u.armL.rotation.z=.03;u.armR.rotation.z=-.03;u.mouth.rotation.z=0;u.mouth.position.y=u.mouth.userData.y0-.12}}
+/* eigener kleiner Renderer für Avatare (Porträts + Live-Bühne) */
+const AV={r:null,scene:null,cam:null,img:{},stage:null};
+function avInit(){if(AV.r||!HAS3D)return;try{
+ const cv=document.createElement('canvas');AV.r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,preserveDrawingBuffer:true});AV.r.setPixelRatio(Math.min(devicePixelRatio||1,2));AV.r.setClearColor(0x000000,0);
+ AV.scene=new THREE.Scene();AV.scene.add(new THREE.HemisphereLight(0xfff2e0,0x304060,1.05));const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(2,3,5);AV.scene.add(dl);const rl=new THREE.DirectionalLight(0xffa860,.6);rl.position.set(-4,2,-3);AV.scene.add(rl);
+ AV.cam=new THREE.PerspectiveCamera(30,1,.1,50)}catch(e){AV.r=null}}
+function avPortrait(id){if(AV.img[id])return AV.img[id];avInit();if(!AV.r)return'';
+ const a=buildAvatar(AVA(id));AV.scene.add(a);poseAvatar(a,'idle',0.4);a.userData.eL.scale.y=1;a.userData.eR.scale.y=1;a.userData.head.rotation.set(0,-.12,0);
+ AV.r.setSize(160,160,false);AV.cam.aspect=1;AV.cam.fov=30;AV.cam.position.set(.55,1.6,4.3);AV.cam.lookAt(0,1.5,0);AV.cam.updateProjectionMatrix();
+ AV.r.render(AV.scene,AV.cam);const url=AV.r.domElement.toDataURL('image/png');AV.scene.remove(a);AV.img[id]=url;return url}
+function avImg(id,cls=''){const u=avPortrait(id);return u?`<img class="ava ${cls}" src="${u}" alt="">`:`<span class="ava ${cls}">⚓</span>`}
+/* Live-Bühne: animierter Avatar in einem Element */
+function avStage(el,id,pose){avStop();avInit();if(!AV.r||!el)return;const a=buildAvatar(AVA(id));AV.scene.add(a);
+ const cv=AV.r.domElement;cv.className='avStage';el.innerHTML='';el.appendChild(cv);const w=el.clientWidth||180,h=el.clientHeight||200;AV.r.setSize(w,h,false);cv.style.width=w+'px';cv.style.height=h+'px';
+ AV.cam.aspect=w/h;AV.cam.fov=32;AV.cam.position.set(0,1.05,7.4);AV.cam.lookAt(0,.75,0);AV.cam.updateProjectionMatrix();
+ const st={a,pose,t:0,run:true,el};AV.stage=st;let last=performance.now();
+ const loop=now=>{if(!st.run)return;requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;st.t+=dt;
+  a.rotation.y=Math.sin(st.t*.6)*.35;poseAvatar(a,st.pose,st.t);AV.r.render(AV.scene,AV.cam)};requestAnimationFrame(loop);return st}
+function avStop(){if(AV.stage){AV.stage.run=false;AV.scene.remove(AV.stage.a);AV.stage=null}}
+function avPose(p){if(AV.stage)AV.stage.pose=p}
+/* ================= DIENSTGRADE (Abzeichen) & ORDEN ================= */
+const RANKS=[
+ [0,'Schiffsjunge','c',0],[150,'Matrose','c',1],[400,'Maat','c',2],[800,'Bootsmann','c',3],
+ [1400,'Leutnant','s',1],[2200,'Kapitänleutnant','s',2],[3200,'Fregattenkapitän','s',3],[4500,'Kapitän zur See','s',4],
+ [6000,'Flottillenadmiral','a',1],[8000,'Admiral','a',2],[11000,'Großadmiral','a',3]];
+const MEDALS=[
+ {id:'first',n:'Erster Sieg',d:'Gewinne deine erste Seeschlacht',i:'🎖️',c:['#c0303a','#f5f5f5']},
+ {id:'sniper',n:'Scharfschütze',d:'Gewinne mit mindestens 60 % Trefferquote',i:'🎯',c:['#1d5fbf','#f2c14e']},
+ {id:'blitz',n:'Blitzsieg',d:'Gewinne mit sehr wenigen Schüssen',i:'⚡',c:['#f2c14e','#1b2c55']},
+ {id:'unsink',n:'Unversenkbar',d:'Gewinne, ohne ein Schiff zu verlieren',i:'🛡️',c:['#1b2c55','#7fb3ff']},
+ {id:'chain',n:'Kettenreaktion',d:'Triff 5-mal hintereinander',i:'🔥',c:['#e2552a','#ffd27a']},
+ {id:'double',n:'Doppelschlag',d:'Versenke 2 Schiffe in einem Zug',i:'💥',c:['#7a1f8a','#f2c14e']},
+ {id:'admiral',n:'Admiralsbezwinger',d:'Besiege den Computer auf Stufe „Admiral“',i:'⚓',c:['#0f3a2a','#f2c14e']},
+ {id:'comeback',n:'Comeback',d:'Gewinne mit nur noch einem Schiff',i:'🦾',c:['#555','#e8e8e8']},
+ {id:'lucky',n:'Glückspilz',d:'Dein allererster Schuss ist ein Treffer',i:'🍀',c:['#2c9a4a','#f5f5f5']},
+ {id:'duel',n:'Duellant',d:'Gewinne ein Spiel gegen einen Menschen',i:'🤝',c:['#b8862b','#1b2c55']},
+ {id:'ocean',n:'Herr der Weltmeere',d:'Gewinne auf der 15×15-Karte',i:'🌊',c:['#0b5f8a','#bfe6ff']},
+ {id:'streak',n:'Siegesserie',d:'Gewinne 3 Spiele hintereinander',i:'🏅',c:['#c0303a','#1b2c55']},
+ {id:'bear',n:'Seebär',d:'Gewinne 10 Spiele',i:'🐻',c:['#6b3f1d','#f2c14e']},
+ {id:'fleet',n:'Flottenkommandant',d:'Gewinne 25 Spiele',i:'👑',c:['#f2c14e','#7a1f1f']}];
+const PROF=Object.assign({ava:'',xp:0,games:0,wins:0,losses:0,streak:0,medals:{}},LS.get('prof',{}));
+const saveProf=()=>LS.set('prof',PROF);
+function rankIdx(xp){let i=0;RANKS.forEach((r,k)=>{if(xp>=r[0])i=k});return i}
+function rankName(i){return RANKS[Math.max(0,Math.min(RANKS.length-1,i|0))][1]}
+function badge(i,big){i=Math.max(0,Math.min(RANKS.length-1,i|0));const [,,t,n]=RANKS[i];
+ let inner=t==='c'?(n?'<b class="chev"></b>'.repeat(n):'<b class="dot"></b>'):t==='s'?'<b class="star">★</b>'.repeat(n):'<b class="anc">⚓</b>'+'<b class="star">★</b>'.repeat(n);
+ return`<span class="badge b-${t}${big?' big':''}" title="${rankName(i)}">${inner}</span>`}
+function medalHTML(m,cnt,isNew){return`<div class="medal2${cnt?'':' locked'}${isNew?' new':''}" title="${esc(m.d)}"><div class="rib" style="background:repeating-linear-gradient(90deg,${m.c[0]} 0 7px,${m.c[1]} 7px 11px)"></div><div class="coin"><span>${m.i}</span></div><div class="mn">${esc(m.n)}</div>${cnt>1?`<div class="cnt">×${cnt}</div>`:''}${isNew?'<div class="nw">NEU</div>':''}</div>`}
+function myAva(){return PROF.ava||'blaubart'}
+/* Auswertung nach Spielende (nur eigener Spieler, Computer & Online) */
+function awardGame(){
+ if(!G||G.mode==='local'||G.awarded)return null;G.awarded=true;
+ const me=G.players[G.me],won=G.winner===G.me,st=me.stats,acc=st.shots?st.hits/st.shots:0,lost=me.fleet.filter(s=>s.sunk).length,lvl=G.mode==='cpu'?G.players[1].cpu:2;
+ const before=PROF.xp,rb=rankIdx(before);
+ PROF.games++;if(won){PROF.wins++;PROF.streak++}else{PROF.losses++;PROF.streak=0}
+ const sizeF=N>=15?1.5:N>=12?1.25:1,lvlF=G.mode==='cpu'?[0,.6,1,1.4][lvl]:1.3;
+ const parts=[[won?'Sieg':'Teilnahme',won?100:30],['Versenkte Schiffe',me.sunkEnemy.length*15],['Trefferquote',Math.round(acc*60)]];
+ let xp=parts.reduce((a,p)=>a+p[1],0);xp=Math.round(xp*sizeF*lvlF);
+ const got=[];const give=id=>{PROF.medals[id]=(PROF.medals[id]||0)+1;got.push({id,isNew:PROF.medals[id]===1})};
+ if(won){if(PROF.wins===1)give('first');if(acc>=.6)give('sniper');if(st.shots<=Math.round(N*N*.4))give('blitz');if(lost===0)give('unsink');
+  if(G.mode==='cpu'&&lvl===3)give('admiral');if(me.fleet.length-lost===1)give('comeback');if(G.mode==='online')give('duel');if(N>=15)give('ocean');
+  if(PROF.streak===3)give('streak');if(PROF.wins===10)give('bear');if(PROF.wins===25)give('fleet')}
+ if((st.maxStreak||0)>=5)give('chain');if((st.maxTurnSunk||0)>=2)give('double');if(st.firstHit)give('lucky');
+ xp+=got.length*25;PROF.xp+=xp;saveProf();
+ return{xp,parts,sizeF,lvlF,got,before,after:PROF.xp,rb,ra:rankIdx(PROF.xp),won}}
+function xpBarHTML(xp){const i=rankIdx(xp),lo=RANKS[i][0],hi=RANKS[i+1]?RANKS[i+1][0]:lo;const p=hi>lo?Math.min(100,(xp-lo)/(hi-lo)*100):100;
+ return{i,p,txt:RANKS[i+1]?`${xp-lo} / ${hi-lo} EP bis ${RANKS[i+1][1]}`:'Höchster Dienstgrad erreicht'}}
 /* ================= SPIELREGELN & DATEN ================= */
-const N=10,LET='ABCDEFGHIJ';
-const SHIPS=[{id:'car',name:'Flugzeugträger',len:5},{id:'bat',name:'Schlachtschiff',len:4},{id:'cru',name:'Kreuzer',len:3},{id:'sub',name:'U-Boot',len:3},{id:'des',name:'Zerstörer',len:2}];
-const SNAME=id=>SHIPS.find(s=>s.id===id).name;
+let N=10;const LET='ABCDEFGHIJKLMNO';
+const SHIPT={car:'Flugzeugträger',bat:'Schlachtschiff',cru:'Kreuzer',sub:'U-Boot',des:'Zerstörer'},LENS={car:5,bat:4,cru:3,sub:3,des:2};
+const FLEETS={10:['car','bat','cru','sub','des'],12:['car','bat','cru','cru','sub','des','des'],15:['car','car','bat','bat','cru','cru','sub','sub','des','des']};
+function mkShips(n){const cnt={},tot={};FLEETS[n].forEach(t=>tot[t]=(tot[t]||0)+1);return FLEETS[n].map(t=>{cnt[t]=(cnt[t]||0)+1;return{id:t+(cnt[t]>1?cnt[t]:''),type:t,len:LENS[t],name:SHIPT[t]+(tot[t]>1?' '+'I'.repeat(cnt[t]):'')}})}
+let SHIPS=mkShips(10);
+function setSize(n){n=[10,12,15].includes(+n)?+n:10;N=n;SHIPS=mkShips(n);if(HAS3D&&typeof rebuildBoards3D==='function')rebuildBoards3D(n)}
+const STYPE=id=>String(id).replace(/\d+$/,'');
+const NEUT=id=>['bat','sub'].includes(STYPE(id));
+const SNAME=id=>(SHIPS.find(s=>s.id===id)||{name:SHIPT[STYPE(id)]||id}).name;
+const SIZES={10:'10×10 · 5 Schiffe',12:'12×12 · 7 Schiffe',15:'15×15 · 10 Schiffe'};
 const cn=(r,c)=>LET[c]+(r+1);
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rid=()=>Math.random().toString(36).slice(2,10);
@@ -664,7 +911,7 @@ function valid(F,s,touch){for(const [r,c] of cells(s)){if(r<0||c<0||r>=N||c>=N)r
 function randomFleet(touch){for(let t=0;t<500;t++){const F=newFleet();let ok=true;
  for(const s of F){let p=false;for(let k=0;k<300&&!p;k++){s.dir=Math.random()<.5?1:0;s.r=Math.floor(Math.random()*(s.dir?N-s.len+1:N));s.c=Math.floor(Math.random()*(s.dir?N:N-s.len+1));p=valid(F,s,touch)}if(!p){ok=false;break}}
  if(ok)return F}return null}
-function newPlayer(name,cpu){return{name,cpu:cpu||0,fleet:newFleet(),inc:Array(100).fill(0),view:Array(100).fill(0),sunkEnemy:[],stats:{shots:0,hits:0}}}
+function newPlayer(name,cpu,ava,rank){return{name,cpu:cpu||0,ava:ava||'blaubart',rank:rank|0,fleet:newFleet(),inc:Array(N*N).fill(0),view:Array(N*N).fill(0),sunkEnemy:[],stats:{shots:0,hits:0}}}
 function resolveShot(P,r,c){const i=r*N+c;if(P.inc[i])return{dup:true};
  const s=P.fleet.find(s=>s.r!=null&&cells(s).some(([a,b])=>a===r&&b===c));
  if(!s){P.inc[i]=1;return{hit:false}}
@@ -674,29 +921,32 @@ function around(s,fn){for(const [r,c] of cells(s))for(let dr=-1;dr<=1;dr++)for(l
 
 let G=null;
 function newGame(mode,o={}){
- const g={mode,rules:o.rules||{again:SET.again,touch:SET.touch},players:[],me:o.me||0,viewer:o.me||0,turn:0,phase:'place',n:0,resLog:{},pendingShot:null,
+ const rules=Object.assign({again:SET.again,touch:SET.touch,size:SET.size||10},o.rules||{});setSize(rules.size);
+ const g={mode,rules,players:[],me:o.me||0,viewer:o.me||0,turn:0,phase:'place',n:0,resLog:{},pendingShot:null,
   ready:false,oppReady:false,replay:[[],[]],gameId:o.gameId||rid(),winner:null,oppFleet:null,again:false,oppAgain:false,first:null,busy:0,q:null,sel:null,lastTurn:null,endShown:false};
- g.players=o.players||[newPlayer('Spieler 1'),newPlayer('Spieler 2')];return g}
+ g.players=o.players||[newPlayer('Spieler 1'),newPlayer('Spieler 2')];g.players.forEach(p=>{p.fleet=newFleet();p.inc=Array(N*N).fill(0);p.view=Array(N*N).fill(0)});return g}
 
 function applyShotData(sh,r,c,res){
- const P=G.players[sh],i=r*N+c;P.view[i]=res.hit?2:1;P.stats.shots++;if(res.hit)P.stats.hits++;
+ const P=G.players[sh],i=r*N+c,S=P.stats;P.view[i]=res.hit?2:1;S.shots++;if(res.hit)S.hits++;
+ if(S.shots===1&&res.hit)S.firstHit=1;if(res.hit){S.streak=(S.streak||0)+1;S.maxStreak=Math.max(S.maxStreak||0,S.streak)}else S.streak=0;
+ if(res.sunk){S.turnSunk=(S.turnSunk||0)+1;S.maxTurnSunk=Math.max(S.maxTurnSunk||0,S.turnSunk)}
  if(res.sunk){for(const [a,b] of cells(res.sunk))P.view[a*N+b]=3;P.sunkEnemy.push(res.sunk);if(!G.rules.touch)around(res.sunk,(a,b)=>{if(P.view[a*N+b]===0)P.view[a*N+b]=4})}
  G.n++;
- if(res.over){G.phase='over';G.winner=sh}else if(!(res.hit&&G.rules.again))G.turn=1-sh;
+ if(res.over){G.phase='over';G.winner=sh}else if(!(res.hit&&G.rules.again)){G.turn=1-sh;S.turnSunk=0}
  save()}
 
 /* ---------- Computer-Gegner ---------- */
 function aiPick(P,level){
- const V=P.view,unk=[],hits=[];for(let i=0;i<100;i++){if(V[i]===0)unk.push(i);if(V[i]===2)hits.push(i)}
+ const V=P.view,unk=[],hits=[];for(let i=0;i<N*N;i++){if(V[i]===0)unk.push(i);if(V[i]===2)hits.push(i)}
  const pr=a=>a[Math.floor(Math.random()*a.length)];
- if(level===1){if(hits.length&&Math.random()<.6){const nb=[];hits.forEach(i=>{const r=i/10|0,c=i%10;[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([a,b])=>{if(a>=0&&b>=0&&a<N&&b<N&&V[a*N+b]===0)nb.push(a*N+b)})});if(nb.length)return pr(nb)}return pr(unk)}
- const sunk=P.sunkEnemy.map(s=>s.id),rem=SHIPS.filter(s=>!sunk.includes(s.id)).map(s=>s.len),sc=Array(100).fill(0);
+ if(level===1){if(hits.length&&Math.random()<.6){const nb=[];hits.forEach(i=>{const r=Math.floor(i/N),c=i%N;[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([a,b])=>{if(a>=0&&b>=0&&a<N&&b<N&&V[a*N+b]===0)nb.push(a*N+b)})});if(nb.length)return pr(nb)}return pr(unk)}
+ const sunk=P.sunkEnemy.map(s=>s.id),rem=SHIPS.filter(s=>!sunk.includes(s.id)).map(s=>s.len),sc=Array(N*N).fill(0);
  for(const len of rem)for(let d=0;d<2;d++)for(let r=0;r<N;r++)for(let c=0;c<N;c++){
   if(d?r+len>N:c+len>N)continue;let bad=false,h=0;const cs=[];
   for(let k=0;k<len;k++){const i=d?(r+k)*N+c:r*N+c+k,v=V[i];if(v===1||v===3||v===4){bad=true;break}if(v===2)h++;cs.push(i)}
   if(bad)continue;let w=1;if(hits.length){if(!h)continue;w=Math.pow(9,h)}
   for(const i of cs)if(V[i]===0)sc[i]+=w}
- if(level===2&&!hits.length){const par=unk.filter(i=>(((i/10|0)+i%10)%2===0)&&sc[i]>0);if(par.length)return pr(par)}
+ if(level===2&&!hits.length){const par=unk.filter(i=>((Math.floor(i/N)+i%N)%2===0)&&sc[i]>0);if(par.length)return pr(par)}
  let best=0,bs=[];for(const i of unk){if(sc[i]>best){best=sc[i];bs=[i]}else if(sc[i]===best&&best>0)bs.push(i)}
  return bs.length?pr(bs):pr(unk)}
 
@@ -716,7 +966,7 @@ function myName(){return (SET.name||'').trim()||'Ich'}
 /* ================= SZENEN-AKTIONEN ================= */
 const V3=HAS3D?THREE.Vector3:null;
 function addShipMesh(b,s,anim){if(!HAS3D)return null;const B=BOARDS[b];if(B.ships[s.id]){B.content.remove(B.ships[s.id])}
- const m=shipModel(s.id,s.len);placeShipMesh(m,s);B.content.add(m);B.ships[s.id]=m;
+ const m=shipModel(STYPE(s.id),s.len);placeShipMesh(m,s);B.content.add(m);B.ships[s.id]=m;
  if(anim){const y0=1.6;m.position.y=y0;tween(.38,k=>{m.position.y=y0*(1-k*k)}).then(()=>{const p=m.position;fxSplash(B.x+p.x,p.z,.45);CAM.shake=Math.max(CAM.shake,.12)})}
  return m}
 const MK={};
@@ -737,13 +987,13 @@ function sinkOwn(s){if(!HAS3D)return Promise.resolve();const B=BOARDS.own,m=B.sh
  const y0=b.position.y,rx0=b.rotation.x;AU.sink();vib([200,80,300]);let burnt=false;
  return tween(2.3,k=>{const e=ease(k);b.position.y=y0+(-.2-y0)*e;b.rotation.x=rx0+(.32-rx0)*e;b.rotation.z=.08*e;
   if(k>.25&&!burnt){burnt=true;setShipKind(m,'burnt')}if(Math.random()<.5){const c=cells(s)[Math.floor(Math.random()*s.len)],p=cellPos(c[0],c[1]);fxBubbles(B.x+p.x,p.z)}})}
-async function addWreck(s,anim){if(!HAS3D)return;const B=BOARDS.tgt,m=shipModel(s.id,s.len,'burnt');placeShipMesh(m,s);m.userData.sunk=true;B.content.add(m);B.ships['w_'+s.id]=m;
+async function addWreck(s,anim){if(!HAS3D)return;const B=BOARDS.tgt,m=shipModel(STYPE(s.id),s.len,'burnt');placeShipMesh(m,s);m.userData.sunk=true;B.content.add(m);B.ships['w_'+s.id]=m;
  const b=m.userData.body;b.rotation.x=.32;b.rotation.z=.08;b.position.y=-.2;smokeOnly('tgt',s);
  if(!anim)return;b.position.y=-1.5;AU.sink();
  const cs=cells(s);for(let i=0;i<cs.length;i++){setTimeout(()=>{const p=cellPos(cs[i][0],cs[i][1]);fxExplosion(B.x+p.x,.3,p.z,.75);AU.boom()},i*170/FAST)}
  await tween(1.5,k=>{b.position.y=-1.5+1.3*easeOut(k)});}
 function revealOpp(anim){if(!HAS3D||!G)return;const F=G.mode==='online'?G.oppFleet:G.players[1-G.viewer].fleet;if(!F)return;const B=BOARDS.tgt;
- F.filter(s=>!s.sunk&&s.r!=null).forEach((s,i)=>{if(B.ships['g_'+s.id])return;const m=shipModel(s.id,s.len,'ghost');placeShipMesh(m,s);B.content.add(m);B.ships['g_'+s.id]=m;
+ F.filter(s=>!s.sunk&&s.r!=null).forEach((s,i)=>{if(B.ships['g_'+s.id])return;const m=shipModel(STYPE(s.id),s.len,'ghost');placeShipMesh(m,s);B.content.add(m);B.ships['g_'+s.id]=m;
   if(anim){m.position.y=-1.2;setTimeout(()=>tween(.9,k=>{m.position.y=-1.2+1.2*easeOut(k)}),i*200/FAST)}})}
 function flyMissile(st,ct,end,dur=.95){return new Promise(res=>{if(!HAS3D)return res();
  const m=new THREE.Group();const bm=new THREE.MeshStandardMaterial({color:0xe8ecf0,metalness:.5,roughness:.4}),rm=new THREE.MeshStandardMaterial({color:0xd02a20});
@@ -772,11 +1022,11 @@ async function animShot(sh,r,c,res){
   if(mine)banner('WASSER','c-miss',cn(r,c));else banner('DANEBEN','c-miss',`${opN} schießt auf ${cn(r,c)}`)}
  updHUD();
  if(res.sunk){await sleep(700);if(!G||G.gameId!==gid)return;
-  {const nm=SNAME(res.sunk.id).toUpperCase(),neu=['bat','sub'].includes(res.sunk.id);
+  {const nm=SNAME(res.sunk.id).toUpperCase(),neu=NEUT(res.sunk.id);
    const sub=G.mode==='local'?(mine?`${G.players[G.viewer].name} versenkt ${opN===G.players[G.viewer].name?'':''}das Schiff von ${G.players[1-G.viewer].name}`:`${opN} hat ${G.players[G.viewer].name}s Schiff versenkt`)
     :(mine?(neu?'Feindliches':'Feindlicher')+' '+SNAME(res.sunk.id)+' zerstört':`${opN} hat ${neu?'unser':'unseren'} ${SNAME(res.sunk.id)} versenkt`);
-   await cinematic(res.sunk.id,res.sunk.len,mine,mine?nm+' VERSENKT!':nm+' GESUNKEN',sub);if(!G||G.gameId!==gid)return;await camTo(b,.8)}
-  if(mine){await addWreck(res.sunk,true);banner('VERSENKT!','c-sunk',(G.mode==='local'?'':(['bat','sub'].includes(res.sunk.id)?'Feindliches ':'Feindlicher '))+SNAME(res.sunk.id)+' ist gesunken');if(!G.rules.touch)around(res.sunk,(a,c2)=>{if(G.players[G.viewer].view[a*N+c2]===4)markDot('tgt',a,c2)});if(G.mode==='cpu'&&!res.over&&Math.random()<.5)showEmo(['😱','😤','🙈'][Math.floor(Math.random()*3)],'Computer')}
+   await cinematic(res.sunk.id,res.sunk.len,mine,mine?nm+' VERSENKT!':nm+' GESUNKEN',sub,G.players[sh].ava);if(!G||G.gameId!==gid)return;await camTo(b,.8)}
+  if(mine){await addWreck(res.sunk,true);banner('VERSENKT!','c-sunk',(G.mode==='local'?'':(NEUT(res.sunk.id)?'Feindliches ':'Feindlicher '))+SNAME(res.sunk.id)+' ist gesunken');if(!G.rules.touch)around(res.sunk,(a,c2)=>{if(G.players[G.viewer].view[a*N+c2]===4)markDot('tgt',a,c2)});if(G.mode==='cpu'&&!res.over&&Math.random()<.5)showEmo(['😱','😤','🙈'][Math.floor(Math.random()*3)],'Computer')}
   else{smokeOnly('own',res.sunk);banner('VERSENKT!','c-sunk',(G.mode==='local'?G.players[G.viewer].name+'s ':'Unser ')+SNAME(res.sunk.id)+' ist gesunken');await sinkOwn(res.sunk);if(G.mode==='cpu'&&!res.over&&Math.random()<.5)showEmo(['😎','💥','🤖'][Math.floor(Math.random()*3)],'Computer')}
   updHUD();await sleep(500)}
  else await sleep(res.hit?750:650)}
@@ -788,18 +1038,18 @@ function rebuildAll(){if(!G)return;const P=G.players[G.viewer];clearBoard('own')
  const rp=G.replay[G.viewer]||[],skip=new Set(rp.map(x=>x.r*N+x.c)),skipS=new Set(rp.filter(x=>x.res.sunk).map(x=>x.res.sunk.id));
  const sunkCell=new Set();P.fleet.forEach(s=>{if(s.sunk&&!skipS.has(s.id))cells(s).forEach(([a,b])=>sunkCell.add(a*N+b))});
  P.fleet.forEach(s=>{if(s.r==null)return;const m=addShipMesh('own',s);if(s.sunk&&!skipS.has(s.id))poseSunk(m)});
- for(let i=0;i<100;i++){const r=i/10|0,c=i%10;if(!skip.has(i)){if(P.inc[i]===1)markMiss('own',r,c);else if(P.inc[i]===2)markHit('own',r,c,sunkCell.has(i))}
+ for(let i=0;i<N*N;i++){const r=Math.floor(i/N),c=i%N;if(!skip.has(i)){if(P.inc[i]===1)markMiss('own',r,c);else if(P.inc[i]===2)markHit('own',r,c,sunkCell.has(i))}
   const v=P.view[i];if(v===1)markMiss('tgt',r,c);else if(v===2||v===3)markHit('tgt',r,c,v===3);else if(v===4)markDot('tgt',r,c)}
  P.sunkEnemy.forEach(s=>addWreck(s,false));
  if(G.phase==='over')revealOpp(false)}
 
 /* ================= HUD ================= */
 function updHUD(){if(!G)return;const me=G.players[G.viewer],op=G.players[1-G.viewer];
- $('#nmMe').textContent=G.mode==='local'?me.name:'Deine Flotte';$('#nmOp').textContent=G.mode==='local'?op.name:op.name;
+ $('#nmMe').innerHTML=avImg(me.ava,'sm')+'<span>'+esc(G.mode==='local'?me.name:'Deine Flotte')+'</span>'+(G.mode==='local'?'':badge(me.rank));$('#nmOp').innerHTML=avImg(op.ava,'sm')+'<span>'+esc(op.name)+'</span>'+(G.mode==='local'?'':badge(op.rank));
  let a=0,b=0;
  $('#flMe').innerHTML=SHIPS.map(s=>{const d=me.fleet.find(f=>f.id===s.id).sunk;if(!d)a++;return`<span class="sh${d?' dead':''}">${shipIcons(s.len)}</span>`}).join('');
  $('#flOp').innerHTML=SHIPS.map(s=>{const d=me.sunkEnemy.some(x=>x.id===s.id);if(!d)b++;return`<span class="sh${d?' dead':''}">${shipIcons(s.len)}</span>`}).join('');
- $('#cntMe').textContent=a+'/5';$('#cntOp').textContent=b+'/5';
+ $('#cntMe').textContent=a+'/'+SHIPS.length;$('#cntOp').textContent=b+'/'+SHIPS.length;
  $('#bEmo').classList.toggle('hide',G.mode!=='online')}
 function canShoot(){return !!G&&G.phase==='play'&&G.turn===G.viewer&&!G.busy&&!G.pendingShot&&!(G.mode==='online'&&!NET.ok)}
 function fireBtn(){const b=$('#bFire');if(!G)return;
@@ -813,7 +1063,7 @@ function nextTurnUI(){if(!G||G.phase!=='play')return;updHUD();G.sel=null;setSel(
  else{const op=G.players[G.turn];setTurn(G.mode==='cpu'?'Computer zielt …':`${op.name} zielt …`,'op');hint('');camTo('own');if(G.mode==='cpu')scheduleCpu()}
  fireBtn()}
 function scheduleCpu(){const gid=G.gameId,n=G.n;setTimeout(()=>{if(!G||G.gameId!==gid||G.phase!=='play'||G.turn!==1||G.busy||G.n!==n)return;
- const i=aiPick(G.players[1],G.players[1].cpu);shootLocal(1,i/10|0,i%10)},rnd(800,1400)/FAST)}
+ const i=aiPick(G.players[1],G.players[1].cpu);shootLocal(1,Math.floor(i/N),i%N)},rnd(800,1400)/FAST)}
 async function replayIncoming(){const rp=G.replay[G.viewer];if(!rp||!rp.length)return;G.replay[G.viewer]=[];
  hint('Das hat '+G.players[1-G.viewer].name+' gemacht:');setTurn('Rückblick','op');await camTo('own');
  for(const x of rp){await animShot(1-G.viewer,x.r,x.c,x.res)}await sleep(300)}
@@ -877,9 +1127,11 @@ async function endSequence(){if(!G||G.endShown)return;G.endShown=true;LS.del('sa
  await sleep(500);if(!G||G.gameId!==gid)return;
  if(G.mode==='local'){banner(G.players[G.winner].name.toUpperCase(),'c-gold','hat gewonnen!');AU.win();fxConfetti()}
  else if(won){banner('SIEG!','c-gold','Die feindliche Flotte ist versenkt');AU.win();fxConfetti()}else{banner('VERLOREN','c-sunk','Deine Flotte liegt am Meeresgrund');AU.lose()}
+ G.award=awardGame();
  await camTo('tgt');revealOpp(true);fireBtn();await sleep(3200);if(!G||G.gameId!==gid)return;showEnd()}
 function showEnd(){const W=G.players[G.winner],won=G.mode==='local'||G.winner===G.viewer;
- $('#endI').textContent=won?'🏆':'⚓';$('#endT').textContent=G.mode==='local'?W.name:(won?'SIEG!':'VERLOREN');$('#endT').className='endT '+(won?'c-gold':'c-sunk');
+ const ei=$('#endI');ei.innerHTML='';ei.className=G.mode==='local'?'medal':'endStage';if(G.mode==='local'){ei.textContent='🏆';avStop()}else setTimeout(()=>avStage(ei,G.players[G.viewer].ava,won?'cheer':'sad'),30);
+ renderAward();$('#endT').textContent=G.mode==='local'?W.name:(won?'SIEG!':'VERLOREN');$('#endT').className='endT '+(won?'c-gold':'c-sunk');
  $('#endP').textContent=G.mode==='local'?'hat die Seeschlacht gewonnen!':won?'Glückwunsch, Admiral! Die feindliche Flotte ist versenkt.':'Diesmal hat '+(G.mode==='cpu'?'der Computer':W.name)+' gewonnen.';
  const row=P=>{const q=P.stats.shots?Math.round(P.stats.hits/P.stats.shots*100):0;return`<span>${esc(P.name)}</span><b>${P.stats.shots}</b><b>${P.stats.hits}</b><b>${q} %</b>`};
  $('#endS').style.gridTemplateColumns='1fr auto auto auto';
@@ -889,12 +1141,13 @@ function rematch(){AU.click();if(!G)return;
  if(G.mode==='cpu'){const lvl=G.players[1].cpu;startCpu(lvl)}
  else if(G.mode==='local'){startLocal(G.players[0].name,G.players[1].name)}
  else{G.again=true;netSend({t:'again'});$('#btnAgain').disabled=true;$('#btnAgain').textContent='Warte auf '+G.players[1-G.me].name+' …';if(G.oppAgain&&NET.role==='host')hostNewRound()}}
-function startCpu(lvl){G=newGame('cpu',{players:[newPlayer(myName()),newPlayer('Computer',lvl)]});enterGame();startPlacement(0)}
-function startLocal(a,b){G=newGame('local',{players:[newPlayer(a),newPlayer(b)]});enterGame();handoff(0,`${a} stellt die Flotte auf`,()=>startPlacement(0))}
+function cpuAva(){const o=AVATARS.filter(a=>a.id!==myAva());return(o.find(a=>a.id==='graubart')||o[0]).id}
+function startCpu(lvl){G=newGame('cpu',{players:[newPlayer(myName(),0,myAva(),rankIdx(PROF.xp)),newPlayer('Computer',lvl,cpuAva(),[0,1,5,9][lvl])]});enterGame();startPlacement(0)}
+function startLocal(a,b){const o=AVATARS.filter(x=>x.id!==myAva());G=newGame('local',{players:[newPlayer(a,0,myAva()),newPlayer(b,0,(o.find(x=>x.g!==AVA(myAva()).g)||o[0]).id)]});enterGame();handoff(0,`${a} stellt die Flotte auf`,()=>startPlacement(0))}
 function toMenu(){if(G&&G.mode==='online'){netSend({t:'bye'});netClose()}G=null;LS.del('save');showMenu()}
 function showMenu(){hideScreens();$('#hud').classList.add('hide');$('#place').classList.add('hide');$$('.modal').forEach(m=>m.classList.remove('on'));
  if(HAS3D){clearBoard('own');clearBoard('tgt');showBoards(false);MENU.visible=true;camOrbit()}
- $('#inName').value=SET.name||'';const sv=LS.get('save',null);const ok=sv&&sv.G&&Date.now()-sv.t<6*3600e3&&sv.G.phase!=='over';
+ $('#inName').value=SET.name||'';renderProf();avStop();const sv=LS.get('save',null);const ok=sv&&sv.G&&Date.now()-sv.t<6*3600e3&&sv.G.phase!=='over';
  $('#btnResume').classList.toggle('hide',!ok);if(ok)$('#resumeInfo').textContent=`gegen ${sv.G.players[1-sv.G.me].name} · Code ${sv.code}`;show('menu')}
 function showEmo(e,from){const d=document.createElement('div');d.className='emoFly';d.innerHTML=`${e}<small>${esc(from)}</small>`;d.style.left=rnd(35,65)+'%';document.body.appendChild(d);setTimeout(()=>d.remove(),2500)}
 let wakeL=null;async function wake(){try{if(navigator.wakeLock&&!wakeL){wakeL=await navigator.wakeLock.request('screen');wakeL.addEventListener('release',()=>{wakeL=null})}}catch(e){}}
@@ -980,13 +1233,13 @@ function lobbyCode(code){NET.code=code;$('#lobCode').textContent=code;const qe=$
  if(typeof qrcode==='function'){try{const q=qrcode(0,'M');q.addData(joinUrl(code));q.make();qe.innerHTML=q.createImgTag(6,0)}catch(e){qe.textContent=''}}
  if(G&&G.phase==='lobby')save()}
 function lobbyStatus(){if(!G||G.phase!=='lobby')return;$('#lobStatus').innerHTML=NET.role==='host'?(NET.srv?'<span class="dots">Warte auf Mitspieler</span>':'<span class="dots">Verbinde</span>'):'<span class="dots">Verbinde mit Spiel '+NET.code+'</span><br><small style="font-weight:400;color:#9fb6cc">Das kann bis zu 20 Sekunden dauern.</small>'}
-function hostHello(m){const opName=String(m.name||'Gast').slice(0,14);G.players[1].name=opName;
+function hostHello(m){const opName=String(m.name||'Gast').slice(0,14);G.players[1].name=opName;G.players[1].ava=AVA(m.ava).id;G.players[1].rank=m.rank|0;G.players[0].ava=myAva();G.players[0].rank=rankIdx(PROF.xp);
  if(G.phase==='lobby'){G.phase='place';netSend(welcomeMsg());toast(opName+' ist beigetreten');AU.horn();enterGame();startPlacement(0);return}
  if(m.gameId!==G.gameId){if(G.phase==='place'){G.oppReady=false;netSend(welcomeMsg());return}hostNewRound();return}
  netSend(welcomeMsg());if(G.pendingShot)netSend({t:'shot',...G.pendingShot});if(G.phase==='over')netSend({t:'reveal',fleet:G.players[G.me].fleet});updHUD();if(G.phase==='place'&&G.ready)waitUI()}
-function welcomeMsg(){return{t:'welcome',gameId:G.gameId,rules:G.rules,name:myName(),ready:G.ready,started:G.phase==='play'||G.phase==='over',first:G.first}}
+function welcomeMsg(){return{t:'welcome',gameId:G.gameId,rules:G.rules,name:myName(),ava:myAva(),rank:rankIdx(PROF.xp),ready:G.ready,started:G.phase==='play'||G.phase==='over',first:G.first}}
 function hostStart(){if(G.phase!=='place')return;const f=Math.random()<.5?0:1;netSend({t:'start',first:f});startPlay(f)}
-function hostNewRound(){const nm=[G.players[0].name,G.players[1].name];G=newGame('online',{me:0,players:[newPlayer(nm[0]),newPlayer(nm[1])]});netSend({t:'reset',gameId:G.gameId,rules:G.rules,name:myName()});enterGame();startPlacement(0)}
+function hostNewRound(){const P=G.players;G=newGame('online',{me:0,players:[newPlayer(P[0].name,0,myAva(),rankIdx(PROF.xp)),newPlayer(P[1].name,0,P[1].ava,P[1].rank)]});netSend({t:'reset',gameId:G.gameId,rules:G.rules,name:myName(),ava:myAva(),rank:rankIdx(PROF.xp)});enterGame();startPlacement(0)}
 function joinGame(code){NET.role='guest';NET.code=code;NET.active=true;connectGuest()}
 function connectGuest(){clearTimeout(NET.rejoinT);NET.rejoinT=null;NET.tryAt=Date.now();try{NET.tp&&NET.tp.close()}catch(e){}
  const tp=Transport.join(NET.code,{
@@ -995,7 +1248,7 @@ function connectGuest(){clearTimeout(NET.rejoinT);NET.rejoinT=null;NET.tryAt=Dat
   onClose(){if(NET.tp!==tp)return;NET.ok=false;netUI();rejoin()},
   onError(e){if(NET.tp!==tp)return;if(!G||G.phase==='lobby'){$('#lobStatus').textContent=netErr(e);if(e.type==='peer-unavailable'&&G&&G.phase==='lobby')rejoin(4000)}else{NET.ok=false;netUI();rejoin()}}});
  NET.tp=tp}
-function sendHello(){NET.helloAt=Date.now();netSend({t:'hello',token:NET.token,name:myName(),gameId:G&&G.gameId})}
+function sendHello(){NET.helloAt=Date.now();netSend({t:'hello',token:NET.token,name:myName(),ava:myAva(),rank:rankIdx(PROF.xp),gameId:G&&G.gameId})}
 function rejoin(ms=2500){if(NET.rejoinT||!NET.active||NET.role!=='guest')return;NET.rejoinT=setTimeout(()=>{NET.rejoinT=null;if(NET.active&&!NET.ok)connectGuest()},ms)}
 setInterval(()=>{if(!NET.active)return;
  if(NET.ok){netSend({t:'ping'});if(Date.now()-NET.lastRx>15000){NET.ok=false;netUI();if(NET.role==='guest'&&NET.tp){NET.tp.fix&&NET.tp.fix();sendHello()}}}
@@ -1006,11 +1259,11 @@ function onNet(m){if(!G)return;switch(m.t){
  case 'ping':break;
  case 'who':if(NET.role==='guest')sendHello();break;
  case 'welcome':{const nm=String(m.name||'Gastgeber').slice(0,14);
-  if(G.phase==='lobby'||G.gameId!==m.gameId){G=newGame('online',{me:1,rules:m.rules,gameId:m.gameId,players:[newPlayer(nm),newPlayer(myName())]});AU.horn();enterGame();startPlacement(1);G.oppReady=!!m.ready}
-  else{G.players[0].name=nm;G.oppReady=!!m.ready;if(G.ready)netSend({t:'ready'});if(m.started&&G.phase==='place'&&G.ready)startPlay(m.first);
+  if(G.phase==='lobby'||G.gameId!==m.gameId){G=newGame('online',{me:1,rules:m.rules,gameId:m.gameId,players:[newPlayer(nm,0,AVA(m.ava).id,m.rank|0),newPlayer(myName(),0,myAva(),rankIdx(PROF.xp))]});AU.horn();enterGame();startPlacement(1);G.oppReady=!!m.ready}
+  else{G.players[0].name=nm;G.players[0].ava=AVA(m.ava).id;G.players[0].rank=m.rank|0;G.oppReady=!!m.ready;if(G.ready)netSend({t:'ready'});if(m.started&&G.phase==='place'&&G.ready)startPlay(m.first);
    if(G.pendingShot)netSend({t:'shot',...G.pendingShot});if(G.phase==='place'&&G.ready)waitUI();updHUD()}
   save();break}
- case 'reset':{const nm=[G.players[0].name,G.players[1].name];G=newGame('online',{me:1,rules:m.rules,gameId:m.gameId,players:[newPlayer(m.name||nm[0]),newPlayer(nm[1])]});enterGame();startPlacement(1);toast('Neue Runde!');break}
+ case 'reset':{const P=G.players;G=newGame('online',{me:1,rules:m.rules,gameId:m.gameId,players:[newPlayer(m.name||P[0].name,0,AVA(m.ava||P[0].ava).id,m.rank??P[0].rank),newPlayer(P[1].name,0,myAva(),rankIdx(PROF.xp))]});enterGame();startPlacement(1);toast('Neue Runde!');break}
  case 'ready':G.oppReady=true;if(G.phase==='place'){if(G.ready)waitUI();if(NET.role==='host'&&G.ready)hostStart()}break;
  case 'start':if(G.phase==='place'&&G.ready)startPlay(m.first);break;
  case 'shot':{if(G.phase!=='play'&&!(G.phase==='over'&&m.n<=G.n))return;
@@ -1028,7 +1281,7 @@ function onNet(m){if(!G)return;switch(m.t){
 /* ---------- Speichern / Fortsetzen ---------- */
 function save(){if(!G||G.mode!=='online'||G.phase==='lobby')return;
  LS.set('save',{t:Date.now(),role:NET.role,code:NET.code,oppToken:NET.oppToken,G:JSON.parse(JSON.stringify(G,(k,v)=>(k==='q'||k==='busy'||k==='sel')?undefined:v))})}
-function resumeGame(){const s=LS.get('save',null);if(!s)return;G=s.G;G.busy=0;G.q=null;G.sel=null;G.endShown=false;NET.oppToken=s.oppToken;enterGame();
+function resumeGame(){const s=LS.get('save',null);if(!s)return;setSize((s.G.rules&&s.G.rules.size)||10);G=s.G;G.busy=0;G.q=null;G.sel=null;G.endShown=false;NET.oppToken=s.oppToken;enterGame();
  if(s.role==='host')hostGame(s.code,true);else joinGame(s.code);
  if(G.phase==='place'){if(G.ready)waitUI();else startPlacement(G.me)}
  else if(G.phase==='play'){$('#hud').classList.remove('hide');rebuildAll();updHUD();G.lastTurn=G.turn;nextTurnUI()}
@@ -1037,8 +1290,8 @@ function resumeGame(){const s=LS.get('save',null);if(!s)return;G=s.G;G.busy=0;G.
 /* ================= EINGABE ================= */
 const ray=HAS3D?new THREE.Raycaster():null,ndc=HAS3D?new THREE.Vector2():null;
 function pick(b,x,y){if(!HAS3D||!BOARDS[b].g.visible)return null;ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(ndc,cam);
- const h=ray.intersectObject(BOARDS[b].hit)[0];if(!h)return null;const lp=BOARDS[b].g.worldToLocal(h.point.clone());const c=Math.floor(lp.x+5),r=Math.floor(lp.z+5);
- return(r<0||c<0||r>9||c>9)?null:[r,c]}
+ const h=ray.intersectObject(BOARDS[b].hit)[0];if(!h)return null;const lp=BOARDS[b].g.worldToLocal(h.point.clone());const c=Math.floor(lp.x+N/2),r=Math.floor(lp.z+N/2);
+ return(r<0||c<0||r>=N||c>=N)?null:[r,c]}
 let pd=null;
 $('#gl').addEventListener('pointerdown',e=>{pd={x:e.clientX,y:e.clientY,t:Date.now()}});
 $('#gl').addEventListener('pointerup',e=>{if(!pd)return;const d=Math.hypot(e.clientX-pd.x,e.clientY-pd.y),dt=Date.now()-pd.t;pd=null;if(d>16||dt>900||!G)return;
@@ -1063,11 +1316,11 @@ function bind(){
  $$('[data-lvl]').forEach(b=>b.addEventListener('click',()=>{AU.click();startCpu(+b.dataset.lvl)}));
  $('#btnLocal').addEventListener('click',()=>{const a=$('#inP1').value.trim()||'Spieler 1',b=$('#inP2').value.trim()||'Spieler 2';SET.p1=a;SET.p2=b;saveSet();AU.click();startLocal(a.slice(0,14),b.slice(0,14))});
  $('#btnCreate').addEventListener('click',()=>{AU.click();if(!SET.name){toast('Bitte zuerst im Hauptmenü deinen Namen eintragen');showMenu();$('#inName').focus();return}
-  G=newGame('online',{me:0,players:[newPlayer(myName()),newPlayer('Gast')]});G.phase='lobby';NET.oppToken=null;
+  G=newGame('online',{me:0,players:[newPlayer(myName(),0,myAva(),rankIdx(PROF.xp)),newPlayer('Gast')]});G.phase='lobby';NET.oppToken=null;
   $('#lobT').textContent='Dein Spiel';$('#lobHost').classList.remove('hide');$('#lobNote').classList.remove('hide');show('lobby');hostGame(newCode(),false);lobbyStatus();wake()});
  const doJoin=()=>{const c=$('#inCode').value.trim().toUpperCase();if(c.length!==4){toast('Bitte den 4-stelligen Code eingeben');return}
   if(!SET.name){toast('Bitte zuerst im Hauptmenü deinen Namen eintragen');showMenu();return}
-  G=newGame('online',{me:1,players:[newPlayer('Gastgeber'),newPlayer(myName())]});G.phase='lobby';$('#lobT').textContent='Beitreten';$('#lobHost').classList.add('hide');$('#lobNote').classList.add('hide');show('lobby');joinGame(c);lobbyStatus();wake()};
+  G=newGame('online',{me:1,players:[newPlayer('Gastgeber'),newPlayer(myName(),0,myAva(),rankIdx(PROF.xp))]});G.phase='lobby';$('#lobT').textContent='Beitreten';$('#lobHost').classList.add('hide');$('#lobNote').classList.add('hide');show('lobby');joinGame(c);lobbyStatus();wake()};
  $('#btnJoin').addEventListener('click',()=>{AU.click();doJoin()});
  $('#inCode').addEventListener('keydown',e=>{if(e.key==='Enter')doJoin()});
  $('#btnLobBack').addEventListener('click',()=>{AU.click();netClose();G=null;showMenu()});
@@ -1087,8 +1340,42 @@ function bind(){
  $('#btnEndView').addEventListener('click',()=>{AU.click();hideScreens();$('#hud').classList.remove('hide');hint('Tippe 👁 zum Umschalten · ERGEBNIS zeigt die Auswertung');fireBtn()});
  $('#btnEndMenu').addEventListener('click',()=>{AU.click();toMenu()});
 }
+
+/* ================= PROFIL, AVATARE, ORDEN – UI ================= */
+function renderProf(){const i=rankIdx(PROF.xp),x=xpBarHTML(PROF.xp);
+ $('#profAva').innerHTML=avImg(myAva(),'lg');$('#profRank').innerHTML=badge(i)+'<span>'+rankName(i)+'</span>';
+ $('#profBar').style.width=x.p+'%';$('#profXp').textContent=x.txt;
+ const n=Object.keys(PROF.medals).length;$('#profMed').textContent=n?`🎖️ ${n} von ${MEDALS.length} Orden`:'🎖️ Orden & Dienstgrade'}
+let avSel=null;
+function openAvaPicker(){avSel=myAva();modal('mAva');$('#avaGrid').innerHTML=AVATARS.map(a=>`<button data-av="${a.id}" class="${a.id===avSel?'on':''}">${avImg(a.id)}<small>${esc(a.name)}</small></button>`).join('');
+ $('#avaName').textContent=AVA(avSel).name;setTimeout(()=>avStage($('#avaStage'),avSel,'wave'),40)}
+function pickAva(id){avSel=id;$$('#avaGrid button').forEach(b=>b.classList.toggle('on',b.dataset.av===id));$('#avaName').textContent=AVA(id).name;avStage($('#avaStage'),id,'salute');AU.click()}
+function openMedals(){modal('mMed');const i=rankIdx(PROF.xp),x=xpBarHTML(PROF.xp);
+ $('#medHead').innerHTML=`<div class="mh">${avImg(myAva(),'lg')}<div><div class="mhR">${badge(i,1)} ${rankName(i)}</div><div class="xpb"><i style="width:${x.p}%"></i></div><small>${x.txt}</small><div class="mhS">${PROF.wins} Siege · ${PROF.games} Spiele · ${PROF.xp} EP</div></div></div>`;
+ $('#medGrid').innerHTML=MEDALS.map(m=>medalHTML(m,PROF.medals[m.id]||0)).join('');
+ $('#rankList').innerHTML=RANKS.map((r,k)=>`<div class="rl${k===i?' on':''}${k>i?' lk':''}">${badge(k)}<span>${r[1]}</span><small>${r[0]} EP</small></div>`).join('')}
+function renderAward(){const box=$('#endAward');const A=G&&G.award;if(!A){box.innerHTML='';return}
+ const before=xpBarHTML(A.before),after=xpBarHTML(A.after),up=A.ra>A.rb;
+ box.innerHTML=`<div class="aw"><div class="awT"><b>+${A.xp} EP</b><span>${badge(A.ra)} ${rankName(A.ra)}</span></div>
+  <div class="xpb"><i id="awBar" style="width:${up?0:before.p}%"></i></div><small id="awTxt">${after.txt}</small>
+  ${up?`<div class="promo">⭐ BEFÖRDERT! ⭐<br><span>${badge(A.ra,1)} ${rankName(A.ra)}</span></div>`:''}
+  ${A.got.length?`<div class="awM">${A.got.map((g,k)=>`<div style="animation-delay:${.6+k*.35}s" class="drop">${medalHTML(MEDALS.find(m=>m.id===g.id),PROF.medals[g.id],g.isNew)}</div>`).join('')}</div>`:''}</div>`;
+ setTimeout(()=>{const b=$('#awBar');if(b)b.style.width=after.p+'%'},250);
+ if(up){setTimeout(()=>{avPose('salute');AU.horn()},900)}
+ if(A.got.length)A.got.forEach((g,k)=>setTimeout(()=>AU.lock(),(600+k*350)))}
+function sizeSeg(id){const el=$(id);el.innerHTML=[10,12,15].map(n=>`<button data-sz="${n}" class="${(SET.size||10)===n?'on':''}">${SIZES[n].replace(' · ','<small>')}</small></button>`).join('');
+ el.querySelectorAll('button').forEach(b=>b.onclick=()=>{SET.size=+b.dataset.sz;saveSet();AU.click();$$('.seg button').forEach(x=>x.classList.toggle('on',+x.dataset.sz===SET.size))})}
+function bindProg(){
+ $('#profAva').addEventListener('click',()=>{AU.click();openAvaPicker()});
+ $('#profMed').addEventListener('click',()=>{AU.click();openMedals()});
+ $('#avaGrid').addEventListener('click',e=>{const b=e.target.closest('[data-av]');if(b)pickAva(b.dataset.av)});
+ $('#avaOk').addEventListener('click',()=>{PROF.ava=avSel;saveProf();avStop();modal('mAva',false);renderProf();AU.horn();toast(AVA(avSel).name+' übernimmt das Kommando!')});
+ $$('#mAva [data-close],#mAva').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)avStop()}));
+ ['#segCpu','#segOn','#segLoc'].forEach(sizeSeg);
+ if(!PROF.ava)setTimeout(()=>{if($('#menu').classList.contains('on'))toast('Tipp: Tippe auf den Kommandeur, um deinen Avatar zu wählen',4500)},1500)}
+
 let JOINCODE='';
-function boot(){try{init3D()}catch(e){console.error(e)}bind();syncSw();
+function boot(){try{init3D()}catch(e){console.error(e)}bind();bindProg();syncSw();
  const j=(QS.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
  if(!HAS3D)toast('3D-Grafik konnte nicht geladen werden – bitte Internet prüfen und Seite neu laden.',6000);
  if(j.length===4){JOINCODE=j;history.replaceState(null,'',location.pathname);CAM.mode='orbit';showMenu();
