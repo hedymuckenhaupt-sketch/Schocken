@@ -203,7 +203,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
       <button id="btnInvite" style="width:100%;margin-top:8px">💬 Per WhatsApp einladen</button>
     </div>
     <div class="status" id="lobStatus"><span class="dots">Verbinde</span></div>
-    <p id="lobNote" style="text-align:center;font-size:14px">Bitte das Handy entsperrt und die Seite offen lassen.</p>
+    <p id="lobNote" style="text-align:center;font-size:14px">Nach dem Teilen bitte sofort hierher zurückwechseln und die Seite offen lassen – sonst kann dein Mitspieler nicht beitreten.</p>
     <button class="back" id="btnLobBack">‹ Abbrechen</button>
   </div>
 </div>
@@ -860,7 +860,7 @@ const Transport={
   peer.on('error',e=>h.onError(e));
   return{send(id,msg){const c=conns.get(id);if(c&&c.open){try{c.send(msg)}catch(e){}}},close(){try{peer.destroy()}catch(e){}},fix(){try{if(peer.disconnected&&!peer.destroyed)peer.reconnect()}catch(e){}}}},
  join(code,h){
-  if(TEST_NET){const id='g'+rid();const bc=new BroadcastChannel('sv-'+code);bc.onmessage=e=>{const d=e.data;if(d.to===id)h.onMsg(d.msg)};setTimeout(()=>h.onOpen(),60);
+  if(TEST_NET){const id='g'+rid();const bc=new BroadcastChannel('sv-'+code);bc.onmessage=e=>{const d=e.data;if(d.to===id)h.onMsg(d.msg)};setTimeout(()=>h.onOpen(),+(QS.get('lag')||60));
    return{send(msg){bc.postMessage({to:'host',from:id,msg})},close(){bc.close()}}}
   if(typeof Peer!=='function'){setTimeout(()=>h.onError({type:'nolib'}),0);return{send(){},close(){}}}
   const peer=new Peer({debug:0});let conn=null;
@@ -889,13 +889,13 @@ function hostGame(code,resume){NET.role='host';NET.code=code;NET.active=true;NET
     NET.cid=id;NET.oppToken=m.token;NET.ok=true;NET.lastRx=Date.now();netUI();hostHello(m);return}
    if(id!==NET.cid)return;NET.lastRx=Date.now();if(!NET.ok){NET.ok=true;netUI()}onNet(m)},
   onClose(id){if(id===NET.cid){NET.ok=false;netUI()}},
-  onError(e){if(e.type==='unavailable-id'){try{NET.tp.close()}catch(x){}if(resume||(G&&G.phase!=='lobby')){setTimeout(()=>{if(NET.active&&NET.role==='host')hostGame(code,true)},3000)}else{const c=newCode();lobbyCode(c);hostGame(c,false)}}
+  onError(e){if(e.type==='unavailable-id'){try{NET.tp.close()}catch(x){}if(resume||NET.srv||(G&&G.phase!=='lobby')){setTimeout(()=>{if(NET.active&&NET.role==='host')hostGame(code,true)},3000)}else{const c=newCode();lobbyCode(c);hostGame(c,false)}}
    else if(G&&G.phase==='lobby')$('#lobStatus').textContent=netErr(e);else toast(netErr(e))}});
  if(!resume)lobbyCode(code)}
 function lobbyCode(code){NET.code=code;$('#lobCode').textContent=code;const qe=$('#qr');qe.innerHTML='';
  if(typeof qrcode==='function'){try{const q=qrcode(0,'M');q.addData(joinUrl(code));q.make();qe.innerHTML=q.createImgTag(6,0)}catch(e){qe.textContent=''}}
  if(G&&G.phase==='lobby')save()}
-function lobbyStatus(){if(!G||G.phase!=='lobby')return;$('#lobStatus').innerHTML=NET.role==='host'?(NET.srv?'<span class="dots">Warte auf Mitspieler</span>':'<span class="dots">Verbinde</span>'):'<span class="dots">Verbinde mit Spiel '+NET.code+'</span>'}
+function lobbyStatus(){if(!G||G.phase!=='lobby')return;$('#lobStatus').innerHTML=NET.role==='host'?(NET.srv?'<span class="dots">Warte auf Mitspieler</span>':'<span class="dots">Verbinde</span>'):'<span class="dots">Verbinde mit Spiel '+NET.code+'</span><br><small style="font-weight:400;color:#9fb6cc">Das kann bis zu 20 Sekunden dauern.</small>'}
 function hostHello(m){const opName=String(m.name||'Gast').slice(0,14);G.players[1].name=opName;
  if(G.phase==='lobby'){G.phase='place';netSend(welcomeMsg());toast(opName+' ist beigetreten');AU.horn();enterGame();startPlacement(0);return}
  if(m.gameId!==G.gameId){if(G.phase==='place'){G.oppReady=false;netSend(welcomeMsg());return}hostNewRound();return}
@@ -904,7 +904,7 @@ function welcomeMsg(){return{t:'welcome',gameId:G.gameId,rules:G.rules,name:myNa
 function hostStart(){if(G.phase!=='place')return;const f=Math.random()<.5?0:1;netSend({t:'start',first:f});startPlay(f)}
 function hostNewRound(){const nm=[G.players[0].name,G.players[1].name];G=newGame('online',{me:0,players:[newPlayer(nm[0]),newPlayer(nm[1])]});netSend({t:'reset',gameId:G.gameId,rules:G.rules,name:myName()});enterGame();startPlacement(0)}
 function joinGame(code){NET.role='guest';NET.code=code;NET.active=true;connectGuest()}
-function connectGuest(){clearTimeout(NET.rejoinT);NET.rejoinT=null;try{NET.tp&&NET.tp.close()}catch(e){}
+function connectGuest(){clearTimeout(NET.rejoinT);NET.rejoinT=null;NET.tryAt=Date.now();try{NET.tp&&NET.tp.close()}catch(e){}
  const tp=Transport.join(NET.code,{
   onOpen(){if(NET.tp!==tp)return;NET.ok=true;NET.lastRx=Date.now();netSend({t:'hello',token:NET.token,name:myName(),gameId:G&&G.gameId});netUI()},
   onMsg(m){if(NET.tp!==tp||!m||typeof m!=='object')return;NET.lastRx=Date.now();if(!NET.ok){NET.ok=true;netUI()}onNet(m)},
@@ -912,8 +912,10 @@ function connectGuest(){clearTimeout(NET.rejoinT);NET.rejoinT=null;try{NET.tp&&N
   onError(e){if(NET.tp!==tp)return;if(!G||G.phase==='lobby'){$('#lobStatus').textContent=netErr(e);if(e.type==='peer-unavailable'&&G&&G.phase==='lobby')rejoin(4000)}else{NET.ok=false;netUI();rejoin()}}});
  NET.tp=tp}
 function rejoin(ms=2500){if(NET.rejoinT||!NET.active||NET.role!=='guest')return;NET.rejoinT=setTimeout(()=>{NET.rejoinT=null;if(NET.active&&!NET.ok)connectGuest()},ms)}
-setInterval(()=>{if(!NET.active)return;if(NET.ok){netSend({t:'ping'});if(Date.now()-NET.lastRx>11000){NET.ok=false;netUI();if(NET.role==='guest')connectGuest()}}else if(NET.role==='guest')rejoin()},3000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;wakeL=null;if(G&&!(G.phase==='lobby'))wake();if(!NET.active)return;if(NET.role==='host'){NET.tp&&NET.tp.fix&&NET.tp.fix()}else if(!NET.ok)connectGuest()});
+setInterval(()=>{if(!NET.active)return;
+ if(NET.ok){netSend({t:'ping'});if(Date.now()-NET.lastRx>15000){NET.ok=false;netUI();if(NET.role==='guest')connectGuest()}}
+ else if(NET.role==='guest'&&!NET.rejoinT&&Date.now()-(NET.tryAt||0)>20000)connectGuest()},3000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;wakeL=null;if(G&&!(G.phase==='lobby'))wake();if(!NET.active)return;if(NET.role==='host'){NET.tp&&NET.tp.fix&&NET.tp.fix()}else if(!NET.ok&&Date.now()-(NET.tryAt||0)>5000)connectGuest()});
 
 function onNet(m){if(!G)return;switch(m.t){
  case 'ping':break;
