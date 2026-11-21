@@ -145,6 +145,19 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
 #handoff .bigI{font-size:70px;text-align:center}
 .medal{font-size:70px;text-align:center;animation:medal 1s cubic-bezier(.2,1.6,.4,1)}
 @keyframes medal{from{transform:scale(0) rotate(-40deg)}to{transform:none}}
+#cine{position:fixed;inset:0;z-index:18;pointer-events:none}
+#cine.on{pointer-events:auto}
+#cine .lb{position:absolute;left:0;right:0;height:15vh;background:#000;transition:transform .5s cubic-bezier(.3,.8,.3,1)}
+#cine .lb.t{top:0;transform:translateY(-100%)}#cine .lb.b{bottom:0;transform:translateY(100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding-bottom:var(--sab)}
+#cine.on .lb{transform:none}
+#cine .ct{font-family:"Black Ops One",Impact,sans-serif;font-size:min(9vw,46px);letter-spacing:.04em;text-align:center;opacity:0;transform:scale(1.6);transition:all .45s cubic-bezier(.2,1.5,.4,1)}
+#cine .cs{font-size:15px;color:#c9d6e2;opacity:0;transition:opacity .4s .2s;text-align:center}
+#cine.title .ct{opacity:1;transform:none}#cine.title .cs{opacity:1}
+#cine .skip{position:absolute;right:12px;top:calc(15vh + 10px);font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.35);padding:5px 10px;border-radius:99px;opacity:0;transition:opacity .4s .6s}
+#cine.on .skip{opacity:1}
+#cine .tag{position:absolute;left:14px;top:calc(15vh + 10px);font-size:12px;letter-spacing:.3em;color:#ff5a3c;font-weight:800;opacity:0;transition:opacity .3s .4s}
+#cine.on .tag{opacity:1;animation:pulse 1s infinite}
+#hud{transition:opacity .35s}
 </style>
 </head>
 <body>
@@ -269,6 +282,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   </div>
 </div>
 
+<div id="cine"><div class="lb t"></div><div class="tag">● LIVE</div><div class="skip">Tippen zum Überspringen</div><div class="lb b"><div class="ct"></div><div class="cs"></div></div></div>
 <div id="banner"><div class="b1"></div><div class="b2"></div></div>
 
 <div id="mHelp" class="modal"><div class="card help">
@@ -291,6 +305,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   <div class="tg">Ton<span class="sw" data-set="sound"></span></div>
   <div class="tg">Vibration<span class="sw" data-set="vib"></span></div>
   <div class="tg">Intro-Animation beim Start<span class="sw" data-set="intro"></span></div>
+  <div class="tg">Film beim Versenken eines Schiffs<span class="sw" data-set="cine"></span></div>
   <div class="tg"><span>Bei Treffer nochmal schießen<small>gilt ab dem nächsten Spiel</small></span><span class="sw" data-set="again"></span></div>
   <div class="tg"><span>Schiffe dürfen sich berühren<small>gilt ab dem nächsten Spiel</small></span><span class="sw" data-set="touch"></span></div>
   <button class="go" data-close>Fertig</button>
@@ -321,7 +336,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms/FAST));
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const LSP='sv_'+(QS.get('id')||'');
 const LS={get(k,d){try{const v=localStorage.getItem(LSP+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(LSP+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(LSP+k)}catch(e){}}};
-const SET=Object.assign({sound:true,vib:true,intro:true,again:true,touch:false,name:'',p1:'',p2:''},LS.get('set',{}));
+const SET=Object.assign({cine:true,sound:true,vib:true,intro:true,again:true,touch:false,name:'',p1:'',p2:''},LS.get('set',{}));
 const saveSet=()=>LS.set('set',SET);
 const HAS3D=typeof THREE!=='undefined';
 
@@ -592,12 +607,49 @@ function loop(now){requestAnimationFrame(loop);
  // Kamera
  if(CAM.mode==='orbit'){CAM.oa=(CAM.oa||0)+dt*.07;const a=CAM.oa;CAM.pos.set(Math.sin(a)*24,8.2+Math.sin(a*3)*1,Math.cos(a)*24);CAM.tgt.set(0,1,0)}
  else if(CAM.mode==='intro'){introCam(dt)}
+ else if(CAM.mode==='cine'&&CAM.cine){CAM.cine(dt)}
  cam.position.copy(CAM.pos);
  if(CAM.shake>0){CAM.shake=Math.max(0,CAM.shake-dt*1.1);const s=CAM.shake*CAM.shake;cam.position.x+=rnd(-s,s);cam.position.y+=rnd(-s,s);cam.position.z+=rnd(-s,s)}
  cam.lookAt(CAM.tgt);R.render(scene,cam)}
 function introCam(dt){if(introT<0)introT=0;introT+=dt;const k=Math.min(1,introT/4.2),e=ease(k);
  const a=-.9+e*.9;const r=34-e*10;CAM.pos.set(Math.sin(a)*r,1.2+e*7,Math.cos(a)*r);CAM.tgt.set(0,1.2-e*.2,0);
  if(k>=1)CAM.mode='orbit'}
+
+/* ---------- 3D-Einspieler: Schiff wird versenkt ---------- */
+function cinematic(id,len,mine,title,sub){
+ if(!HAS3D||!SET.cine)return Promise.resolve();
+ return new Promise(res=>{
+  const Z=-62,X0=-4,SC=2.4,el=$('#cine');
+  const m=shipModel(id,len);m.scale.setScalar(SC);m.position.set(X0,0,Z);scene.add(m);
+  const body=m.userData.body,half=(len*.97)/2;
+  const ct=el.querySelector('.ct');ct.textContent=title;ct.className='ct '+(mine?'c-gold':'c-sunk');el.querySelector('.cs').textContent=sub||'';
+  el.classList.remove('title');el.classList.add('on');$('#hud').style.opacity='0';$('#banner').classList.remove('play');
+  CAM.tok++;CAM.mode='cine';CAM.moving=false;
+  let t=0,done=false,hit=false,nextSec=0,secN=0,titled=false,sunkS=false;const v=new THREE.Vector3();
+  const wp=(x,y)=>body.localToWorld(v.set(x,y,0)).clone();
+  const finish=()=>{if(done)return;done=true;scene.remove(m);el.classList.remove('on','title');el.onclick=null;$('#hud').style.opacity='';CAM.cine=null;CAM.mode='fixed';res()};
+  el.onclick=finish;
+  setTimeout(()=>{if(done)return;const end=wp(half*.15,.3);
+   flyMissile(new THREE.Vector3(X0+22,16,Z+12),new THREE.Vector3(X0+10,13,Z+3),end,.85).then(()=>{if(done)return;hit=true;nextSec=t+.18;
+    const p=wp(half*.15,.4);fxExplosion(p.x,p.y,p.z,2.3);AU.boom(true);vib([140,60,220]);CAM.shake=.9})},380/FAST);
+  CAM.cine=dt=>{if(done)return;t+=dt*FAST;
+   const k=Math.min(1,t/4.8),e=ease(k);m.position.x=X0+t*.55;
+   const f=innerWidth/innerHeight<1?1.85:1;CAM.tgt.set(m.position.x+e*.5,1.1-e*.9,Z);CAM.pos.set(CAM.tgt.x+(-9+e*10)*f,CAM.tgt.y+(.4+e*2.6)*f,Z+(9-e*2.4)*f);
+   if(!hit){const b=body;b.position.y=Math.sin(T*1.4)*.04;b.rotation.x=Math.sin(T*1.1)*.03;return}
+   // Kettenexplosionen entlang des Rumpfs
+   if(secN<5&&t>=nextSec){secN++;nextSec=t+.22;const x=(Math.random()*2-1)*half*.9,p=wp(x,.35);fxExplosion(p.x,p.y,p.z,1.3);AU.boom()}
+   // Feuer & Rauch auf dem Wrack
+   for(let i=0;i<3;i++){const p=wp((Math.random()*2-1)*half*.8,.45);if(p.y>-.2){PSA.spawn(p.x,p.y,p.z,rnd(-.3,.3),rnd(1.5,3),rnd(-.3,.3),rnd(.4,.7),rnd(.7,1.1),.1,[1,.75,.25,1],[.9,.15,.02,0],-1,.6);
+    if(Math.random()<.35)PSN.spawn(p.x,p.y+.5,p.z,rnd(-.2,.2)+.5,rnd(1,2),rnd(-.2,.2),rnd(1.6,2.4),.5,1.6,[.1,.1,.1,.5],[.3,.28,.28,0],-.3,.3)}}
+   // Untergang: Heck sinkt, Bug richtet sich auf
+   const st=Math.max(0,t-1.4);
+   if(st>0){if(!sunkS){sunkS=true;AU.sink();vib([300,100,400])}
+    body.rotation.z=Math.min(.6,st*.3);body.rotation.x=Math.min(.18,st*.07);body.position.y=-st*st*.32;
+    if(Math.random()<.7){const p=wp((Math.random()*2-1)*half,0);PSN.spawn(p.x,.15,p.z+rnd(-.6,.6),rnd(-.8,.8),rnd(1.5,4),rnd(-.8,.8),rnd(.7,1.1),.35,.1,[.9,.97,1,.9],[.6,.8,.9,0],10,.3)}
+    if(Math.random()<.4){const p=wp(-half*.6,0);fxBubbles(p.x,p.z)}}
+   if(!titled&&t>2.0){titled=true;el.classList.add('title');AU.horn()}
+   if(t>4.6)finish()};
+ })}
 /* ================= SPIELREGELN & DATEN ================= */
 const N=10,LET='ABCDEFGHIJ';
 const SHIPS=[{id:'car',name:'Flugzeugträger',len:5},{id:'bat',name:'Schlachtschiff',len:4},{id:'cru',name:'Kreuzer',len:3},{id:'sub',name:'U-Boot',len:3},{id:'des',name:'Zerstörer',len:2}];
@@ -719,7 +771,11 @@ async function animShot(sh,r,c,res){
  else{if(HAS3D)fxSplash(B.x+p.x,p.z,1);AU.splash();markMiss(b,r,c,true);
   if(mine)banner('WASSER','c-miss',cn(r,c));else banner('DANEBEN','c-miss',`${opN} schießt auf ${cn(r,c)}`)}
  updHUD();
- if(res.sunk){await sleep(900);if(!G||G.gameId!==gid)return;
+ if(res.sunk){await sleep(700);if(!G||G.gameId!==gid)return;
+  {const nm=SNAME(res.sunk.id).toUpperCase(),neu=['bat','sub'].includes(res.sunk.id);
+   const sub=G.mode==='local'?(mine?`${G.players[G.viewer].name} versenkt ${opN===G.players[G.viewer].name?'':''}das Schiff von ${G.players[1-G.viewer].name}`:`${opN} hat ${G.players[G.viewer].name}s Schiff versenkt`)
+    :(mine?(neu?'Feindliches':'Feindlicher')+' '+SNAME(res.sunk.id)+' zerstört':`${opN} hat ${neu?'unser':'unseren'} ${SNAME(res.sunk.id)} versenkt`);
+   await cinematic(res.sunk.id,res.sunk.len,mine,mine?nm+' VERSENKT!':nm+' GESUNKEN',sub);if(!G||G.gameId!==gid)return;await camTo(b,.8)}
   if(mine){await addWreck(res.sunk,true);banner('VERSENKT!','c-sunk',(G.mode==='local'?'':(['bat','sub'].includes(res.sunk.id)?'Feindliches ':'Feindlicher '))+SNAME(res.sunk.id)+' ist gesunken');if(!G.rules.touch)around(res.sunk,(a,c2)=>{if(G.players[G.viewer].view[a*N+c2]===4)markDot('tgt',a,c2)});if(G.mode==='cpu'&&!res.over&&Math.random()<.5)showEmo(['😱','😤','🙈'][Math.floor(Math.random()*3)],'Computer')}
   else{smokeOnly('own',res.sunk);banner('VERSENKT!','c-sunk',(G.mode==='local'?G.players[G.viewer].name+'s ':'Unser ')+SNAME(res.sunk.id)+' ist gesunken');await sinkOwn(res.sunk);if(G.mode==='cpu'&&!res.over&&Math.random()<.5)showEmo(['😎','💥','🤖'][Math.floor(Math.random()*3)],'Computer')}
   updHUD();await sleep(500)}
