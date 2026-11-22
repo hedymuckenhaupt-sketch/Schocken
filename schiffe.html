@@ -394,8 +394,8 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   <ul><li>Tippe ein Feld im Feindgebiet an – es leuchtet gelb.</li><li>Dann <b>FEUER</b> drücken oder das Feld nochmal antippen.</li><li>💥 Feuer = Treffer. ⚪ Boje = Wasser.</li><li>Bei einem Treffer darfst du nochmal schießen.</li><li>Ist ein Schiff versenkt, werden die Felder drumherum markiert – dort kann kein Schiff mehr sein.</li></ul>
   <h3>Spezialwaffen</h3>
   <ul><li>🌊 <b>Torpedo</b> (U-Boot): Reihe antippen – er läuft von links los und trifft das erste Schiff. Unterwegs zeigt er Wasser an.</li><li>📡 <b>Sonar</b> (Zerstörer): zählt die versteckten Schiffsteile in einem 3×3-Feld.</li><li>✈️ <b>Bomber</b> (Flugzeugträger): bombardiert 5 Felder in Kreuzform.</li><li>Jede Waffe gibt es einmal pro Spiel – und nur, solange das zugehörige Schiff schwimmt.</li></ul>
-  <h3>Salvenmodus</h3><p>Du hast pro Runde so viele Schüsse, wie du noch Schiffe hast. Ziele antippen (nochmal tippen = abwählen), dann SALVE drücken.</p>
-  <h3>Inseln &amp; Minen</h3><p>🏝️ Inseln liegen auf beiden Karten gleich – dort kann kein Schiff stehen. In jedem Meer liegen versteckte Minen. Wer eine trifft, beschädigt eines seiner eigenen Schiffe, und sein Zug ist vorbei.</p>
+  <h3>Salvenmodus</h3><p>Du hast pro Runde so viele Schüsse, wie du noch Schiffe hast. Ziele antippen (nochmal tippen = abwählen), dann SALVE drücken. Hat die Salve getroffen, darfst du einen Schuss nachlegen – und weiter, solange du triffst.</p>
+  <h3>Inseln &amp; Minen</h3><p>🏝️ Inseln liegen auf beiden Karten gleich – dort kann kein Schiff stehen. 💣 In jedem Meer liegen versteckte Minen. Wer eine trifft, beschädigt eines seiner eigenen Schiffe, und sein Zug ist vorbei. Beides lässt sich in den Einstellungen einzeln abschalten.</p>
   <h3>Die Flotte</h3>
   <ul><li>Flugzeugträger – 5 Felder</li><li>Schlachtschiff – 4 Felder</li><li>Zerstörer – 3 Felder</li><li>U-Boot – 3 Felder</li><li>Patrouillenboot – 2 Felder</li></ul>
   <h3>Knöpfe im Spiel</h3>
@@ -416,7 +416,8 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   <div class="yl" style="margin-top:8px">Spielregeln – gelten ab dem nächsten Spiel</div>
   <div class="tg"><span>Spezialwaffen<small>Torpedo, Sonar und Bomber – je einmal pro Spiel</small></span><span class="sw" data-set="weapons"></span></div>
   <div class="tg"><span>Salvenmodus<small>pro Runde so viele Schüsse, wie man noch Schiffe hat</small></span><span class="sw" data-set="salvo"></span></div>
-  <div class="tg"><span>Inseln &amp; Minen<small>Inseln blockieren Felder, versteckte Minen treffen den Schützen</small></span><span class="sw" data-set="islands"></span></div>
+  <div class="tg"><span>Inseln<small>blockieren Felder – auf beiden Karten gleich</small></span><span class="sw" data-set="islands"></span></div>
+  <div class="tg"><span>Minen<small>versteckte Minen – wer eine trifft, beschädigt sein eigenes Schiff</small></span><span class="sw" data-set="mines"></span></div>
   <div class="tg"><span>Spielleiter-Markierungen<small>Knopf 🖍 im Spiel: eigene Felder markieren (🚩 Verdacht / ✕ Wasser)</small></span><span class="sw" data-set="marks"></span></div>
   <div class="tg"><span>Treffer-Heatmap<small>zeigt, wo ein Treffer am wahrscheinlichsten ist – mit Heatmap gibt es halbe EP und keine Orden</small></span><span class="sw" data-set="heat"></span></div>
   <div class="tg"><span>Schiffe dürfen sich berühren<small>gilt ab dem nächsten Spiel</small></span><span class="sw" data-set="touch"></span></div>
@@ -477,7 +478,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms/FAST));
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const LSP='sv_'+(QS.get('id')||'');
 const LS={get(k,d){try{const v=localStorage.getItem(LSP+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(LSP+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(LSP+k)}catch(e){}}};
-const SET=Object.assign({weapons:true,salvo:false,islands:true,talk:true,voice:false,cine:true,sound:true,vib:true,intro:true,again:true,touch:false,name:'',p1:'',p2:''},LS.get('set',{}));
+const SET=Object.assign({weapons:true,salvo:false,islands:true,mines:true,talk:true,voice:false,cine:true,sound:true,vib:true,intro:true,again:true,touch:false,name:'',p1:'',p2:''},LS.get('set',{}));
 const saveSet=()=>LS.set('set',SET);
 const HAS3D=typeof THREE!=='undefined';
 
@@ -1090,7 +1091,7 @@ function around(s,fn){for(const [r,c] of cells(s))for(let dr=-1;dr<=1;dr++)for(l
 
 let G=null,ISL=new Set();
 function newGame(mode,o={}){
- const rules=Object.assign({again:SET.again,touch:SET.touch,size:SET.size||10,weapons:SET.weapons,salvo:SET.salvo,islands:SET.islands},o.rules||{});setSize(rules.size);
+ const rules=Object.assign({again:SET.again,touch:SET.touch,size:SET.size||10,weapons:SET.weapons,salvo:SET.salvo,islands:SET.islands,mines:SET.mines},o.rules||{});setSize(rules.size);
  ISL=new Set();if(rules.islands&&!rules.isl)rules.isl=genIslands(rules.touch);ISL=new Set(rules.islands?(rules.isl||[]):[]);
  const g={mode,rules,players:[],me:o.me||0,viewer:o.me||0,turn:0,phase:'place',n:0,outLog:{},pending:null,waitMine:false,weap:'s',
   ready:false,oppReady:false,replay:[[],[]],gameId:o.gameId||rid(),winner:null,oppFleet:null,again:false,oppAgain:false,first:null,busy:0,q:null,sel:null,lastTurn:null,endShown:false};
@@ -1206,7 +1207,7 @@ function genIslands(touch){const cl=N>=15?6:N>=12?4:3;
  for(let t=0;t<200;t++){const set=new Set();for(let k=0;k<cl;k++){let r=1+Math.floor(Math.random()*(N-2)),c=1+Math.floor(Math.random()*(N-2));const sz=1+Math.floor(Math.random()*3);
    for(let j=0;j<sz;j++){set.add(r*N+c);const d=[[0,1],[1,0],[0,-1],[-1,0]][Math.floor(Math.random()*4)];const nr=r+d[0],nc=c+d[1];if(inB(nr,nc)){r=nr;c=nc}}}
   const old=ISL;ISL=set;const ok=randomFleet(touch);ISL=old;if(ok)return[...set]}return[]}
-function placeMines(P){if(!G.rules.islands){P.mines=[];return}const n=N>=15?4:N>=12?3:2,occ=new Set();P.fleet.forEach(s=>cells(s).forEach(([a,b])=>occ.add(a*N+b)));
+function placeMines(P){if(!G.rules.mines){P.mines=[];return}const n=N>=15?4:N>=12?3:2,occ=new Set();P.fleet.forEach(s=>cells(s).forEach(([a,b])=>occ.add(a*N+b)));
  const free=[];for(let i=0;i<N*N;i++)if(!occ.has(i)&&!ISL.has(i))free.push(i);P.mines=[];for(let k=0;k<n&&free.length;k++)P.mines.push(free.splice(Math.floor(Math.random()*free.length),1)[0])}
 function mineTarget(V){const o=[];V.fleet.forEach(s=>{if(s.sunk)return;cells(s).forEach(([r,c])=>{if(!V.inc[r*N+c])o.push([r,c])})});return o.length?o[Math.floor(Math.random()*o.length)]:null}
 function resolveAct(D,act){const out={cells:[]};
@@ -1229,9 +1230,10 @@ function applyAct(sh,act,out){const P=G.players[sh],S=P.stats,st=act.k!=='m';let
  if(act.k==='o'){P.sonar=P.sonar||[];P.sonar.push({r:act.r,c:act.c,n:out.cnt})}
  G.n++;
  if(out.cells.some(x=>x.res.over)){G.phase='over';G.winner=sh}
- else if(act.k==='m'){G.turn=sh;G.waitMine=false}
- else if(out.mine){G.turn=1-sh;S.turnSunk=0;if(G.mode==='online'&&sh!==G.me)G.waitMine=true}
- else if(act.k==='v'||act.k==='o'||!(anyHit&&G.rules.again)){G.turn=1-sh;S.turnSunk=0}
+ else if(act.k==='m'){G.turn=sh;G.waitMine=false;G.bonus=0}
+ else if(out.mine){G.turn=1-sh;S.turnSunk=0;G.bonus=0;if(G.mode==='online'&&sh!==G.me)G.waitMine=true}
+ else if(act.k==='o'||!(anyHit&&G.rules.again)){G.turn=1-sh;S.turnSunk=0;G.bonus=0}
+ else if(G.rules.salvo)G.bonus=1
  save()}
 function doLocal(sh,act){const out=resolveAct(G.players[1-sh],act);if(!out.cells.length&&act.k!=='o')return false;
  applyAct(sh,act,out);if(G.mode==='local')G.replay[1-sh].push({sh,act,out});enqueue(sh,act,out);
@@ -1344,12 +1346,12 @@ function canShoot(){return !!G&&G.phase==='play'&&G.turn===G.viewer&&!G.busy&&!G
 function fireBtn(){const b=$('#bFire');if(!G)return;
  if(G.phase==='over'){b.disabled=false;b.textContent='ERGEBNIS';return}
  const k=curWeap(),s=G.sel||[];b.disabled=!(canShoot()&&s.length);
- b.textContent=!s.length?(G.rules.salvo&&k==='s'?'SALVE!':k==='t'?'TORPEDO!':k==='b'?'BOMBER!':k==='o'?'SONAR!':'FEUER!'):k==='t'?`TORPEDO! R${s[0][0]+1}`:k==='b'?'BOMBER! '+cn(s[0][0],s[0][1]):k==='o'?'SONAR! '+cn(s[0][0],s[0][1]):G.rules.salvo?`SALVE! ${s.length}×`:'FEUER! '+cn(s[0][0],s[0][1])}
+ const sv=G.rules.salvo&&!G.bonus;b.textContent=!s.length?(sv&&k==='s'?'SALVE!':k==='t'?'TORPEDO!':k==='b'?'BOMBER!':k==='o'?'SONAR!':'FEUER!'):k==='t'?`TORPEDO! R${s[0][0]+1}`:k==='b'?'BOMBER! '+cn(s[0][0],s[0][1]):k==='o'?'SONAR! '+cn(s[0][0],s[0][1]):sv?`SALVE! ${s.length}×`:'FEUER! '+cn(s[0][0],s[0][1])}
 function nextTurnUI(){if(!G||G.phase!=='play')return;G.sel=[];G.weap='s';showTargets([]);updHUD();setSel(null);fireBtn();
  if(G.mode==='local'&&G.turn!==G.viewer){const nx=G.turn;handoff(nx,`${G.players[nx].name} ist dran`,async()=>{G.viewer=nx;rebuildAll();updHUD();await replayIncoming();nextTurnUI()});return}
  const changed=G.lastTurn!==G.turn;G.lastTurn=G.turn;
  if(G.turn===G.viewer){setTurn(G.mode==='local'?`${G.players[G.viewer].name} ist dran`:'Du bist dran!','me');
-  if(changed)hintForWeap();else hint('Treffer! Du darfst nochmal schießen');camTo('tgt');if(changed)AU.ping()}
+  if(changed||G.rules.salvo)hintForWeap();else hint('Treffer! Du darfst nochmal schießen');camTo('tgt');if(changed)AU.ping()}
  else{const op=G.players[G.turn];setTurn(G.mode==='cpu'?'Computer zielt …':`${op.name} zielt …`,'op');hint('');camTo('own');if(G.mode==='cpu')scheduleCpu()}
  fireBtn()}
 function scheduleCpu(){const gid=G.gameId,n=G.n;setTimeout(()=>{if(!G||G.gameId!==gid||G.phase!=='play'||G.turn!==1||G.busy||G.n!==n)return;
@@ -1359,7 +1361,7 @@ function cpuAct(){const P=G.players[1],lvl=P.cpu;
   if(ks.length){const k=ks[Math.floor(Math.random()*ks.length)],sc=heatScores(P);
    if(k==='t'){let best=-1,br=0;for(let r=0;r<N;r++){let s=0,open=false;for(let c=0;c<N;c++){s+=sc[r*N+c];if(P.view[r*N+c]===0)open=true}if(open&&s>best){best=s;br=r}}if(best>0)return{k:'t',r:br,c:0,w:1}}
    else{const i=aiPick(P,Math.max(2,lvl));if(i!=null)return{k,r:Math.floor(i/N),c:i%N,w:1}}}}
- if(G.rules.salvo){const k=salvoN(1),V=P.view.slice(),picks=[];
+ if(G.rules.salvo&&!G.bonus){const k=salvoN(1),V=P.view.slice(),picks=[];
   for(let j=0;j<k;j++){const i=aiPick(Object.assign({},P,{view:V}),lvl);if(i==null||V[i]!==0)break;picks.push([Math.floor(i/N),i%N]);V[i]=1}
   if(picks.length)return{k:'v',cells:picks}}
  const i=aiPick(P,lvl);return{k:'s',r:Math.floor(i/N),c:i%N}}
@@ -1367,17 +1369,17 @@ async function replayIncoming(){const rp=G.replay[G.viewer];if(!rp||!rp.length)r
  hint('Das hat '+G.players[1-G.viewer].name+' gemacht:');setTurn('Rückblick','op');await camTo('own');
  for(const x of rp){await animAct(x.sh,x.act,x.out)}await sleep(300)}
 function curWeap(){return(G&&G.weap)||'s'}
-function hintForWeap(){if(!G)return;const k=curWeap();hint(k==='t'?'🌊 Torpedo: Tippe eine Reihe an – er läuft von links bis zum ersten Treffer':k==='o'?'📡 Sonar: Tippe die Mitte des 3×3-Suchfelds an':k==='b'?'✈️ Bomber: Tippe die Mitte des Kreuzes an (5 Felder)':G.rules.salvo?`Salve: Wähle bis zu ${salvoN(G.viewer)} Ziele, dann FEUER`:'Tippe auf ein Feld im Feindgebiet')}
+function hintForWeap(){if(!G)return;const k=curWeap();hint(k==='t'?'🌊 Torpedo: Tippe eine Reihe an – er läuft von links bis zum ersten Treffer':k==='o'?'📡 Sonar: Tippe die Mitte des 3×3-Suchfelds an':k==='b'?'✈️ Bomber: Tippe die Mitte des Kreuzes an (5 Felder)':G.rules.salvo&&G.bonus?'💥 Treffer! Leg einen Schuss nach – solange du triffst, geht es weiter':G.rules.salvo?`Salve: Wähle bis zu ${salvoN(G.viewer)} Ziele, dann FEUER`:'Tippe auf ein Feld im Feindgebiet')}
 function setWeap(k){if(!G)return;if(k!=='s'&&!weapOK(G.viewer,k)){const used=(G.players[G.viewer].used||{})[k];toast(used?`${WEAP[k].n} wurde schon eingesetzt`:`${WEAP[k].n} nicht verfügbar – ${SHIPT[WEAP[k].ship]} ist versenkt`);return}
  if(MARKMODE)setMarkMode(false);G.weap=G.weap===k?'s':k;G.sel=[];showTargets([]);renderWeapBar();hintForWeap();fireBtn();AU.click()}
 function renderWeapBar(){const el=$('#weapBar');if(!el)return;const on=!!G&&G.rules.weapons&&G.phase==='play'&&G.turn===G.viewer&&!G.busy;el.classList.toggle('hide',!on);if(!on)return;const k=curWeap(),P=G.players[G.viewer];
- el.innerHTML=`<button data-w="s" class="${k==='s'?'on':''}">🎯<small>${G.rules.salvo?'Salve':'Schuss'}</small></button>`+['t','o','b'].map(w=>{const ok=weapOK(G.viewer,w),used=(P.used||{})[w];return`<button data-w="${w}" class="${k===w?'on':''}${ok?'':' off'}">${WEAP[w].i}<small>${WEAP[w].n}${used?' ✓':''}</small></button>`}).join('')}
+ el.innerHTML=`<button data-w="s" class="${k==='s'?'on':''}">🎯<small>${G.rules.salvo&&!G.bonus?'Salve':'Schuss'}</small></button>`+['t','o','b'].map(w=>{const ok=weapOK(G.viewer,w),used=(P.used||{})[w];return`<button data-w="${w}" class="${k===w?'on':''}${ok?'':' off'}">${WEAP[w].i}<small>${WEAP[w].n}${used?' ✓':''}</small></button>`}).join('')}
 function previewCells(){const k=curWeap(),s=G.sel||[];if(!s.length)return[];const [r,c]=s[0];
  if(k==='t'){const a=[];for(let cc=0;cc<N;cc++)if(!ISL.has(r*N+cc))a.push([r,cc]);return a}if(k==='b')return plusCells(r,c);if(k==='o')return boxCells(r,c);return s}
 function tgtTap(r,c){if(MARKMODE&&G&&G.phase==='play'){markTap(r,c);return}if(!canShoot())return;const V=G.players[G.viewer].view,v=V[r*N+c],k=curWeap();
  if(v===5&&k!=='t'&&k!=='o'){toast('Das ist eine Insel – dort liegt kein Schiff');return}
  if(k==='s'){if(v>=1&&v<=3){toast('Da hast du schon hingeschossen');return}if(v===4){toast('Dort kann kein Schiff sein – es liegt neben einem versenkten');return}
-  if(G.rules.salvo){const max=salvoN(G.viewer);G.sel=G.sel||[];const j=G.sel.findIndex(x=>x[0]===r&&x[1]===c);
+  if(G.rules.salvo&&!G.bonus){const max=salvoN(G.viewer);G.sel=G.sel||[];const j=G.sel.findIndex(x=>x[0]===r&&x[1]===c);
    if(j>=0)G.sel.splice(j,1);else{if(G.sel.length>=max){toast(`Maximal ${max} Schüsse in dieser Salve (so viele Schiffe hast du noch)`);return}G.sel.push([r,c])}
    showTargets(G.sel);AU.lock();vib(12);hint(`Salve: ${G.sel.length} von ${max} Zielen gewählt – FEUER drücken`);fireBtn();return}}
  else if(k==='t'){let open=false;for(let cc=0;cc<N;cc++)if(V[r*N+cc]===0)open=true;if(!open){toast('In dieser Reihe gibt es nichts mehr zu treffen');return}}
@@ -1386,12 +1388,12 @@ function tgtTap(r,c){if(MARKMODE&&G&&G.phase==='play'){markTap(r,c);return}if(!c
  G.sel=[[r,c]];showTargets(previewCells());AU.lock();vib(12);
  hint(k==='t'?`Torpedo auf Reihe ${r+1} – FEUER drücken`:k==='b'?`Bomber auf ${cn(r,c)} – FEUER drücken`:k==='o'?`Sonar um ${cn(r,c)} – FEUER drücken`:`Ziel ${cn(r,c)} – FEUER drücken oder Feld nochmal antippen`);fireBtn()}
 function fire(){if(!canShoot()||!G.sel||!G.sel.length)return;const k=curWeap(),[r,c]=G.sel[0];
- const act=k==='s'?(G.rules.salvo?{k:'v',cells:G.sel.map(x=>[x[0],x[1]])}:{k:'s',r,c}):{k,r,c,w:1};
+ const act=k==='s'?(G.rules.salvo&&!G.bonus?{k:'v',cells:G.sel.map(x=>[x[0],x[1]])}:{k:'s',r,c}):{k,r,c,w:1};
  G.sel=[];G.weap='s';showTargets([]);setSel(null);hint('');vib(30);
  if(G.mode==='online'){G.pending={n:G.n+1,act};save();netSend({t:'act',n:G.n+1,act});setTurn('Feuer frei …','me')}else doLocal(G.viewer,act);
  renderWeapBar();fireBtn()}
 function resendNet(){if(!G)return;if(G.pending)netSend({t:'act',n:G.pending.n,act:G.pending.act});const L=G.outLog&&G.outLog[G.n];if(L)netSend(L)}
-function rulesToast(){const r=[];if(G.rules.salvo)r.push('💥 Salve');if(G.rules.weapons)r.push('🌊📡✈️ Spezialwaffen');if(G.rules.islands)r.push('🏝️ Inseln & Minen');if(r.length)toast('Regeln: '+r.join(' · '),3500)}
+function rulesToast(){const r=[];if(G.rules.salvo)r.push('💥 Salve');if(G.rules.weapons)r.push('🌊📡✈️ Spezialwaffen');if(G.rules.islands)r.push('🏝️ Inseln');if(G.rules.mines)r.push('💣 Minen');if(r.length)toast('Regeln: '+r.join(' · '),3500)}
 /* ---------- Kommandeur-Sprüche ---------- */
 const LINES={
  hit:['Volle Breitseite!','Das hat gesessen!','Kawumm!','Direkt aufs Sonnendeck!','Bingo, Bongo, Bumm!','Treffer – ich bin ein Genie!','Da wackelt die Kombüse!'],
