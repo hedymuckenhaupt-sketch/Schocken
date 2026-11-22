@@ -236,6 +236,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
 .pt-camo{background:radial-gradient(circle at 25% 35%,#2e3624 22%,transparent 23%),radial-gradient(circle at 70% 65%,#7d8a6a 25%,transparent 26%),#4b5a3c}
 .pt-dazzle{background:repeating-linear-gradient(60deg,#1a1d22 0 6px,#f0f0f0 6px 11px)}
 .card>*{flex-shrink:0}
+#bMark.on{background:linear-gradient(180deg,#ffb04a,#e07a1a);color:#2a1500;border:0;box-shadow:0 0 18px rgba(255,160,60,.7)}
 </style>
 </head>
 <body>
@@ -349,6 +350,7 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
     <div class="btns">
       <button id="bView" class="sq" title="Ansicht wechseln">👁</button>
       <button id="bFire" class="fire" disabled>FEUER!</button>
+      <button id="bMark" class="sq hide" title="Felder markieren">🖍</button>
       <button id="bEmo" class="sq hide">😀</button>
       <button id="bMenu" class="sq">☰</button>
     </div>
@@ -390,6 +392,8 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   <div class="tg">Intro-Animation beim Start<span class="sw" data-set="intro"></span></div>
   <div class="tg">Film beim Versenken eines Schiffs<span class="sw" data-set="cine"></span></div>
   <div class="tg"><span>Bei Treffer nochmal schießen<small>gilt ab dem nächsten Spiel</small></span><span class="sw" data-set="again"></span></div>
+  <div class="tg"><span>Spielleiter-Markierungen<small>Knopf 🖍 im Spiel: eigene Felder markieren (🚩 Verdacht / ✕ Wasser)</small></span><span class="sw" data-set="marks"></span></div>
+  <div class="tg"><span>Treffer-Heatmap<small>zeigt, wo ein Treffer am wahrscheinlichsten ist – mit Heatmap gibt es halbe EP und keine Orden</small></span><span class="sw" data-set="heat"></span></div>
   <div class="tg"><span>Schiffe dürfen sich berühren<small>gilt ab dem nächsten Spiel</small></span><span class="sw" data-set="touch"></span></div>
   <button class="go" data-close>Fertig</button>
 </div></div>
@@ -611,9 +615,9 @@ function labelTex(col){const cv=document.createElement('canvas');cv.width=cv.hei
  const t=new THREE.CanvasTexture(cv);t.anisotropy=4;return t}
 function makeBoard(key,x,col){
  const g=new THREE.Group();g.position.x=x;scene.add(g);
- const gm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uN:{value:BN()},uC:{value:col},uT:{value:0},uSel:{value:new THREE.Vector2(-9,-9)},uRad:{value:key==='tgt'?1:0},uHi:{value:0}},
+ const gm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uHeat:{value:heatTex()},uHeatOn:{value:0},uN:{value:BN()},uC:{value:col},uT:{value:0},uSel:{value:new THREE.Vector2(-9,-9)},uRad:{value:key==='tgt'?1:0},uHi:{value:0}},
   vertexShader:`varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`uniform vec3 uC;uniform float uN,uT,uRad,uHi;uniform vec2 uSel;varying vec2 vU;
+  fragmentShader:`uniform sampler2D uHeat;uniform float uHeatOn;uniform vec3 uC;uniform float uN,uT,uRad,uHi;uniform vec2 uSel;varying vec2 vU;
   void main(){vec2 g=vU*uN;vec2 f=fract(g);vec2 cl=floor(g);vec2 d=min(f,1.-f);
    float ln=1.-smoothstep(0.,.05,min(d.x,d.y));vec2 e=min(vU,1.-vU)*uN;float bd=1.-smoothstep(0.,.09,min(e.x,e.y));
    float a=.07+ln*.5+bd*.95+uHi*.08;vec3 c=uC;
@@ -621,6 +625,8 @@ function makeBoard(key,x,col){
    if(uRad>0.){float an=atan(p.y,p.x);float sw=mod(uT*1.3-an,6.2832);float s=exp(-sw*3.)*smoothstep(.75,.6,r);a+=s*.28;c=mix(c,vec3(1.,.8,.5),s*.5);}
    a+=.05*sin(r*40.-uT*3.)*smoothstep(.7,.0,r)*uRad;
    if(all(lessThan(abs(cl-uSel),vec2(.5)))){float pu=.5+.5*sin(uT*9.);float ring=1.-smoothstep(.06,.14,min(d.x,d.y));a+=.25+.2*pu+ring*.6;c=mix(c,vec3(1.,.9,.25),.85);}
+   if(uHeatOn>0.&&cl.x<uN&&cl.y<uN){float h=texture2D(uHeat,(cl+.5)/16.).r;if(h>.001){vec3 hc=h<.5?mix(vec3(.15,.35,1.),vec3(1.,.85,.1),h*2.):mix(vec3(1.,.85,.1),vec3(1.,.12,.05),(h-.5)*2.);
+     float inner=smoothstep(.0,.08,min(d.x,d.y));c=mix(c,hc,.85*inner*uHeatOn);a=max(a,(.18+.5*h)*inner*uHeatOn);}}
    gl_FragColor=vec4(c*1.25,clamp(a,0.,1.));}`});
  const grid=new THREE.Mesh(new THREE.PlaneGeometry(BN(),BN()),gm);grid.rotation.x=-Math.PI/2;grid.position.y=.12;grid.renderOrder=2;g.add(grid);
  const lab=new THREE.Mesh(new THREE.PlaneGeometry(BN()+2,BN()+2),new THREE.MeshBasicMaterial({map:labelTex(col),transparent:true,depthWrite:false}));
@@ -629,6 +635,9 @@ function makeBoard(key,x,col){
  const content=new THREE.Group();g.add(content);
  BOARDS[key]={key,g,grid,gm,hit,content,ships:{},x};}
 function showBoards(v){if(!HAS3D)return;BOARDS.own.g.visible=v;BOARDS.tgt.g.visible=v;water.material.uniforms.uCalm.value=v?1:0}
+let HEATT=null;function heatTex(){if(HEATT)return HEATT;HEATT=new THREE.DataTexture(new Uint8Array(16*16*4),16,16,THREE.RGBAFormat);HEATT.magFilter=HEATT.minFilter=THREE.NearestFilter;HEATT.needsUpdate=true;return HEATT}
+function setHeat(scores){if(!HAS3D||!BOARDS.tgt)return;const u=BOARDS.tgt.gm.uniforms;if(!scores){u.uHeatOn.value=0;return}
+ const d=HEATT.image.data;d.fill(0);const n=BN();for(let i=0;i<n*n;i++){const r=Math.floor(i/n),c=i%n,k=((n-1-r)*16+c)*4;d[k]=Math.round(scores[i]*255);d[k+3]=255}HEATT.needsUpdate=true;u.uHeatOn.value=1}
 function cellPos(r,c){const h=(BN()-1)/2;return{x:c-h,z:r-h}}
 let BSIZE=0;
 function rebuildBoards3D(n){if(!HAS3D||!scene||BSIZE===n)return;BSIZE=n;const vis=BOARDS.own?BOARDS.own.g.visible:false;
@@ -1012,12 +1021,13 @@ function awardGame(){
  const parts=[[won?'Sieg':'Teilnahme',won?100:30],['Versenkte Schiffe',me.sunkEnemy.length*15],['Trefferquote',Math.round(acc*60)]];
  let xp=parts.reduce((a,p)=>a+p[1],0);xp=Math.round(xp*sizeF*lvlF);
  const got=[];const give=id=>{PROF.medals[id]=(PROF.medals[id]||0)+1;got.push({id,isNew:PROF.medals[id]===1})};
- if(won){if(PROF.wins===1)give('first');if(acc>=.6)give('sniper');if(st.shots<=Math.round(N*N*.4))give('blitz');if(lost===0)give('unsink');
+ const heat=!!G.heatUsed;
+ if(won&&!heat){if(PROF.wins===1)give('first');if(acc>=.6)give('sniper');if(st.shots<=Math.round(N*N*.4))give('blitz');if(lost===0)give('unsink');
   if(G.mode==='cpu'&&lvl===3)give('admiral');if(me.fleet.length-lost===1)give('comeback');if(G.mode==='online')give('duel');if(N>=15)give('ocean');
   if(PROF.streak===3)give('streak');if(PROF.wins===10)give('bear');if(PROF.wins===25)give('fleet')}
- if((st.maxStreak||0)>=5)give('chain');if((st.maxTurnSunk||0)>=2)give('double');if(st.firstHit)give('lucky');
- xp+=got.length*25;PROF.xp+=xp;saveProf();
- return{xp,parts,sizeF,lvlF,got,before,after:PROF.xp,rb,ra:rankIdx(PROF.xp),won}}
+ if(!heat){if((st.maxStreak||0)>=5)give('chain');if((st.maxTurnSunk||0)>=2)give('double');if(st.firstHit)give('lucky')}
+ xp+=got.length*25;if(heat)xp=Math.round(xp/2);PROF.xp+=xp;saveProf();
+ return{xp,parts,sizeF,lvlF,got,before,after:PROF.xp,rb,ra:rankIdx(PROF.xp),won,heat}}
 function xpBarHTML(xp){const i=rankIdx(xp),lo=RANKS[i][0],hi=RANKS[i+1]?RANKS[i+1][0]:lo;const p=hi>lo?Math.min(100,(xp-lo)/(hi-lo)*100):100;
  return{i,p,txt:RANKS[i+1]?`${xp-lo} / ${hi-lo} EP bis ${RANKS[i+1][1]}`:'Höchster Dienstgrad erreicht'}}
 
@@ -1060,7 +1070,7 @@ function newGame(mode,o={}){
  g.players=o.players||[newPlayer('Spieler 1'),newPlayer('Spieler 2')];g.players.forEach(p=>{p.fleet=newFleet();p.inc=Array(N*N).fill(0);p.view=Array(N*N).fill(0)});return g}
 
 function applyShotData(sh,r,c,res){
- const P=G.players[sh],i=r*N+c,S=P.stats;P.view[i]=res.hit?2:1;S.shots++;if(res.hit)S.hits++;
+ const P=G.players[sh],i=r*N+c,S=P.stats;if(G.marks&&G.marks[sh]&&G.marks[sh][i]){delete G.marks[sh][i];if(sh===G.viewer)drawMark(r,c,0)}P.view[i]=res.hit?2:1;S.shots++;if(res.hit)S.hits++;
  if(S.shots===1&&res.hit)S.firstHit=1;if(res.hit){S.streak=(S.streak||0)+1;S.maxStreak=Math.max(S.maxStreak||0,S.streak)}else S.streak=0;
  if(res.sunk){S.turnSunk=(S.turnSunk||0)+1;S.maxTurnSunk=Math.max(S.maxTurnSunk||0,S.turnSunk)}
  if(res.sunk){for(const [a,b] of cells(res.sunk))P.view[a*N+b]=3;P.sunkEnemy.push(res.sunk);if(!G.rules.touch)around(res.sunk,(a,b)=>{if(P.view[a*N+b]===0)P.view[a*N+b]=4})}
@@ -1069,6 +1079,28 @@ function applyShotData(sh,r,c,res){
  save()}
 
 /* ---------- Computer-Gegner ---------- */
+/* Wahrscheinlichkeiten: an wie vielen möglichen Schiffspositionen liegt ein Feld? (0..1) */
+function heatScores(P){const V=P.view,hits=[];for(let i=0;i<N*N;i++)if(V[i]===2)hits.push(i);
+ const sunk=P.sunkEnemy.map(s=>s.id),rem=SHIPS.filter(s=>!sunk.includes(s.id)).map(s=>s.len),sc=Array(N*N).fill(0);
+ for(const len of rem)for(let d=0;d<2;d++)for(let r=0;r<N;r++)for(let c=0;c<N;c++){if(d?r+len>N:c+len>N)continue;let bad=false,h=0;const cs=[];
+  for(let k=0;k<len;k++){const i=d?(r+k)*N+c:r*N+c+k,v=V[i];if(v===1||v===3||v===4){bad=true;break}if(v===2)h++;cs.push(i)}
+  if(bad)continue;const w=h?Math.pow(12,h):1;for(const i of cs)if(V[i]===0)sc[i]+=w}
+ const mx=Math.max(...sc);return sc.map(v=>mx>0?Math.max(.04,Math.pow(v/mx,1.4)):0)}
+function updHeat(){if(!HAS3D)return;const on=SET.heat&&G&&G.phase==='play'&&!(G.mode==='cpu'&&G.viewer!==0);if(!on){setHeat(null);return}
+ const P=G.players[G.viewer];setHeat(heatScores(P));if(G.turn===G.viewer)G.heatUsed=true}
+/* Spielleiter-Markierungen */
+const MARKG={};function marksOf(){if(!G)return{};G.marks=G.marks||{};return G.marks[G.viewer]=G.marks[G.viewer]||{}}
+function drawMark(r,c,t){if(!HAS3D)return;const B=BOARDS.tgt;B.mk=B.mk||{};const k=r*N+c;if(B.mk[k]){B.content.remove(B.mk[k]);delete B.mk[k]}if(!t)return;
+ if(!MARKG.pin){MARKG.pin=new THREE.ConeGeometry(.13,.36,10);MARKG.pinm=new THREE.MeshBasicMaterial({color:0xff9a1a});MARKG.ball=new THREE.SphereGeometry(.09,10,8);MARKG.bar=new THREE.BoxGeometry(.62,.03,.09);MARKG.xm=new THREE.MeshBasicMaterial({color:0xcfd8e2,transparent:true,opacity:.85})}
+ const p=cellPos(r,c),g=new THREE.Group();g.position.set(p.x,.16,p.z);
+ if(t===1){const cn2=new THREE.Mesh(MARKG.pin,MARKG.pinm);cn2.rotation.x=Math.PI;cn2.position.y=.2;const b=new THREE.Mesh(MARKG.ball,MARKG.pinm);b.position.y=.4;g.add(cn2,b);const ring=new THREE.Mesh(RING_G,MARKG.pinm);ring.rotation.x=-Math.PI/2;ring.scale.setScalar(.3);ring.position.y=.01;g.add(ring)}
+ else{const a=new THREE.Mesh(MARKG.bar,MARKG.xm);a.rotation.y=Math.PI/4;const b=a.clone();b.rotation.y=-Math.PI/4;g.add(a,b)}
+ B.content.add(g);B.mk[k]=g}
+function drawAllMarks(){const M=marksOf(),V=G.players[G.viewer].view;for(const k in M){if(V[k]){delete M[k];continue}drawMark(Math.floor(k/N),k%N,M[k])}}
+let MARKMODE=false;
+function setMarkMode(on){MARKMODE=!!on;$('#bMark').classList.toggle('on',MARKMODE);if(MARKMODE){if(G)G.sel=null;setSel(null);fireBtn();hint('🖍 Markier-Modus: tippen = 🚩 Verdacht → ✕ Wasser → weg. Nochmal 🖍 = zurück zum Schießen');if(CAM.key!=='tgt')camTo('tgt')}else if(G&&G.phase==='play'&&G.turn===G.viewer)hint('Tippe auf ein Feld im Feindgebiet');else hint('')}
+function markTap(r,c){const V=G.players[G.viewer].view,k=r*N+c;if(V[k]){toast('Auf dieses Feld wurde schon geschossen');return}
+ const M=marksOf();M[k]=((M[k]||0)+1)%3;if(!M[k])delete M[k];drawMark(r,c,M[k]);AU.click();vib(10);save()}
 function aiPick(P,level){
  const V=P.view,unk=[],hits=[];for(let i=0;i<N*N;i++){if(V[i]===0)unk.push(i);if(V[i]===2)hits.push(i)}
  const pr=a=>a[Math.floor(Math.random()*a.length)];
@@ -1174,10 +1206,10 @@ function rebuildAll(){if(!G)return;const P=G.players[G.viewer];clearBoard('own')
  for(let i=0;i<N*N;i++){const r=Math.floor(i/N),c=i%N;if(!skip.has(i)){if(P.inc[i]===1)markMiss('own',r,c);else if(P.inc[i]===2)markHit('own',r,c,sunkCell.has(i))}
   const v=P.view[i];if(v===1)markMiss('tgt',r,c);else if(v===2||v===3)markHit('tgt',r,c,v===3);else if(v===4)markDot('tgt',r,c)}
  P.sunkEnemy.forEach(s=>addWreck(s,false));
- if(G.phase==='over')revealOpp(false)}
+ if(G.phase==='over')revealOpp(false);drawAllMarks();updHeat()}
 
 /* ================= HUD ================= */
-function updHUD(){if(!G)return;const me=G.players[G.viewer],op=G.players[1-G.viewer];
+function updHUD(){if(!G)return;updHeat();$('#bMark').classList.toggle('hide',!SET.marks||G.phase!=='play');if(!SET.marks&&MARKMODE)setMarkMode(false);const me=G.players[G.viewer],op=G.players[1-G.viewer];
  $('#nmMe').innerHTML=avImg(me.ava,'sm')+'<span>'+esc(G.mode==='local'?me.name:'Deine Flotte')+'</span>'+(G.mode==='local'?'':badge(me.rank));$('#nmOp').innerHTML=avImg(op.ava,'sm')+'<span>'+esc(op.name)+'</span>'+(G.mode==='local'?'':badge(op.rank));
  let a=0,b=0;
  $('#flMe').innerHTML=SHIPS.map(s=>{const d=me.fleet.find(f=>f.id===s.id).sunk;if(!d)a++;return`<span class="sh${d?' dead':''}">${shipIcons(s.len)}</span>`}).join('');
@@ -1202,7 +1234,7 @@ async function replayIncoming(){const rp=G.replay[G.viewer];if(!rp||!rp.length)r
  for(const x of rp){await animShot(1-G.viewer,x.r,x.c,x.res)}await sleep(300)}
 function shootLocal(sh,r,c){const res=resolveShot(G.players[1-sh],r,c);if(res.dup)return;applyShotData(sh,r,c,res);
  if(G.mode==='local')G.replay[1-sh].push({r,c,res});enqueue(sh,r,c,res)}
-function tgtTap(r,c){if(!canShoot())return;const v=G.players[G.viewer].view[r*N+c];
+function tgtTap(r,c){if(MARKMODE&&G&&G.phase==='play'){markTap(r,c);return}if(!canShoot())return;const v=G.players[G.viewer].view[r*N+c];
  if(v>=1&&v<=3){toast('Da hast du schon hingeschossen');return}if(v===4){toast('Dort kann kein Schiff sein – es liegt neben einem versenkten');return}
  if(G.sel&&G.sel[0]===r&&G.sel[1]===c)return fire();
  G.sel=[r,c];setSel('tgt',r,c);AU.lock();vib(12);hint(`Ziel ${cn(r,c)} – FEUER drücken oder Feld nochmal antippen`);fireBtn()}
@@ -1246,7 +1278,7 @@ function waitUI(){$('#place').classList.add('hide');$('#hud').classList.remove('
  setTurn(`Warte auf ${op} …`,'');hint(G.oppReady?`${op} ist bereit`:`${op} stellt noch die Flotte auf`);fireBtn();camTo('own')}
 
 /* ================= SPIELABLAUF ================= */
-function enterGame(){if(HAS3D){MENU.visible=false;showBoards(true)}hideScreens();$$('.modal').forEach(m=>m.classList.remove('on'));wake()}
+function enterGame(){MARKMODE=false;$('#bMark').classList.remove('on');if(HAS3D){MENU.visible=false;showBoards(true)}hideScreens();$$('.modal').forEach(m=>m.classList.remove('on'));wake()}
 function startPlay(first){G.phase='play';G.turn=first;G.first=first;G.lastTurn=null;$('#place').classList.add('hide');save();
  if(G.mode==='local'){handoff(first,`${G.players[first].name} beginnt`,()=>{G.viewer=first;$('#hud').classList.remove('hide');rebuildAll();updHUD();nextTurnUI()});return}
  $('#hud').classList.remove('hide');rebuildAll();updHUD();setTurn('Münzwurf …','');hint('');
@@ -1492,6 +1524,7 @@ function renderAward(){const box=$('#endAward');const A=G&&G.award;if(!A){box.in
  box.innerHTML=`<div class="aw"><div class="awT"><b>+${A.xp} EP</b><span>${badge(A.ra)} ${rankName(A.ra)}</span></div>
   <div class="xpb"><i id="awBar" style="width:${up?0:before.p}%"></i></div><small id="awTxt">${after.txt}</small>
   ${up?`<div class="promo">⭐ BEFÖRDERT! ⭐<br><span>${badge(A.ra,1)} ${rankName(A.ra)}</span></div>`:''}
+  ${A.heat?'<small>🔥 Mit Heatmap gespielt: halbe EP, keine Orden</small>':''}
   ${A.got.length?`<div class="awM">${A.got.map((g,k)=>`<div style="animation-delay:${.6+k*.35}s" class="drop">${medalHTML(MEDALS.find(m=>m.id===g.id),PROF.medals[g.id],g.isNew)}</div>`).join('')}</div>`:''}</div>`;
  setTimeout(()=>{const b=$('#awBar');if(b)b.style.width=after.p+'%'},250);
  if(up){setTimeout(()=>{avPose('salute');AU.horn()},900)}
@@ -1527,7 +1560,8 @@ function bindYard(){
  $$('#mYard [data-close],#mYard').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)avStop()}))}
 
 let JOINCODE='';
-function boot(){try{init3D()}catch(e){console.error(e)}bind();bindProg();bindYard();syncSw();
+function boot(){try{init3D()}catch(e){console.error(e)}bind();bindProg();bindYard();$('#bMark').addEventListener('click',()=>{AU.click();setMarkMode(!MARKMODE)});
+ $$('.sw[data-set=heat],.sw[data-set=marks]').forEach(s=>s.addEventListener('click',()=>{if(G)updHUD()}));syncSw();
  const j=(QS.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
  if(!HAS3D)toast('3D-Grafik konnte nicht geladen werden – bitte Internet prüfen und Seite neu laden.',6000);
  if(j.length===4){JOINCODE=j;history.replaceState(null,'',location.pathname);CAM.mode='orbit';showMenu();
