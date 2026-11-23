@@ -710,6 +710,27 @@ html.big body.watching .watchbox{font-size:21px}
 .imgview.on{display:flex}.imgview img{max-width:100%;max-height:100%;border-radius:10px}
 .cmsg .cb .stk .se{font-size:58px;line-height:1.05}
 .cmsg .cb .stk .st{font-size:17px;line-height:1.1}
+
+/* QR scanner */
+.scanbig{margin-top:2px;background:linear-gradient(180deg,#ffcf6b,#e88a2a)!important;color:#2a1606!important;box-shadow:0 5px 0 #9b5a14!important;font-size:20px}
+.scanbig .sub{color:#4a2a0a!important}
+#setup.invite .scanbig{display:none!important}
+.scanmini{flex:none;width:54px;height:54px;border-radius:14px;font-size:24px;background:linear-gradient(180deg,#ffcf6b,#e88a2a);box-shadow:0 4px 0 #9b5a14}
+.scanwrap{position:fixed;inset:0;z-index:70;background:rgba(5,12,9,.88);display:none;align-items:center;justify-content:center;padding:18px}
+.scanwrap.on{display:flex}
+.scancard{width:100%;max-width:420px;background:linear-gradient(180deg,#f6eed9,#eadfc3);color:var(--ink);border-radius:24px;padding:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.scancard h2{font-family:'Alfa Slab One',serif;font-weight:400;color:#8e1c14;margin:2px 0 12px;font-size:26px}
+.scancard p{font-size:17px;margin:12px 4px;min-height:44px}
+.scanBox{position:relative;width:100%;aspect-ratio:1;border-radius:18px;overflow:hidden;background:#000}
+.scanBox video{width:100%;height:100%;object-fit:cover;display:block}
+.scanFrame{position:absolute;inset:16%;pointer-events:none}
+.scanFrame i{position:absolute;width:26%;height:26%;border:5px solid #f3bd52;border-radius:6px}
+.scanFrame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}.scanFrame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.scanFrame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}.scanFrame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.scanLine{position:absolute;left:18%;right:18%;height:3px;background:linear-gradient(90deg,transparent,#ff5a3c,transparent);box-shadow:0 0 12px #ff5a3c;animation:scanl 2s ease-in-out infinite}
+@keyframes scanl{0%,100%{top:18%}50%{top:80%}}
+.scanBox.ok .scanFrame i{border-color:#2a9d4f}.scanBox.ok .scanLine{display:none}
+@media (max-width:359px){.joinrow .btn{width:110px}}
 </style>
 </head>
 <body>
@@ -762,7 +783,8 @@ html.big body.watching .watchbox{font-size:21px}
       <button class="btn pri wide" id="hostBtn">Spiel erstellen<span class="sub">du bekommst einen Code + QR-Code</span></button>
       <button class="btn wide planbtn" id="planBtn">🗓️ Für später planen<span class="sub">Uhrzeit festlegen, Zu- und Absagen sammeln</span></button>
       <div class="orline">oder beitreten</div>
-      <div class="joinrow"><input class="tin code" id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"><button class="btn sec" id="joinBtn">Beitreten</button></div>
+      <button class="btn wide scanbig" id="scanBtn">📷 QR-Code scannen<span class="sub">vom Handy des Spielleiters</span></button>
+      <div class="joinrow"><button class="scanmini" id="scanBtn2" aria-label="QR-Code scannen">📷</button><input class="tin code" id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"><button class="btn sec" id="joinBtn">Beitreten</button></div>
       <p class="smallp">Einer erstellt das Spiel, die anderen scannen den QR-Code oder tippen den Code ein. Jeder würfelt am eigenen Handy – was die anderen gewürfelt haben, siehst du erst beim Aufdecken.</p>
     </div>
 
@@ -879,6 +901,12 @@ html.big body.watching .watchbox{font-size:21px}
 </div></div>
 <div class="chatbubble" id="chatBubble"></div>
 <div class="reactlayer" id="reactLayer"></div>
+<div class="scanwrap" id="scanModal"><div class="scancard">
+  <h2>QR-Code scannen</h2>
+  <div class="scanBox" id="scanBox"><video id="scanVid" playsinline muted autoplay></video><div class="scanFrame"><i></i><i></i><i></i><i></i></div><div class="scanLine"></div></div>
+  <p id="scanMsg"></p>
+  <button class="btn sec wide" id="scanClose">Abbrechen</button>
+</div></div>
 <div class="imgview" id="imgView"><img alt=""></div>
 <div class="toast" id="toast"></div>
 <div class="netbar" id="netbar">Verbindung wird wiederhergestellt …</div>
@@ -5527,6 +5555,56 @@ $('#chat').addEventListener('click',e=>{if(e.target.id==='chat')closeChat()});
 $('#chatBtn').addEventListener('click',()=>{ac();openChat()});
 $('#lbChat').addEventListener('click',()=>{ac();openChat()});
 $('#chatBubble').addEventListener('click',()=>{hideChatBubble();openChat()});
+
+/* ================= QR-Code scannen (Kamera in der App) ================= */
+const SCAN={stream:null,raf:0,det:null,cv:null};
+const JSQR_URL='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+function loadJsQR(){if(window.jsQR)return Promise.resolve(true);return new Promise(res=>{const s=document.createElement('script');s.src=JSQR_URL;s.onload=()=>res(!!window.jsQR);s.onerror=()=>res(false);document.head.appendChild(s)})}
+function codeFromText(t){t=String(t||'').trim();const m=t.match(/[?&]join=([A-Za-z0-9]{4})/);if(m)return m[1].toUpperCase();if(/^[A-Za-z0-9]{4}$/.test(t))return t.toUpperCase();return null}
+async function openScanner(){
+  ac();
+  if(IN_FRAME&&!TEST_NET){toast('Scannen geht nur außerhalb der Claude-App',true);return}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Die Kamera wird hier nicht unterstützt – bitte den Code eintippen');return}
+  $('#scanModal').classList.add('on');$('#scanMsg').textContent='Kamera wird gestartet …';$('#scanBox').classList.remove('ok');
+  try{SCAN.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})}
+  catch(e){$('#scanModal').classList.remove('on');toast(e&&e.name==='NotAllowedError'?'Kamera-Zugriff verweigert – bitte erlauben oder den Code eintippen':'Kamera konnte nicht gestartet werden – bitte den Code eintippen',true);return}
+  if(!$('#scanModal').classList.contains('on')){stopCam();return}
+  const v=$('#scanVid');v.srcObject=SCAN.stream;v.muted=true;v.setAttribute('playsinline','');try{await v.play()}catch(e){}
+  SCAN.det=null;
+  if('BarcodeDetector' in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes('qr_code'))SCAN.det=new BarcodeDetector({formats:['qr_code']})}catch(e){}}
+  if(!SCAN.det&&!(await loadJsQR())){closeScanner();toast('QR-Erkennung konnte nicht geladen werden – bitte den Code eintippen',true);return}
+  $('#scanMsg').textContent='Halte die Kamera auf den QR-Code am Handy des Spielleiters';
+  SCAN.cv=SCAN.cv||document.createElement('canvas');const ctx=SCAN.cv.getContext('2d',{willReadFrequently:true});let busy=false,last=0;
+  const tick=async now=>{
+    if(!SCAN.stream)return;SCAN.raf=requestAnimationFrame(tick);
+    if(busy||now-last<150||v.readyState<2)return;last=now;busy=true;
+    try{
+      let txt=null;
+      if(SCAN.det){const r=await SCAN.det.detect(v);if(r&&r[0])txt=r[0].rawValue}
+      else{const w=v.videoWidth,h=v.videoHeight;if(w&&h){const sc=Math.min(1,720/Math.max(w,h));const cw=SCAN.cv.width=Math.round(w*sc),ch=SCAN.cv.height=Math.round(h*sc);ctx.drawImage(v,0,0,cw,ch);
+        const d=ctx.getImageData(0,0,cw,ch);const q=window.jsQR(d.data,cw,ch,{inversionAttempts:'attemptBoth'});if(q)txt=q.data}}
+      if(txt){const c=codeFromText(txt);if(c&&SCAN.stream){scanFound(c);return}if(!c)$('#scanMsg').textContent='Das ist kein Spiel-Code – bitte den QR-Code aus dem Spiel scannen'}
+    }catch(e){}
+    busy=false;
+  };
+  SCAN.raf=requestAnimationFrame(tick);
+}
+function stopCam(){cancelAnimationFrame(SCAN.raf);if(SCAN.stream){SCAN.stream.getTracks().forEach(t=>t.stop());SCAN.stream=null}const v=$('#scanVid');if(v)v.srcObject=null}
+function closeScanner(){stopCam();$('#scanModal').classList.remove('on')}
+function scanFound(c){
+  $('#scanBox').classList.add('ok');$('#scanMsg').textContent='✓ Code '+c+' erkannt';vib([40,40,90]);sfx.ding();stopCam();
+  setTimeout(()=>{
+    $('#scanModal').classList.remove('on');$('#joinCode').value=c;
+    S.tab='online';renderSetup();$('#joinCode').value=c;
+    const n=($('#onName').value||S.myName||'').trim();
+    if(!n){$('#onName').focus();toast('Code erkannt! Trag noch deinen Namen ein und tippe auf „Beitreten“.');return}
+    toast('Code '+c+' erkannt – trete bei …');setTimeout(()=>$('#joinBtn').click(),250);
+  },450);
+}
+$('#scanBtn').addEventListener('click',openScanner);
+$('#scanBtn2').addEventListener('click',openScanner);
+$('#scanClose').addEventListener('click',()=>{ac();closeScanner()});
+$('#scanModal').addEventListener('click',e=>{if(e.target.id==='scanModal')closeScanner()});
 
 /* ================= Boot ================= */
 buildDice();applyBoard();applyBig();
