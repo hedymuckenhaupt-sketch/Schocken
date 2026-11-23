@@ -712,8 +712,8 @@ html.big body.watching .watchbox{font-size:21px}
 .cmsg .cb .stk .st{font-size:17px;line-height:1.1}
 
 /* QR scanner */
-.scanbig{margin-top:2px;background:linear-gradient(180deg,#ffcf6b,#e88a2a)!important;color:#2a1606!important;box-shadow:0 5px 0 #9b5a14!important;font-size:20px}
-.scanbig .sub{color:#4a2a0a!important}
+.scanbig{margin-top:2px;background:rgba(244,234,211,.08)!important;border:1.5px solid var(--line)!important;color:var(--cream,#f4ead3)!important;box-shadow:none!important;font-size:20px}
+.scanbig .sub{color:var(--muted)!important}
 #setup.invite .scanbig{display:none!important}
 .scanmini{flex:none;width:54px;height:54px;border-radius:14px;font-size:24px;background:linear-gradient(180deg,#ffcf6b,#e88a2a);box-shadow:0 4px 0 #9b5a14}
 .scanwrap{position:fixed;inset:0;z-index:70;background:rgba(5,12,9,.88);display:none;align-items:center;justify-content:center;padding:18px}
@@ -784,7 +784,7 @@ html.big body.watching .watchbox{font-size:21px}
       <button class="btn wide planbtn" id="planBtn">🗓️ Für später planen<span class="sub">Uhrzeit festlegen, Zu- und Absagen sammeln</span></button>
       <div class="orline">oder beitreten</div>
       <button class="btn wide scanbig" id="scanBtn">📷 QR-Code scannen<span class="sub">vom Handy des Spielleiters</span></button>
-      <div class="joinrow"><button class="scanmini" id="scanBtn2" aria-label="QR-Code scannen">📷</button><input class="tin code" id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"><button class="btn sec" id="joinBtn">Beitreten</button></div>
+      <div class="joinrow"><input class="tin code" id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"><button class="btn sec" id="joinBtn">Beitreten</button></div>
       <p class="smallp">Einer erstellt das Spiel, die anderen scannen den QR-Code oder tippen den Code ein. Jeder würfelt am eigenen Handy – was die anderen gewürfelt haben, siehst du erst beim Aufdecken.</p>
     </div>
 
@@ -5602,7 +5602,6 @@ function scanFound(c){
   },450);
 }
 $('#scanBtn').addEventListener('click',openScanner);
-$('#scanBtn2').addEventListener('click',openScanner);
 $('#scanClose').addEventListener('click',()=>{ac();closeScanner()});
 $('#scanModal').addEventListener('click',e=>{if(e.target.id==='scanModal')closeScanner()});
 
