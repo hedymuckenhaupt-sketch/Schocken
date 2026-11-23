@@ -259,6 +259,17 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
 .slot .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.slot small{font-size:12px;color:var(--mut)}
 .slot.bot{opacity:.75;font-weight:500}.slot.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
 .slot .ava.sm{width:28px;height:28px}
+.codeRow{display:flex;gap:8px}.codeRow input{flex:1;min-width:0}
+.scanBtn{flex:0 0 64px;font-size:26px;padding:0;border-radius:12px;background:linear-gradient(180deg,#ffcf6b,#e88a2a);border:0}
+.scanBox{position:relative;width:100%;aspect-ratio:1;border-radius:18px;overflow:hidden;background:#000}
+.scanBox video{width:100%;height:100%;object-fit:cover;display:block}
+.scanFrame{position:absolute;inset:16%;pointer-events:none}
+.scanFrame i{position:absolute;width:26%;height:26%;border:5px solid var(--gold);border-radius:6px}
+.scanFrame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}.scanFrame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.scanFrame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}.scanFrame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.scanLine{position:absolute;left:18%;right:18%;height:3px;background:linear-gradient(90deg,transparent,#ff5a3c,transparent);box-shadow:0 0 12px #ff5a3c;animation:scanl 2s ease-in-out infinite}
+@keyframes scanl{0%,100%{top:18%}50%{top:80%}}
+.scanBox.ok .scanFrame i{border-color:var(--green)}.scanBox.ok .scanLine{display:none}
 </style>
 </head>
 <body>
@@ -304,7 +315,8 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
     <div class="segL">Spielfeld (bestimmt der Ersteller)</div><div class="seg" id="segOn"></div>
     <button class="big gold" id="btnCreate"><span class="ic">➕</span><span>Spiel erstellen</span></button>
     <div style="height:4px"></div>
-    <label class="fld">Code vom Mitspieler<input id="inCode" class="codeIn" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="····"></label>
+    <button class="big" id="btnScan2" style="justify-content:center"><span class="ic">📷</span><span>QR-Code scannen<small>vom Handy des Erstellers</small></span></button>
+    <label class="fld">oder Code eintippen<div class="codeRow"><input id="inCode" class="codeIn" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="····"><button id="btnScan" class="scanBtn" title="QR-Code scannen">📷</button></div></label>
     <button class="big" id="btnJoin"><span class="ic">🔗</span><span>Beitreten</span></button>
     <button class="back" data-go="menu">‹ Zurück</button>
   </div>
@@ -492,6 +504,13 @@ button.fire:not(:disabled){animation:fireGlow 1.1s infinite}
   <div id="yardOpts"></div>
   <button class="big gold" id="yardOk" style="justify-content:center">⚓ Lackierung übernehmen</button>
   <button class="back" data-close>Abbrechen</button>
+</div></div>
+
+<div id="mScan" class="modal"><div class="card" style="text-align:center">
+  <h2>QR-Code scannen</h2>
+  <div id="scanBox" class="scanBox"><video id="scanVid" playsinline muted autoplay></video><div class="scanFrame"><i></i><i></i><i></i><i></i></div><div class="scanLine"></div></div>
+  <p id="scanMsg" style="text-align:center;color:#d8e8f6"></p>
+  <button class="back" id="scanClose">Abbrechen</button>
 </div></div>
 
 <div id="toast"></div>
@@ -1695,7 +1714,7 @@ function bind(){
  $('#btnCreate').addEventListener('click',()=>{AU.click();if(!SET.name){toast('Bitte zuerst im Hauptmenü deinen Namen eintragen');showMenu();$('#inName').focus();return}
   TL=null;G=newGame('online',{me:0,players:[newPlayer(myName(),0,myAva(),rankIdx(PROF.xp),myPaint()),newPlayer('Gast')]});G.phase='lobby';NET.oppToken=null;
   $('#lobT').textContent='Dein Spiel';$('#lobHost').classList.remove('hide');$('#lobNote').classList.remove('hide');show('lobby');hostGame(newCode(),false);lobbyStatus();wake()});
- const doJoin=()=>{const c=$('#inCode').value.trim().toUpperCase();if(c.length!==4){toast('Bitte den 4-stelligen Code eingeben');return}
+ const doJoin=window.doJoinFn=()=>{const c=$('#inCode').value.trim().toUpperCase();if(c.length!==4){toast('Bitte den 4-stelligen Code eingeben');return}
   if(!SET.name){toast('Bitte zuerst im Hauptmenü deinen Namen eintragen');showMenu();return}
   TL=null;G=newGame('online',{me:1,players:[newPlayer('Gastgeber'),newPlayer(myName(),0,myAva(),rankIdx(PROF.xp),myPaint())]});G.phase='lobby';$('#lobT').textContent='Beitreten';$('#lobHost').classList.add('hide');$('#lobNote').classList.add('hide');show('lobby');joinGame(c);lobbyStatus();wake()};
  $('#btnJoin').addEventListener('click',()=>{AU.click();doJoin()});
@@ -1772,7 +1791,7 @@ function bindYard(){
  $$('#mYard [data-close],#mYard').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)avStop()}))}
 
 let JOINCODE='';
-function boot(){try{init3D()}catch(e){console.error(e)}bind();bindProg();bindYard();bindTeam();$('#weapBar').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(b)setWeap(b.dataset.w)});$('#bMark').addEventListener('click',()=>{AU.click();setMarkMode(!MARKMODE)});
+function boot(){try{init3D()}catch(e){console.error(e)}bind();bindProg();bindYard();bindTeam();bindScan();$('#weapBar').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(b)setWeap(b.dataset.w)});$('#bMark').addEventListener('click',()=>{AU.click();setMarkMode(!MARKMODE)});
  $$('.sw[data-set=heat],.sw[data-set=marks]').forEach(s=>s.addEventListener('click',()=>{if(G)updHUD()}));syncSw();
  const j=(QS.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
  if(!HAS3D)toast('3D-Grafik konnte nicht geladen werden – bitte Internet prüfen und Seite neu laden.',6000);
@@ -1918,6 +1937,38 @@ function bindTeam(){
  $('#tlInvite').addEventListener('click',()=>{const c=TL&&TL.code;if(!c)return;const u=joinUrl(c);window.open('https://wa.me/?text='+encodeURIComponent(`Lust auf Schiffe versenken – 2 gegen 2? ⚓💥\nTipp auf den Link und gib deinen Namen ein:\n${u}\n(Code: ${c})`),'_blank')});
  $('#tlBack').addEventListener('click',()=>{AU.click();if(NET.role==='host')tSendAll({t:'bye'});else netSend({t:'bye'});netClose();TL=null;TLG=null;G=null;LS.del('save');showMenu()});
 }
+/* ================= QR-CODE SCANNEN (Kamera im Spiel) ================= */
+const SCAN={stream:null,raf:0,det:null,cv:null};
+function loadJsQR(){if(window.jsQR)return Promise.resolve(true);return new Promise(res=>{const s=document.createElement('script');s.src=JSQR_URL;s.onload=()=>res(!!window.jsQR);s.onerror=()=>res(false);document.head.appendChild(s)})}
+const JSQR_URL='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+function codeFromText(t){t=String(t||'').trim();const m=t.match(/[?&]join=([A-Za-z0-9]{4})/);if(m)return m[1].toUpperCase();if(/^[A-Za-z0-9]{4}$/.test(t))return t.toUpperCase();return null}
+async function openScanner(){AU.click();
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Die Kamera wird hier nicht unterstützt – bitte den Code eintippen',4500);return}
+ modal('mScan');$('#scanMsg').textContent='Kamera wird gestartet …';$('#scanBox').classList.remove('ok');
+ try{SCAN.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})}
+ catch(e){modal('mScan',false);toast(e&&e.name==='NotAllowedError'?'Kamera-Zugriff wurde verweigert. Erlaube die Kamera für diese Seite oder tippe den Code ein.':'Kamera konnte nicht gestartet werden – bitte den Code eintippen',5500);return}
+ if(!$('#mScan').classList.contains('on')){stopCam();return}
+ const v=$('#scanVid');v.srcObject=SCAN.stream;v.muted=true;v.setAttribute('playsinline','');try{await v.play()}catch(e){}
+ SCAN.det=null;if('BarcodeDetector' in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes('qr_code'))SCAN.det=new BarcodeDetector({formats:['qr_code']})}catch(e){}}
+ if(!SCAN.det&&!(await loadJsQR())){closeScanner();toast('QR-Erkennung konnte nicht geladen werden – bitte den Code eintippen',4500);return}
+ $('#scanMsg').textContent='Halte die Kamera auf den QR-Code am Handy des Erstellers';
+ SCAN.cv=SCAN.cv||document.createElement('canvas');const ctx=SCAN.cv.getContext('2d',{willReadFrequently:true});let busy=false,last=0;
+ const tick=async now=>{if(!SCAN.stream)return;SCAN.raf=requestAnimationFrame(tick);if(busy||now-last<150||v.readyState<2)return;last=now;busy=true;
+  try{let txt=null;
+   if(SCAN.det){const r=await SCAN.det.detect(v);if(r&&r[0])txt=r[0].rawValue}
+   else{const w=v.videoWidth,h=v.videoHeight;if(w&&h){const s=Math.min(1,720/Math.max(w,h));const cw=SCAN.cv.width=Math.round(w*s),ch=SCAN.cv.height=Math.round(h*s);ctx.drawImage(v,0,0,cw,ch);
+     const d=ctx.getImageData(0,0,cw,ch);const q=window.jsQR(d.data,cw,ch,{inversionAttempts:'attemptBoth'});if(q)txt=q.data}}
+   if(txt){const c=codeFromText(txt);if(c&&SCAN.stream){scanFound(c);return}if(!c)$('#scanMsg').textContent='Das ist kein Spiel-Code – bitte den QR-Code aus dem Spiel scannen'}}catch(e){}
+  busy=false};
+ SCAN.raf=requestAnimationFrame(tick)}
+function stopCam(){cancelAnimationFrame(SCAN.raf);if(SCAN.stream){SCAN.stream.getTracks().forEach(t=>t.stop());SCAN.stream=null}const v=$('#scanVid');if(v)v.srcObject=null}
+function closeScanner(){stopCam();modal('mScan',false)}
+function scanFound(c){$('#scanBox').classList.add('ok');$('#scanMsg').textContent='✓ Code '+c+' erkannt';vib([40,40,90]);AU.lock();stopCam();
+ setTimeout(()=>{modal('mScan',false);$('#inCode').value=c;JOINCODE=c;
+  if(!SET.name){showMenu();$('#inName').focus();toast('Code erkannt! Trag noch kurz deinen Namen ein und tippe dann auf „Zwei Handys“.',5500);return}
+  show('onlineSel');$('#inCode').value=c;toast('Code '+c+' erkannt – trete bei …');setTimeout(()=>window.doJoinFn&&window.doJoinFn(),250)},450)}
+function bindScan(){$('#btnScan').addEventListener('click',openScanner);$('#btnScan2').addEventListener('click',openScanner);$('#scanClose').addEventListener('click',()=>{AU.click();closeScanner()});
+ $('#mScan').addEventListener('click',e=>{if(e.target===$('#mScan'))stopCam()})}
 boot();
 </script>
 </body></html>
