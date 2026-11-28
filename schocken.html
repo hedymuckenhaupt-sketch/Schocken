@@ -3218,7 +3218,7 @@ const LS={
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
   del(k){try{localStorage.removeItem(k)}catch(e){}}
 };
-const DEF_OPT={finalFirst:true,mode:'klassisch',hidden:true,handOnly:true,flipSix:true,sound:true,vibrate:true,ads:true,sens:'mittel',speed:'normal',tempo:'schnell',watchSee:true};
+const DEF_OPT={finalFirst:true,mode:'klassisch',hidden:true,handOnly:true,flipSix:true,sound:true,vibrate:true,ads:true,sens:'mittel',speed:'normal',tempo:'schnell',watchSee:true,schockDoof:true};
 let S=LS.get('schocken.setup',null);
 if(!S||!Array.isArray(S.players)||S.players.length<2)S={players:[{name:'',cpu:false},{name:'',cpu:false}],opt:{}};
 S.opt=Object.assign({},DEF_OPT,S.opt||{});
@@ -3277,7 +3277,11 @@ function evaluate(d,fromHand){
   const ones=d.filter(x=>x===1).length;
   const ok=!rules().handOnly||fromHand;
   if(ones===3)return{rank:1000,deckel:13,type:'out',label:'Schock aus'};
-  if(ones===2)return{rank:900+s[0],deckel:s[0],type:'schock',label:'Schock '+s[0]};
+  if(ones===2){
+    // Schockdoof (zwei Einsen + Zwei) zählt weniger als ein General – ab Schock 3 schlägt jeder Schock jeden General
+    if(s[0]===2&&rules().schockDoof!==false)return{rank:750,deckel:2,type:'schock',label:'Schockdoof'};
+    return{rank:900+s[0],deckel:s[0],type:'schock',label:'Schock '+s[0]};
+  }
   const gen=s[0]===s[2],str=s[0]-s[1]===1&&s[1]-s[2]===1;
   if(gen&&ok)return{rank:800+s[0],deckel:3,type:'general',label:'General '+s[0]};
   if(str&&ok)return{rank:700+s[0],deckel:2,type:'strasse',label:'Straße '+[...s].reverse().join('-')};
@@ -3486,7 +3490,7 @@ function halfName(h){if(G&&G.opt.mode==='schnell')return h===3?'Finale':'Partie'
 function eNewGame(players){
   clearTimers();cpuGen++;
   G={v:3,gid:Math.random().toString(36).slice(2,9),seq:0,tid:0,
-     opt:{mode:S.opt.mode,hidden:S.opt.hidden,handOnly:S.opt.handOnly,flipSix:S.opt.flipSix,finalFirst:S.opt.finalFirst,tempo:S.opt.tempo||'schnell',watchSee:S.opt.watchSee!==false},hist:[],
+     opt:{mode:S.opt.mode,hidden:S.opt.hidden,handOnly:S.opt.handOnly,flipSix:S.opt.flipSix,finalFirst:S.opt.finalFirst,tempo:S.opt.tempo||'schnell',watchSee:S.opt.watchSee!==false,schockDoof:S.opt.schockDoof!==false},hist:[],
      players:players.map((p,i)=>({name:(p.name||'').trim()||('Spieler '+(i+1)),cpu:!!p.cpu,cid:p.cid||null,color:COLORS[i%8],fig:p.fig||(p.cpu?'🤖':null),dice:p.dice||'weiss',img:NET.mode==='local'?(p.img||null):null})),
      half:0,halfLosers:[],finalists:null,part:[],chips:players.map(()=>0),pot:13,roundNo:0,sayings:pickSayings(players.length),
      starter:Math.floor(Math.random()*players.length),round:null,cur:null,status:'start',summary:null};
@@ -4235,6 +4239,7 @@ function optControlsHtml(o,withRules,rulesLocked){
     <div class="opt"><div class="lbl">Straße &amp; General nur aus einem Wurf<small>sonst zählen sie auch mit rausgelegten Einsen</small></div><button class="tog ${o.handOnly?'on':''}" data-t="handOnly"></button></div>
     <div class="opt"><div class="lbl">Zwei Sechsen → eine Eins<small>eine Sechs umdrehen, die andere mitwürfeln · drei Sechsen → zwei Einsen</small></div><button class="tog ${o.flipSix?'on':''}" data-t="flipSix"></button></div>
     <div class="opt"><div class="lbl">Finale: erster Wurf steht<small>nur in der ersten Finalrunde ein Wurf, danach normal</small></div><button class="tog ${o.finalFirst?'on':''}" data-t="finalFirst"></button></div>
+    <div class="opt"><div class="lbl">Schockdoof unter General<small>1-1-2 zählt weniger als ein General, ab Schock 3 schlägt jeder Schock jeden General</small></div><button class="tog ${o.schockDoof!==false?'on':''}" data-t="schockDoof"></button></div>
     <div class="opt"><div class="lbl">Zuschauer sehen die Würfe<small>wer in einer Hälfte schon raus ist, sieht auf seinem Handy, was die anderen würfeln (bei „Mehrere Handys“)</small></div><button class="tog ${o.watchSee!==false?'on':''}" data-t="watchSee"></button></div>
     <div class="opt"><div class="lbl">Spieltempo<small>Würfel, Züge, Computer &amp; Animationen</small></div><div class="seg" data-s="tempo">${TEMPOS.map(([v,l])=>`<button class="${(o.tempo||'schnell')===v?'on':''}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   }
@@ -4328,8 +4333,11 @@ function openRules(){
   <h3>Wertung (von hoch nach niedrig)</h3>
   <table class="combo">
     <tr><td>${dd([1,1,1])}</td><td><b>Schock aus</b><br><small>Verlierer bekommt sofort alle 13</small></td><td>alle</td></tr>
-    <tr><td>${dd([1,1,6])}</td><td><b>Schock 6</b> … <b>Schock 2</b><br><small>zwei Einsen + Zahl</small></td><td>6 … 2</td></tr>
+    ${rules().schockDoof!==false?`<tr><td>${dd([1,1,6])}</td><td><b>Schock 6</b> … <b>Schock 3</b><br><small>zwei Einsen + Zahl – schlägt jeden General</small></td><td>6 … 3</td></tr>
     <tr><td>${dd([4,4,4])}</td><td><b>General</b><br><small>drei Gleiche, höher schlägt niedriger</small></td><td>3</td></tr>
+    <tr><td>${dd([1,1,2])}</td><td><b>Schockdoof</b><br><small>zwei Einsen + Zwei – unter dem General</small></td><td>2</td></tr>`
+    :`<tr><td>${dd([1,1,6])}</td><td><b>Schock 6</b> … <b>Schock 2</b><br><small>zwei Einsen + Zahl</small></td><td>6 … 2</td></tr>
+    <tr><td>${dd([4,4,4])}</td><td><b>General</b><br><small>drei Gleiche, höher schlägt niedriger</small></td><td>3</td></tr>`}
     <tr><td>${dd([3,4,5])}</td><td><b>Straße</b><br><small>drei aufeinanderfolgende</small></td><td>2</td></tr>
     <tr><td>${dd([6,5,3])}</td><td><b>Zahl</b><br><small>absteigend gelesen: 653</small></td><td>1</td></tr>
   </table>
@@ -4807,7 +4815,7 @@ function renderLobby(){
   else{
     const o=NET.hostOpt||{};
     lo.style.display='flex';lo.dataset.built='';
-    lo.innerHTML=`<div class="opt"><div class="lbl">Regeln vom Spielleiter<small>${o.hidden?'Verdeckt':'Offen'} · ${o.mode==='schnell'?'Schnell':'Klassisch'} · ${o.handOnly?'Straße/General nur aus einem Wurf':'Straße/General auch zusammengesetzt'} · ${o.flipSix?'6-6 → 1 erlaubt':'kein 6-6 → 1'}${o.finalFirst?' · Finale: 1. Wurf steht':''}</small></div></div>`+optControlsHtml(S.opt,false);
+    lo.innerHTML=`<div class="opt"><div class="lbl">Regeln vom Spielleiter<small>${o.hidden?'Verdeckt':'Offen'} · ${o.mode==='schnell'?'Schnell':'Klassisch'} · ${o.handOnly?'Straße/General nur aus einem Wurf':'Straße/General auch zusammengesetzt'} · ${o.flipSix?'6-6 → 1 erlaubt':'kein 6-6 → 1'}${o.schockDoof!==false?' · Schockdoof unter General':''}${o.finalFirst?' · Finale: 1. Wurf steht':''}</small></div></div>`+optControlsHtml(S.opt,false);
     bindOptControls(lo);
   }
 }
